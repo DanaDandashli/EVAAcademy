@@ -1,0 +1,305 @@
+{% extends "base-dashboard.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'css/compete-room.css' %}"/>
+{% endblock %}
+
+{% block title %} 1v1 Compete — EVA Academy {% endblock %}
+
+{% block content %}
+<div class="cr-layout">
+
+  <!-- Top bar -->
+  <div class="cr-topbar">
+    <a href="{% url 'dashboard' %}" class="cr-back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <div class="cr-topbar-center">
+      <i class="fas fa-swords" style="color:var(--purple)"></i>
+      <span>1v1 Compete Arena</span>
+    </div>
+    <div class="cr-topbar-right">
+      <span class="cr-topics-pill">
+        {% for lesson in completed_lessons %}{{ lesson }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="cr-main">
+
+    <!-- PHASE 0: Matchmaking -->
+    <div class="cr-phase" id="crPhaseMatchmaking">
+      <div class="cr-matchmaking-card">
+
+        <h2 class="cr-match-title">Finding your opponent...</h2>
+        <p class="cr-match-sub">EVA is matching you with a player at your level</p>
+
+        <div class="cr-vs-wrap">
+          <!-- YOU -->
+          <div class="cr-player you-player">
+            <div class="cr-player-avatar">
+              {% if user.avatar %}
+                <img src="{{ user.avatar.image.url }}" alt="You"/>
+              {% else %}
+                <div class="cr-player-initial">{{ user.username|first|upper }}</div>
+              {% endif %}
+            </div>
+            <span class="cr-player-name">{{ user.username }}</span>
+            <span class="cr-player-meta">Lv.{{ profile.level }} · {{ user.age_group|capfirst }}</span>
+            <span class="cr-online-dot"></span>
+          </div>
+
+          <div class="cr-vs-badge">VS</div>
+
+          <!-- OPPONENT -->
+          <div class="cr-player opp-player">
+            <div class="cr-player-avatar opp-avatar-wrap">
+              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+            </div>
+            <span class="cr-player-name" id="oppName">Searching...</span>
+            <span class="cr-player-meta" id="oppMeta">Finding match...</span>
+            <span class="cr-online-dot"></span>
+          </div>
+        </div>
+
+        <div class="cr-match-topics">
+          <i class="fas fa-brain"></i>
+          Topics: 
+          {% for lesson in completed_lessons %}
+            <span class="cr-topic-tag">{{ lesson }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="cr-match-fair">
+          <i class="fas fa-shield-halved"></i>
+          EVA matched you with a same-level coder. Fair play guaranteed.
+        </div>
+
+        <button class="cr-start-btn" id="crStartBtn">
+          <i class="fas fa-play"></i> Start Battle!
+        </button>
+
+      </div>
+    </div>
+
+    <!-- PHASE 1: Countdown -->
+    <div class="cr-phase hidden" id="crPhaseCountdown">
+      <div class="cr-countdown-card">
+        <p class="cr-countdown-label">BATTLE STARTS IN...</p>
+        <div class="cr-countdown-circle">
+          <svg viewBox="0 0 120 120">
+            <circle class="cr-ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="cr-ring-fill" cx="60" cy="60" r="52" id="crRingFill"/>
+          </svg>
+          <span class="cr-countdown-num" id="crCountdownNum">3</span>
+        </div>
+        <p class="cr-countdown-sub">
+          <i class="fas fa-rocket" style="color:var(--purple)"></i> Get ready to code!
+        </p>
+      </div>
+    </div>
+
+    <!-- PHASE 2: Battle -->
+    <div class="cr-phase hidden" id="crPhaseBattle">
+
+      <!-- Timer -->
+      <div class="cr-timer-bar">
+        <i class="fas fa-clock" style="color:var(--purple)"></i>
+        <div class="cr-timer-track">
+          <div class="cr-timer-fill" id="crTimerFill"></div>
+        </div>
+        <span class="cr-timer-val" id="crTimerVal">5:00</span>
+      </div>
+
+      <!-- Battle layout -->
+      <div class="cr-battle-layout">
+
+        <!-- LEFT: Your editor -->
+        <div class="cr-editor-panel">
+          <div class="cr-coder-header you-header">
+            <div class="cr-coder-avatar">
+              {% if user.avatar %}
+                <img src="{{ user.avatar.image.url }}" alt="You"/>
+              {% else %}
+                <div class="cr-coder-initial">{{ user.username|first|upper }}</div>
+              {% endif %}
+            </div>
+            <div class="cr-coder-info">
+              <span class="cr-coder-name">{{ user.username }} <span class="you-badge">YOU</span></span>
+              <span class="cr-coder-meta">Lv.{{ profile.level }}</span>
+            </div>
+            <span class="cr-status-pill coding" id="youStatus">
+              <i class="fas fa-code"></i> Coding...
+            </span>
+          </div>
+
+          <!-- Task -->
+          <div class="cr-task-card">
+            <h3 class="cr-task-title" id="crTaskTitle">Python Challenge</h3>
+            <p class="cr-task-desc" id="crTaskDesc">Loading task...</p>
+          </div>
+
+          <!-- CodeMirror -->
+          <div class="cr-editor-topbar">
+            <div class="cr-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="cr-filename">solution.py</span>
+            <button class="cr-reset-btn" id="crResetBtn">
+              <i class="fas fa-rotate-left"></i> Reset
+            </button>
+          </div>
+          <div class="cr-editor-wrap">
+            <textarea id="crCodeEditor"></textarea>
+          </div>
+
+          <!-- Output -->
+          <div class="cr-output">
+            <div class="cr-output-bar">
+              <span><i class="fas fa-terminal"></i> Output</span>
+              <span id="crOutputStatus" class="cr-output-status"></span>
+            </div>
+            <div class="cr-output-body" id="crOutputBody">
+              <span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>
+            </div>
+          </div>
+
+          <!-- Run button -->
+          <div class="cr-run-bar">
+            <button class="cr-run-btn" id="crRunBtn">
+              <i class="fas fa-play"></i> Run & Test
+            </button>
+            <div class="cr-tests-row">
+              <span>Tests passed</span>
+              <span id="crYouTests">0/5</span>
+            </div>
+            <div class="cr-tests-bar">
+              <div class="cr-tests-fill you-fill" id="crYouTestsFill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MIDDLE: VS + EVA -->
+        <div class="cr-middle-panel">
+          <div class="cr-vs-divider">VS</div>
+          <div class="cr-eva-watch">
+            <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA" class="cr-eva-img"/>
+            <p class="cr-eva-label">EVA watching</p>
+          </div>
+          <div class="cr-commentary" id="crCommentary">
+            <p style="font-size:0.78rem;color:#9ca3af;text-align:center;">Battle starting...</p>
+          </div>
+        </div>
+
+        <!-- RIGHT: Opponent -->
+        <div class="cr-opp-panel">
+          <div class="cr-coder-header opp-header">
+            <div class="cr-coder-avatar">
+              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+            </div>
+            <div class="cr-coder-info">
+              <span class="cr-coder-name" id="oppNameBattle">Opponent</span>
+              <span class="cr-coder-meta" id="oppMetaBattle">Lv.1</span>
+            </div>
+            <span class="cr-status-pill coding" id="oppStatus">
+              <i class="fas fa-code"></i> Coding...
+            </span>
+          </div>
+
+          <div class="cr-opp-tests-row">
+            <span>Tests passed</span>
+            <span id="crOppTests">0/5</span>
+          </div>
+          <div class="cr-tests-bar">
+            <div class="cr-tests-fill opp-fill" id="crOppTestsFill" style="width:0%"></div>
+          </div>
+
+          <div class="cr-opp-code" id="crOppCode">
+            <span style="color:#6b7280;font-size:0.82rem;font-family:monospace;">
+              Opponent is typing...
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PHASE 3: Result -->
+    <div class="cr-phase hidden" id="crPhaseResult">
+      <div class="cr-result-card">
+
+        <div class="cr-result-banner" id="crResultBanner">
+          <i class="fas fa-trophy" style="color:var(--gold);font-size:2rem;"></i>
+          <h2 id="crResultTitle">Result</h2>
+          <p id="crResultSub">Battle complete</p>
+        </div>
+
+        <div class="cr-result-stats">
+          <div class="cr-result-player you-result">
+            <div class="cr-result-avatar">
+              {% if user.avatar %}
+                <img src="{{ user.avatar.image.url }}" alt="You"/>
+              {% else %}
+                <div class="cr-coder-initial">{{ user.username|first|upper }}</div>
+              {% endif %}
+            </div>
+            <span class="cr-result-name">{{ user.username }} <span class="you-badge">YOU</span></span>
+            <span class="cr-result-tests" id="crYouResultTests">0/5</span>
+            <div class="cr-tests-bar" style="width:100%">
+              <div class="cr-tests-fill you-fill" id="crYouResultFill" style="width:0%"></div>
+            </div>
+            <span class="cr-result-xp" id="crYouXP">+10 XP</span>
+          </div>
+
+          <div class="cr-result-vs">VS</div>
+
+          <div class="cr-result-player opp-result">
+            <div class="cr-result-avatar">
+              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+            </div>
+            <span class="cr-result-name" id="crOppResultName">Opponent</span>
+            <span class="cr-result-tests" id="crOppResultTests">0/5</span>
+            <div class="cr-tests-bar" style="width:100%">
+              <div class="cr-tests-fill opp-fill" id="crOppResultFill" style="width:0%"></div>
+            </div>
+            <span class="cr-result-xp" id="crOppXP">+10 XP</span>
+          </div>
+        </div>
+
+        <div class="cr-result-actions">
+          <button class="cr-play-again-btn" id="crPlayAgain">
+            <i class="fas fa-rotate"></i> Play Again
+          </button>
+          <a href="{% url 'dashboard' %}" class="cr-back-dash-btn">
+            <i class="fas fa-home"></i> Back to Dashboard
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+<form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+
+<!-- Confetti -->
+<canvas id="crConfetti"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<!-- Pass data to JS -->
+<script>
+  const COMPLETED_TOPICS = [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  const USER_LEVEL = {{ profile.level }};
+  const COMPLETE_URL = "{% url 'dashboard' %}";
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
+<script src="{% static 'js/compete-room.js' %}"></script>
+{% endblock %}

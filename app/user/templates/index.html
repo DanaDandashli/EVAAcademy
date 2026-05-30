@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} EVA Academy {% endblock %}
+
+{% block content %}
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-container">
+      <div class="hero-content" data-aos="fade-right">
+        <div class="hero-badge">
+          <i class="fas fa-gamepad"></i>
+          <span>Interactive Python Learning Platform</span>
+        </div>
+        <h1 class="hero-title">
+          Learn Python Through <span class="highlight">Interactive Games</span>
+        </h1>
+        <p class="hero-desc">
+         Build real Python skills through interactive games, coding challenges, and creative projects designed for children, teenagers, and adults. From beginner-friendly visual learning to advanced programming concepts, every learner progresses through engaging hands-on experiences.
+        </p>
+        <div class="hero-cta">
+          <a href="/register/" class="btn-primary" id="openTrialHero">
+            Start Your Journey <i class="fas fa-arrow-right"></i>
+          </a>
+          <button class="btn-ghost" id="watchDemo">
+            <span class="play-icon"><i class="fas fa-play"></i></span> Watch Demo
+          </button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <div class="stat-value"><span class="stat-number" data-target="10">0</span><span class="stat-suffix">K+</span></div>
+            <p>Active Students</p>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <div class="stat-value"><span class="stat-number" data-target="500">0</span><span class="stat-suffix">+</span></div>
+            <p>Games & Challenges</p>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <div class="stat-value"><span class="stat-number" data-target="98">0</span><span class="stat-suffix">%</span></div>
+            <p>Success Rate</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual" data-aos="fade-left">
+        <div class="badge-top-rated">
+          <i class="fas fa-star"></i> Top Rated
+        </div>
+        <div class="code-card">
+          <div class="card-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="level-badge">Level 5</span>
+          </div>
+          <div class="card-icon-area">
+            <i class="fas fa-gamepad card-icon"></i>
+          </div>
+          <div class="quest-title">Quest: Build a Calculator</div>
+          <div class="quest-desc">Use Python functions to solve math problems!</div>
+          <div class="code-block">
+            <div class="code-line"><span class="kw">def</span> <span class="fn">add</span>(a, b):</div>
+            <div class="code-line indent"><span class="kw">return</span> a + b</div>
+          </div>
+          <div class="progress-bar-outer">
+            <span class="progress-label">75%</span>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" style="width:75%"></div>
+            </div>
+          </div>
+          <div class="floating-badge badge-python"><i class="fab fa-python"></i> Python</div>
+          <div class="floating-badge badge-xp"><i class="fas fa-bolt"></i> +50 XP</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE -->
+  <section class="why-section" id="why">
+    <div class="section-container">
+      <h2 class="section-title" data-aos="fade-up">Why Choose EVAOPS?</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+        Learn Python the fun way with our game-based approach designed for all skill levels
+      </p>
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="feature-icon-wrap"><i class="fas fa-gamepad"></i></div>
+          <h3>Game-Based Learning</h3>
+          <p>Our game-based learning system helps students build real coding skills through interactive lessons, creative projects, and personalized learning paths</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="feature-icon-wrap"><i class="fas fa-users"></i></div>
+          <h3>Age-Appropriate Content</h3>
+          <p>Programs are carefully designed for children, teenagers, and adults with content tailored to every skill level.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="feature-icon-wrap"><i class="fas fa-trophy"></i></div>
+          <h3>Progress Tracking</h3>
+          <p>Track learning milestones, unlock achievements, and monitor coding progress with real-time performance insights.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+          <div class="feature-icon-wrap"><i class="fas fa-code"></i></div>
+          <h3>Real Python Code</h3>
+          <p>Start with beginner-friendly game mechanics and gradually transition into professional Python programming.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARNING PATHS -->
+  <section class="paths-section" id="paths">
+    <div class="section-container">
+      <h2 class="section-title" data-aos="fade-up">Programs Designed for Every Age Group</h2>
+      <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Flexible learning experiences tailored to each stage of the coding journey.</p>
+      <div class="paths-grid">
+        <div class="path-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="path-icon pink"><i class="fas fa-star"></i></div>
+          <h3>Kids Coding Adventures</h3>
+          <p>Ages 7-12: Fun, visual games that make coding feel like magic</p>
+          <a href="#" class="path-link">Explore Programs <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="path-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="path-icon blue"><i class="fas fa-rocket"></i></div>
+          <h3>Teen Developer Academy</h3>
+          <p>Ages 13-18: Build real projects and prepare for tech careers</p>
+          <a href="#" class="path-link">Explore Programs <i class="fas fa-chevron-right"></i></a>
+        </div>
+        <div class="path-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="path-icon orange"><i class="fas fa-bullseye"></i></div>
+          <h3>Professional Python Tracks</h3>
+          <p>Ages 18+: Professional skills for career advancement</p>
+          <a href="#" class="path-link">Explore Programs <i class="fas fa-chevron-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section class="cta-section" id="cta">
+    <div class="cta-container" data-aos="fade-up">
+      <h2>Ready to Start Your Coding Adventure?</h2>
+      <p>Join thousands of students already learning Python through games</p>
+      <a href="/register/" class="btn-cta-white" id="openTrialCta">
+        Start Free Trial – No Credit Card Required
+      </a>
+      <div class="cta-notes">
+        <span><i class="fas fa-check-circle"></i> 14-day free trial</span>
+        <span><i class="fas fa-check-circle"></i> Cancel anytime</span>
+        <span><i class="fas fa-check-circle"></i> Access all content</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DEMO MODAL (separate, standalone) ===== -->
+  <div class="modal-overlay" id="demoModal">
+      <div class="modal-backdrop" id="demoModalBackdrop"></div>
+      <div class="modal-card" id="demoModalCard">
+          <button class="modal-close" id="demoModalClose">
+              <i class="fas fa-times"></i>
+          </button>
+          <div class="demo-content" style="padding-top: 28px;">
+              <div class="demo-icon"><i class="fas fa-play-circle"></i></div>
+              <h3 class="modal-title" style="font-size:1.4rem">How EVAOPS Works</h3>
+              <p class="modal-sub">See how students learn Python through interactive game-based challenges</p>
+              <div class="demo-placeholder">
+              <i class="fas fa-play"></i>
+              <span>Demo Video Coming Soon</span>
+              </div>
+          </div>
+      </div>
+  </div>
+{% endblock %}

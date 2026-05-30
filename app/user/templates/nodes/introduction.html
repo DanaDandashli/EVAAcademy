@@ -1,0 +1,87 @@
+{% extends "nodes/base-node.html" %}
+{% load static %}
+
+{% block content %}
+<div class="intro-layout">
+
+  <!-- LEFT: Slide content -->
+  <div class="intro-left">
+    <div class="intro-content">
+
+      <!-- Progress indicator -->
+      <div class="intro-progress-wrap">
+        <div class="intro-progress-bar">
+          <div class="intro-progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <span class="intro-progress-label">
+          <span id="currentSlideNum">1</span> / {{ total_slides }}
+        </span>
+      </div>
+
+      <!-- Slides -->
+      {% for slide in slides %}
+      <div class="intro-slide {% if forloop.first %}active{% endif %}"
+           data-slide="{{ forloop.counter }}">
+
+        <div class="intro-slide-header">
+          <div class="intro-slide-num">{{ forloop.counter }}</div>
+          <h2 class="intro-slide-title">{{ slide.title }}</h2>
+        </div>
+
+        <p class="intro-slide-explanation">{{ slide.explanation }}</p>
+
+      </div>
+      {% endfor %}
+
+      <!-- Navigation -->
+      <div class="intro-nav">
+        <button class="intro-btn-back" id="btnBack" disabled>
+          <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button class="intro-btn-next" id="btnNext">
+          Next <i class="fas fa-arrow-right"></i>
+        </button>
+        <form method="POST" action="{% url 'complete_section' section.id %}">
+          {% csrf_token %}
+          <button type="submit" class="intro-complete-btn" id="btnComplete" style="display:none;">
+            <i class="fas fa-check"></i> Complete &amp; Continue
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: Code preview -->
+  <div class="intro-right">
+    <div class="intro-code-panel">
+      <div class="intro-code-bar">
+        <div class="adv-sandbox-dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="intro-code-filename">example.py</span>
+        <span class="intro-code-badge">Read Only</span>
+      </div>
+      <div class="intro-code-body">
+        {% for slide in slides %}
+        <pre class="intro-code-block {% if forloop.first %}active{% endif %}"
+             data-slide="{{ forloop.counter }}">{{ slide.code|linebreaksbr }}</pre>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pass slides data to JS -->
+<script>
+  const TOTAL_SLIDES = {{ total_slides }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/introduction.js' %}"></script>
+{% endblock %}

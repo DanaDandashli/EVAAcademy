@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}EVA Academy{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/node.css' %}"/>
+  {% block links %}{% endblock %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@r3dz0n3/fontawesome-pro@6.3.0/css/all.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="node-layout">
+
+  <!-- Top bar -->
+  <div class="node-topbar">
+    <a href="{% url 'dashboard' %}" class="node-back-btn">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <div class="node-topbar-center">
+      <span class="node-lesson-label">{{ lesson.title }}</span>
+      <i class="fas fa-chevron-right node-breadcrumb-sep"></i>
+      <span class="node-section-label">{{ section.title }}</span>
+    </div>
+    <div class="node-topbar-right">
+      <span class="node-type-pill node-type-{{ section.node_type }}">
+        {% if section.node_type == 'introduction' %}<i class="fas fa-book-open"></i> Introduction
+        {% elif section.node_type == 'application' %}<i class="fas fa-code"></i> Application
+        {% elif section.node_type == 'competition' %}<i class="fas fa-swords"></i> Competition
+        {% elif section.node_type == 'test' %}<i class="fas fa-dragon"></i> Test
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="node-main">
+    {% block content %}{% endblock %}
+  </div>
+
+</div>
+
+<script src="{% static 'js/node.js' %}"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

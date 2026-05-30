@@ -1,0 +1,868 @@
+{% extends "base-dashboard.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'css/dashboard-kids.css' %}">
+{% endblock %}
+
+{% block title %} Child Dashboard {% endblock %}
+
+{% block content %}
+<main class="dash-main">
+  <!-- HEADER -->
+  <header class="dash-header reveal">
+    <div>
+      <a href="{% url 'index' %}" class="logo">
+          <div class="logo-icon"><i class="fas fa-code"></i></div>
+          <span class="gradient-text">EVA Academy</span>
+      </a>
+    </div>
+    <div>
+      <h1 class="dash-greeting">Hey, {{ user.username }}! <span class="wave-emoji"><i class="fa-solid fa-hand"></i></span></h1>
+      <p class="dash-sub">Keep coding — you are doing amazing! <span class="dash-sub-icon"><i class="fa-solid fa-star"></i></span></p>
+    </div>
+    {% if current_section %}
+      <button class="btn-trial" onclick="switchPanel('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => document.getElementById('node-{{ current_section.id }}')?.scrollIntoView({behavior:'smooth', block:'center'}), 300)">
+        Next Task
+      </button>
+    {% endif %}
+  </header>
+
+  <!-- THREE-COLUMN GRID -->
+  <div class="dash-grid">
+
+    <!-- ─────────────── LEFT COLUMN ─────────────── -->
+    <aside class="dash-col dash-col--left">
+
+      <!-- Profile Card -->
+      <div class="dash-card profile-card reveal" id="profileCard">
+        <div class="profile-particles">
+          <span class="pp pp1"></span><span class="pp pp2"></span>
+          <span class="pp pp3"></span><span class="pp pp4"></span>
+          <span class="pp pp5"></span><span class="pp pp6"></span>
+        </div>
+
+        <div class="profile-avatar-wrap">
+          <svg class="xp-ring" viewBox="0 0 120 120">
+            <circle class="xp-ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="xp-ring-fill" cx="60" cy="60" r="52" id="xpRingFill" data-pct="{{ xp_pct }}"/>
+          </svg>
+          {% if avatar_url %}
+            <img src="{{ avatar_url }}" alt="Avatar" class="profile-avatar-img"/>
+          {% else %}
+            <div class="profile-avatar-initial">{{ user.username|first|upper }}</div>
+          {% endif %}
+          <div class="profile-lvl-badge">LVL {{ level }}</div>
+        </div>
+
+        <h2 class="profile-name">{{ user.username }}</h2>
+        <p class="profile-rank">{{ rank_title }}</p>
+
+        <div class="profile-xp-row">
+          <span class="profile-xp-label">XP Progress</span>
+          <span class="profile-xp-val">{{ xp_cur }} / {{ xp_next }}</span>
+        </div>
+        <div class="profile-xp-bar">
+          <div class="profile-xp-fill" data-pct="{{ xp_pct }}" style="width:{{ xp_pct }}%"></div>
+        </div>
+        <p class="profile-xp-hint">{{ xp_remain }}% to Level {{ level_next }}</p>
+
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <i class="fas fa-medal profile-stat-icon gold"></i>
+            <span class="profile-stat-val">#{{ user_rank }}</span>
+            <span class="profile-stat-lbl">Rank</span>
+          </div>
+          <div class="profile-stat highlight">
+            <i class="fas fa-check-circle profile-stat-icon green"></i>
+            <span class="profile-stat-val">{{ completed_quests_count }}</span>
+            <span class="profile-stat-lbl">Quests</span>
+          </div>
+          <div class="profile-stat">
+            <i class="fas fa-shield-halved profile-stat-icon purple"></i>
+            <span class="profile-stat-val">{{ total_badges }}</span>
+            <span class="profile-stat-lbl">Badges</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar-nav reveal">
+        <span class="sidebar-nav-label">Navigation</span>
+        <button class="sidebar-nav-item active" data-panel="learning-path" onclick="switchPanel('learning-path', this)">
+          <i class="fas fa-route"></i>
+          Learning Path
+        </button>
+        <button class="sidebar-nav-item" data-panel="leaderboard-mid" onclick="switchPanel('leaderboard-mid', this)">
+          <i class="fas fa-trophy"></i>
+          Leaderboard
+        </button>
+        <button class="sidebar-nav-item" data-panel="quests" onclick="switchPanel('quests', this)">
+          <i class="fas fa-scroll"></i>
+          Quests &amp; Badges
+        </button>
+        <button class="sidebar-nav-item" data-panel="progress" onclick="switchPanel('progress', this)">
+          <i class="fas fa-chart-line"></i>
+          Progress
+        </button>
+        <button class="sidebar-nav-item" data-panel="compete" onclick="switchPanel('compete', this)">
+            <i class="fas fa-swords"></i>
+            1v1 Compete
+        </button>
+        <button class="sidebar-nav-item" data-panel="advisor" onclick="switchPanel('advisor', this)">
+            <i class="fa-solid fa-chalkboard-user"></i>
+            EVA Advisor
+            <span class="advisor-ai-badge">AI</span>
+        </button>
+        <button class="sidebar-nav-item" data-panel="settings" onclick="switchPanel('settings', this)">
+          <i class="fas fa-gear"></i>
+          Settings
+        </button>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'logout' %}" class="sidebar-nav-item signout-btn">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              Sign Out
+            </a>
+        {% endif %}
+      </nav>
+    </aside>
+
+    <!-- ─────────────── MIDDLE COLUMN ─────────────── -->
+    <section class="dash-col dash-col--mid">
+
+      <!-- ── LEARNING PATH PANEL (default active) ── -->
+      <div class="mid-panel active" id="panel-learning-path">
+
+        {% comment %} <div class="learning-path-card reveal"> {% endcomment %}
+        <div class="learning-path-card reveal">
+          <!-- Header -->
+          <div class="lp-header">
+            <h2 class="lp-title">Python Learning Path</h2>
+            <p class="lp-subtitle">{{ track_label }} — Lesson {{ current_lesson_num }} of {{ total_lessons }}</p>
+            <div class="lp-progress-row">
+              <div class="lp-progress-bar-wrap">
+                <div class="lp-progress-bar-fill" style="width: {{ overall_pct }}%"></div>
+              </div>
+              <span class="lp-progress-label">{{ completed_sections_count }} / {{ total_sections }} nodes</span>
+            </div>
+          </div>
+
+          <!-- Snake path map -->
+          <div class="lp-path-map">
+            {% for lesson in lessons_data %}
+              <!-- Level gate divider -->
+                {% for gate in level_gates %}
+                  {% if gate.before_lesson == lesson.lesson.id %}
+                    <div class="lp-level-gate {% if gate.unlocked %}unlocked{% else %}locked{% endif %}">
+                      <div class="lp-level-gate-line"></div>
+                      <div class="lp-level-gate-badge">
+                        {% if gate.unlocked %}
+                          <i class="fas fa-star"></i> Level {{ gate.level }} Unlocked!
+                        {% else %}
+                          <i class="fas fa-lock"></i> Level {{ gate.level }} — Need {{ gate.xp_needed }} XP
+                        {% endif %}
+                      </div>
+                      <div class="lp-level-gate-line"></div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              <div class="lp-lesson-card"> 
+                <!-- Lesson header -->
+                <div class="lp-lesson-header">
+                  <div class="lp-lesson-header-inner">
+                    <div class="lp-lesson-icon"><i class="fas fa-book-open"></i></div>
+                    <div>
+                      <span class="lp-lesson-num">Lesson {{ forloop.counter }}</span>
+                      <h3 class="lp-lesson-title">{{ lesson.lesson.title }}</h3>
+                    </div>
+                    {% if lesson.is_completed %}
+                      <span class="lp-section-done-pill" style="margin-left:auto;">✓ Complete</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Snake track -->
+                <div class="lp-snake-track" data-nodes="{{ lesson.total_count }}">
+
+                  <!-- SVG path — viewBox matches node % positions exactly -->
+                  <svg class="lp-snake-svg-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+
+                    {% if lesson.total_count == 2 %}
+                      <!-- node1: 25,20 → node2: 75,80 -->
+                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
+                            d="M 25,20 C 25,50 75,50 75,80"/>
+
+                    {% elif lesson.total_count == 3 %}
+                      <!-- node1: 25,14 → node2: 75,50 → node3: 25,86 -->
+                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
+                            d="M 25,14 C 25,32 75,32 75,50 C 75,68 25,68 25,86"/>
+
+                    {% elif lesson.total_count == 4 %}
+                      <!-- node1:25,10 → node2:75,37 → node3:25,63 → node4:75,90 -->
+                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
+                            d="M 25,10 C 25,24 75,24 75,37 C 75,50 25,50 25,63 C 25,77 75,77 75,90"/>
+                    {% endif %}
+
+                  </svg>
+
+                  <!-- Node bubbles -->
+                  {% for s in lesson.sections %}
+                    <div class="lp-node-wrap lp-node-pos-{{ lesson.total_count }}-{{ forloop.counter }}" id="node-{{ s.section.id }}">
+                      {% if s.is_current %}
+                        <div class="lp-node-tooltip">
+                          <button class="lp-start-btn">Start <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                      {% endif %}
+
+                      {% if s.is_completed or s.is_current %}
+                        <a href="/lesson/{{ s.section.id }}/{{ s.section.node_type }}/" class="lp-node-link">
+                      {% endif %}
+
+                        <div class="lp-node-bubble
+                          {% if s.is_completed %}node-done
+                          {% elif s.is_current %}node-current
+                          {% else %}node-locked{% endif %}
+                          {% if s.section.is_boss %} node-boss{% endif %}">
+                          {% if s.is_completed %}
+                            <i class="fas fa-check"></i>
+                          {% elif s.is_current %}
+                            <i class="fas fa-play"></i>
+                          {% elif s.section.is_boss %}
+                            <i class="fas fa-dragon"></i>
+                          {% else %}
+                            <i class="fas fa-lock"></i>
+                          {% endif %}
+                        </div>
+
+                      {% if s.is_completed or s.is_current %}
+                        </a>
+                      {% endif %}
+
+                      <span class="lp-node-label
+                        {% if s.is_current %}label-current
+                        {% elif s.section.is_boss %}label-boss{% endif %}">
+                        {{ s.section.title }}
+                      </span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <!-- Connector between lessons -->
+              {% if not forloop.last %}
+                <div class="lp-lesson-connector {% if lesson.is_completed %}done{% else %}locked{% endif %}">
+                  <div class="lp-lesson-connector-dot"></div>
+                  <div class="lp-lesson-connector-line"></div>
+                </div>
+              {% endif %}
+
+            {% empty %}
+              <div class="lp-empty">
+                <i class="fas fa-book-open"></i>
+                <p>No lessons available yet for your track.</p>
+              </div>
+            {% endfor %}
+
+          </div>
+        </div><!-- end learning-path-card -->
+      </div>
+      <!-- end panel-learning-path -->
+
+      <!-- ── LEADERBOARD PANEL – full expanded view ── -->
+      <div class="mid-panel" id="panel-leaderboard-mid">
+        <div class="dash-card lb-card reveal" style="padding: 24px;">
+          <div class="lb-header" style="margin-bottom:20px;">
+            <div class="lb-title-wrap">
+              <i class="fas fa-trophy lb-trophy"></i>
+              <h3 class="lb-title" style="font-size:1.15rem;">Leaderboard</h3>
+            </div>
+            <span class="lb-badge">{{ track_label }}</span>
+          </div>
+
+          <!-- Podium top 3 -->
+          <div class="lb-podium reveal">
+            {% for entry in leaderboard %}
+              {% if forloop.counter <= 3 %}
+                {% if forloop.counter == 2 %}
+                  <div class="lb-podium-item lb-podium-2">
+                {% elif forloop.counter == 1 %}
+                  <div class="lb-podium-item lb-podium-1">
+                {% else %}
+                  <div class="lb-podium-item lb-podium-3">
+                {% endif %}
+                  <div class="lb-podium-avatar-wrap">
+                    {% if entry.user.avatar %}
+                      <img src="{{ entry.user.avatar.image.url }}" class="lb-podium-avatar" alt=""/>
+                    {% else %}
+                      <div class="lb-podium-initial">{{ entry.user.username|first|upper }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="lb-podium-rank rank-{{ forloop.counter }}">
+                    {% if forloop.counter == 1 %}<i class="fas fa-crown"></i>
+                    {% else %}<i class="fas fa-medal"></i>{% endif %}
+                  </div>
+                  <span class="lb-podium-name {% if entry.user == user %}lb-you-name{% endif %}">
+                    {{ entry.user.username }}{% if entry.user == user %} ★{% endif %}
+                  </span>
+                  <span class="lb-podium-xp">{{ entry.xp_total }} XP</span>
+                  <span class="lb-podium-lv">Lv.{{ entry.level }}</span>
+                  <div class="lb-podium-bar" style="height:{% if forloop.counter == 1 %}90px{% elif forloop.counter == 2 %}60px{% else %}45px{% endif %};"></div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <!-- Full list (rank 4+) -->
+          <ul class="lb-list lb-list-full reveal" style="margin-top:20px;">
+            {% for entry in leaderboard %}
+              {% if forloop.counter > 3 %}
+                <li class="lb-item {% if entry.user == user %}lb-you{% endif %}" data-rank="{{ forloop.counter }}">
+                  <span class="lb-rank-num {% if entry.user == user %}you-num{% endif %}">{{ forloop.counter }}</span>
+                  {% if entry.user.avatar %}
+                    <img src="{{ entry.user.avatar.image.url }}" class="lb-avatar" alt=""/>
+                  {% else %}
+                    <div class="lb-avatar-initial">{{ entry.user.username|first|upper }}</div>
+                  {% endif %}
+                  <div class="lb-info">
+                    <span class="lb-name">
+                      {% if entry.user == user %}YOU{% else %}{{ entry.user.username }}{% endif %}
+                      {% if entry.user == user %}<i class="fas fa-star lb-you-star"></i>{% endif %}
+                    </span>
+                    <span class="lb-xp">{{ entry.xp_total }} XP</span>
+                  </div>
+                  {% with max_xp=leaderboard.0.xp_total %}
+                    <div class="lb-xp-bar-wrap">
+                      <div class="lb-xp-bar-fill {% if entry.user == user %}you-bar{% endif %}"
+                          style="width:{% if max_xp > 0 %}{% widthratio entry.xp_total max_xp 100 %}{% else %}0{% endif %}%">
+                      </div>
+                    </div>
+                  {% endwith %}
+                  <span class="lb-level">Lv.{{ entry.level }}</span>
+                </li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+
+          <button class="lb-see-all" style="margin-top:16px;">
+            See all {{ total_players }} players <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+      <!-- end panel-leaderboard-mid -->
+
+      <!-- ── QUESTS & BADGES PANEL ── -->
+      <div class="mid-panel" id="panel-quests">
+        <div class="dash-tabs reveal">
+          <button class="dash-tab active" data-tab="quests2">
+            <i class="fas fa-scroll"></i> Active Quests
+          </button>
+          <button class="dash-tab" data-tab="badges2">
+            <i class="fas fa-trophy"></i> My Badges
+          </button>
+        </div>
+
+        <div class="dash-tab-panel" id="panelQuests2">
+          {% for uq in user_quests %}
+          <div class="quest-card reveal {% if uq.is_complete %}completed{% endif %}">
+            <div class="quest-icon-wrap" style="background: linear-gradient(135deg, {{ uq.quest.color }}, {{ uq.quest.color }}cc)">
+              <i class="{{ uq.quest.icon }}"></i>
+            </div>
+            <div class="quest-body">
+              <div class="quest-top">
+                <h3 class="quest-name">{{ uq.quest.title }}</h3>
+                <span class="quest-pct" style="color: {{ uq.quest.color }}">{{ uq.pct }}%</span>
+              </div>
+              <p class="quest-desc">{{ uq.quest.description }}</p>
+              <div class="quest-bar">
+                <div class="quest-bar-fill" 
+                    style="width: {{ uq.pct }}%; background: linear-gradient(90deg, {{ uq.quest.color }}, {{ uq.quest.color }}99);"></div>
+              </div>
+              <div class="quest-foot">
+                <span class="quest-status">
+                  {% if uq.is_complete %}
+                    <i class="fas fa-check-circle" style="color:#10b981"></i> Completed — +{{ uq.quest.xp_reward }} XP
+                  {% else %}
+                    <i class="fas fa-circle-dot"></i> {{ uq.progress }} / {{ uq.target }} completed
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+            <p style="text-align:center; color:#9ca3af; padding:24px; font-size:0.85rem;">No quests available yet.</p>
+          {% endfor %}
+        </div>
+
+        <div class="dash-tab-panel hidden" id="panelBadges2">
+          <div class="badges-grid">
+            {% for achievement in earned_achievements %}
+            <div class="badge-item earned reveal">
+              <div class="badge-item-icon" style="background: {{ achievement.color }}">
+                <i class="{{ achievement.icon }}"></i>
+              </div>
+              <span>{{ achievement.title }}</span>
+            </div>
+            {% endfor %}
+
+            {% for achievement in unearned_achievements %}
+            <div class="badge-item locked-b reveal">
+              <div class="badge-item-icon locked-icon">
+                <i class="fas fa-lock"></i>
+              </div>
+              <span>{{ achievement.title }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <!-- end panel-quests -->
+
+      <!-- ── PROGRESS PANEL ── -->
+      <div class="mid-panel" id="panel-progress">
+
+        <div class="progress-stat-card reveal">
+          <p class="settings-section-title">Overall Stats</p>
+          <div class="progress-stats-grid">
+            <div class="progress-stat-item">
+              <span class="progress-stat-num">{{ completed_sections_count }}</span>
+              <span class="progress-stat-lbl">Nodes Done</span>
+            </div>
+            <div class="progress-stat-item">
+              <span class="progress-stat-num">{{ total_badges }}</span>
+              <span class="progress-stat-lbl">Badges Earned</span>
+            </div>
+            <div class="progress-stat-item">
+              <span class="progress-stat-num">{{ xp_cur }}</span>
+              <span class="progress-stat-lbl">Total XP</span>
+            </div>
+            <div class="progress-stat-item">
+              <span class="progress-stat-num">{{ user_quests|length }}</span>
+              <span class="progress-stat-lbl">Active Quests</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-stat-card reveal">
+          <p class="settings-section-title">Skills Progress</p>
+          {% for lesson in lessons_data %}
+            <div class="progress-bar-item">
+              <div class="progress-bar-label-row">
+                <span>{{ lesson.lesson.title }}</span>
+                <span class="progress-count {% if lesson.is_completed %}count-teal{% elif lesson.completed_count > 0 %}count-purple{% else %}count-grey{% endif %}">
+                  {{ lesson.completed_count }}/{{ lesson.total_count }}
+                </span>
+              </div>
+              <div class="progress-bar-bg">
+                {% if lesson.is_completed %}
+                  <div class="progress-bar-fg teal" data-pct="100"></div>
+                {% elif lesson.completed_count > 0 %}
+                  <div class="progress-bar-fg purple" data-pct="{% widthratio lesson.completed_count lesson.total_count 100 %}"></div>
+                {% else %}
+                  <div class="progress-bar-fg grey" data-pct="0"></div>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p style="color:#9ca3af; font-size:0.85rem;">No lessons yet.</p>
+          {% endfor %}
+        </div>
+
+      </div>
+      <!-- end panel-progress -->
+
+      <!-- ── 1v1 COMPETE ── -->
+      <div class="mid-panel" id="panel-compete">
+        <div class="compete-launcher reveal">
+
+          <!-- Header -->
+          <div class="arena-header-bar">
+            <div class="arena-title-group">
+              <i class="fas fa-swords arena-swords-icon"></i>
+              <div>
+                <h2 class="arena-title">1v1 Compete Arena</h2>
+                <p class="arena-subtitle">Challenge players at your level · Best coder wins</p>
+              </div>
+            </div>
+            <span class="arena-age-pill">{{ user.age_group|capfirst }} · Python</span>
+          </div>
+
+          <!-- Player stats card -->
+          <div class="compete-stats-card">
+            <div class="compete-stats-player">
+              <div class="compete-stats-avatar">
+                {% if avatar_url %}
+                  <img src="{{ avatar_url }}" alt="You"/>
+                {% else %}
+                  <div class="compete-stats-initial">{{ user.username|first|upper }}</div>
+                {% endif %}
+              </div>
+              <div class="compete-stats-info">
+                <span class="compete-stats-name">{{ user.username }}</span>
+                <span class="compete-stats-meta">Level {{ profile.level }} · {{ rank_title }}</span>
+              </div>
+              <div class="compete-stats-numbers">
+                <div class="compete-stat-item">
+                  <span class="compete-stat-val">{{ profile.competition_wins }}</span>
+                  <span class="compete-stat-lbl">Wins</span>
+                </div>
+                <div class="compete-stat-item">
+                  <span class="compete-stat-val">{{ profile.elo_rating }}</span>
+                  <span class="compete-stat-lbl">ELO</span>
+                </div>
+                <div class="compete-stat-item">
+                  <span class="compete-stat-val">Lv.{{ profile.level }}</span>
+                  <span class="compete-stat-lbl">Level</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topics card -->
+          <div class="compete-topics-card">
+            <div class="compete-topics-header">
+              <i class="fas fa-brain" style="color:var(--purple)"></i>
+              <span>Your battle topics</span>
+            </div>
+            <p class="compete-topics-desc">
+              EVA will generate a challenge based on everything you've learned so far.
+            </p>
+            <div class="compete-topics-tags">
+              {% for lesson in completed_lessons %}
+                <span class="compete-tag purple">{{ lesson }}</span>
+              {% empty %}
+                <span style="font-size:0.82rem;color:#9ca3af;">
+                  Complete some lessons first to unlock competitions!
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- How it works -->
+          <div class="compete-how-card">
+            <h4 class="compete-how-title">How it works</h4>
+            <div class="compete-how-steps">
+              <div class="compete-how-step">
+                <div class="compete-how-num">1</div>
+                <p>EVA matches you with a player at your level</p>
+              </div>
+              <div class="compete-how-step">
+                <div class="compete-how-num">2</div>
+                <p>Both players get the same challenge based on completed topics</p>
+              </div>
+              <div class="compete-how-step">
+                <div class="compete-how-num">3</div>
+                <p>First to pass all tests wins — earn XP and climb the leaderboard</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Enter Arena button -->
+          {% if current_section and current_section.node_type == 'competition' %}
+            <a href="/lesson/{{ current_section.id }}/competition/" class="compete-enter-btn">
+              <i class="fas fa-swords"></i> Enter Arena
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          {% elif completed_lessons %}
+            <a href="{% url 'compete_room' %}" class="compete-enter-btn">
+              <i class="fas fa-swords"></i> Find a Match
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          {% else %}
+            <button class="compete-enter-btn disabled" disabled>
+              <i class="fas fa-lock"></i> Complete lessons to unlock
+            </button>
+          {% endif %}
+
+        </div>
+      </div>
+      <!-- end panel-compete -->
+        
+      <!-- ── ADVISOR PANEL ── -->
+      <div class="mid-panel" id="panel-advisor">
+        <div class="advisor-layout reveal">
+
+          <!-- LEFT: Sandbox -->
+          <div class="advisor-left">
+
+            <!-- Task card -->
+            <div class="adv-task-card">
+              <div class="adv-task-topbar">
+                <span class="adv-current-task-pill">
+                  <i class="fas fa-bolt"></i> FREE PRACTICE
+                </span>
+                <span class="adv-xp-pill">EVA Guided</span>
+              </div>
+              <h2 class="adv-task-title">
+                {% if current_lesson %}
+                  Practice: {{ current_lesson.title }}
+                {% else %}
+                  Python Sandbox
+                {% endif %}
+              </h2>
+              <p class="adv-task-desc">
+                This is your free coding space. Write any Python code, run it, and ask EVA for guidance whenever you need it. EVA will help you think — but never write code for you.
+              </p>
+              <div class="adv-tags">
+                {% for lesson in completed_lessons %}
+                  <span class="adv-tag">{{ lesson }}</span>
+                {% empty %}
+                  <span class="adv-tag active-tag">Python Basics</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Sandbox -->
+            <div class="adv-sandbox">
+              <div class="adv-sandbox-bar">
+                <div class="adv-sandbox-dots">
+                  <span class="dot red"></span>
+                  <span class="dot yellow"></span>
+                  <span class="dot green"></span>
+                </div>
+                <span class="adv-sandbox-filename">main.py</span>
+                <button class="adv-run-btn" id="advRunBtn">
+                  <i class="fas fa-play"></i> Run
+                </button>
+              </div>
+              <div class="adv-editor-wrap">
+                <textarea id="advCodeEditor"># Welcome to your Python sandbox! </textarea>
+              </div>
+            </div>
+
+            <!-- Output -->
+            <div class="adv-output">
+              <div class="adv-output-bar">
+                <span class="adv-output-label">
+                  <i class="fas fa-terminal"></i> output
+                </span>
+                <span class="adv-output-status" id="advOutputStatus"></span>
+              </div>
+              <div class="adv-output-body" id="advOutputBody">
+                <div class="adv-out-line cursor-blink">&gt;</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT: EVA Chat -->
+          <div class="adv-chat-panel">
+            <div class="adv-chat-header">
+              <div class="adv-eva-avatar">
+                <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+              </div>
+              <div class="adv-eva-info">
+                <h3 class="adv-eva-name">EVA — Python Advisor</h3>
+                <p class="adv-eva-sub">Hints only. Never gives answers.</p>
+              </div>
+              <span class="adv-online-pill">
+                <span class="adv-online-dot"></span> Online
+              </span>
+            </div>
+
+            <div class="adv-rule-banner">
+              <i class="fas fa-lightbulb adv-rule-icon"></i>
+              <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction — the thinking is yours.</p>
+            </div>
+
+            <div class="adv-quick-chips">
+              <button class="adv-chip" data-msg="I'm stuck">
+                <i class="fas fa-circle-question"></i> I'm stuck
+              </button>
+              <button class="adv-chip" data-msg="Explain this concept">
+                <i class="fas fa-magnifying-glass"></i> Explain this
+              </button>
+              <button class="adv-chip" data-msg="Why is my code not working?">
+                <i class="fas fa-triangle-exclamation"></i> Not working?
+              </button>
+              <button class="adv-chip" data-msg="Give me a challenge">
+                <i class="fas fa-chess"></i> Challenge me
+              </button>
+            </div>
+
+            <div class="adv-chat-messages" id="advChatMessages">
+              <div class="adv-msg eva">
+                <div class="adv-msg-avatar">
+                  <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+                </div>
+                <div class="adv-msg-bubble">
+                  <p class="adv-msg-sender">EVA</p>
+                  <p>
+                    <strong>Hey {{ user.username }}! Welcome to your sandbox.</strong>
+                  </p>
+                  <p>
+                    This is your free space to experiment with Python.
+                    {% if current_lesson %}
+                      I see you're working on <strong>{{ current_lesson.title }}</strong> — feel free to practice here!
+                    {% else %}
+                      Write any code and I'll guide you through it.
+                    {% endif %}
+                  </p>
+                  <p>What would you like to build today?</p>
+                </div>
+              </div>
+
+              <div class="adv-msg eva typing-indicator" id="evaTyping" style="display:none">
+                <div class="adv-msg-avatar">
+                  <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+                </div>
+                <div class="adv-msg-bubble typing-bubble">
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                  <span class="dot"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="adv-chat-input-wrap">
+              <input type="text" class="adv-chat-input" id="advChatInput"
+                    placeholder="Ask EVA — she'll guide, not solve..."/>
+              <button class="adv-chat-send" id="advChatSend">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <!-- end panel-advisor -->
+  
+      <!-- ── SETTINGS PANEL ── -->
+      <div class="mid-panel" id="panel-settings">
+        <div class="settings-card reveal">
+          <p class="settings-section-title">Profile</p>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-user"></i> Username</span>
+            <span style="font-size:0.85rem;font-weight:700;color:#374151">{{ user.username }}</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-envelope"></i> Email</span>
+            <span style="font-size:0.82rem;color:#9ca3af">{{ user.email|default:"No email set" }}</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-users"></i> Age Group</span>
+            <span style="font-size:0.85rem;font-weight:700;color:#374151">{{ user.age_group|capfirst }}</span>
+          </div>
+        </div>
+
+        <div class="settings-card reveal">
+          <p class="settings-section-title">Progress</p>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-star"></i> Level</span>
+            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">Level {{ level }} — {{ rank_title }}</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-bolt"></i> Total XP</span>
+            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">{{ xp_cur }} XP</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-trophy"></i> Rank</span>
+            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">#{{ user_rank }} in {{ track_label }}</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-swords"></i> Competition Wins</span>
+            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">{{ profile.competition_wins }}</span>
+          </div>
+        </div>
+
+        <div class="settings-card reveal">
+          <p class="settings-section-title">Account Actions</p>
+          <div class="settings-row">
+            <span class="settings-row-label"><i class="fas fa-right-from-bracket"></i> Sign Out</span>
+            <a href="{% url 'logout' %}" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
+          </div>
+        </div>
+      </div>
+      <!-- end panel-settings -->
+    </section>
+
+    <!-- ─────────────── RIGHT COLUMN ─────────────── -->
+    <aside class="dash-col dash-col--right">
+      <!-- Leaderboard -->
+      <div class="dash-card lb-card reveal">
+        <div class="lb-header">
+          <div class="lb-title-wrap">
+            <i class="fas fa-trophy lb-trophy"></i>
+            <h3 class="lb-title">Leaderboard</h3>
+          </div>
+          <span class="lb-badge">This Week</span>
+        </div>
+
+        <ul class="lb-list" id="lbList">
+          {% for entry in leaderboard %}
+            <li class="lb-item {% if forloop.counter <= 3 %}top3{% endif %} {% if entry.user == user %}lb-you{% endif %}"
+                data-rank="{{ forloop.counter }}">
+              {% if forloop.counter == 1 %}
+                <span class="lb-rank rank-1"><i class="fas fa-crown"></i></span>
+              {% elif forloop.counter == 2 %}
+                <span class="lb-rank rank-2">2</span>
+              {% elif forloop.counter == 3 %}
+                <span class="lb-rank rank-3">3</span>
+              {% else %}
+                <span class="lb-rank-num {% if entry.user == user %}you-num{% endif %}">{{ forloop.counter }}</span>
+              {% endif %}
+              <div class="lb-info">
+                <span class="lb-name">
+                  {{ entry.user.username }}
+                  {% if entry.user == user %}<i class="fas fa-star lb-you-star"></i>{% endif %}
+                </span>
+                <span class="lb-xp">{{ entry.xp_total }} XP</span>
+              </div>
+              <span class="lb-level">Lv.{{ entry.level }}</span>
+            </li>
+          {% empty %}
+            <li style="text-align:center; padding:20px; color:#9ca3af;">No players yet.</li>
+          {% endfor %}
+        </ul>
+        <button class="lb-see-all" id="seeAllBtn"  onclick="switchPanel('leaderboard-mid', this)">See all {{ total_players }} players <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- Achievements -->
+      <div class="achievements-card reveal">
+        <p class="achievements-title">Achievements</p>
+        <div class="achievements-grid">
+
+          {% for achievement in earned_achievements %}
+          <div class="achievement-item earned" 
+              onclick="showAchievement('{{ achievement.title }}', '{{ achievement.description }}', '{{ achievement.icon }}', '{{ achievement.color }}', true)">
+            <div class="achievement-icon-wrap" style="background: {{ achievement.color }}22">
+              <i class="{{ achievement.icon }}" style="color: {{ achievement.color }}"></i>
+            </div>
+            <span class="achievement-label">{{ achievement.title }}</span>
+          </div>
+          {% endfor %}
+
+          {% for achievement in unearned_achievements %}
+          <div class="achievement-item locked"
+              onclick="showAchievement('{{ achievement.title }}', '{{ achievement.description }}', '{{ achievement.icon }}', '{{ achievement.color }}', false)">
+            <div class="achievement-icon-wrap locked">
+              <i class="fas fa-lock"></i>
+            </div>
+            <span class="achievement-label">{{ achievement.title }}</span>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Detail panel -->
+        <div class="achievement-detail" id="achievementDetail" style="display:none">
+          <div class="achievement-detail-icon" id="achDetailIcon">
+            <i id="achDetailIconI"></i>
+          </div>
+          <div class="achievement-detail-body">
+            <div class="achievement-detail-title" id="achDetailTitle"></div>
+            <div class="achievement-detail-desc" id="achDetailDesc"></div>
+            <span class="achievement-detail-badge" id="achDetailBadge"></span>
+          </div>
+        </div>
+      </div>
+      
+    </aside>
+  </div>
+  <!-- end dash-grid -->
+</main>
+
+<canvas id="confettiCanvas"></canvas>
+
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/dashboard-kids.js' %}"></script>
+{% endblock %}

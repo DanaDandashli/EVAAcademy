@@ -1,0 +1,118 @@
+{% extends "nodes/base-node.html" %}
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/dracula.min.css">
+<link rel="stylesheet" href="{% static 'css/test.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="test-layout">
+
+  <!-- LEFT: Task -->
+  <div class="test-left">
+
+    <div class="test-header">
+      <div class="test-icon"><i class="fas fa-dragon"></i></div>
+      <div>
+        <h1 class="test-title">Final Test</h1>
+        <p class="test-subtitle">{{ lesson.title }} · No hints · No EVA · Solo</p>
+      </div>
+      <!-- Timer -->
+      <div class="test-timer" id="testTimer">
+        <i class="fas fa-clock"></i>
+        <span id="timerVal">10:00</span>
+      </div>
+    </div>
+
+    <!-- Rules banner -->
+    <div class="test-rules-banner">
+      <div class="test-rule"><i class="fas fa-ban"></i> No hints</div>
+      <div class="test-rule"><i class="fas fa-robot"></i> No EVA</div>
+      <div class="test-rule"><i class="fas fa-clock"></i> Timed</div>
+      <div class="test-rule"><i class="fas fa-user"></i> Solo</div>
+    </div>
+
+    <!-- Task -->
+    <div class="test-task-card">
+      <h2>Your Challenge</h2>
+      <p>Write a complete Python program that demonstrates everything you learned about <strong>{{ lesson.title }}</strong>.</p>
+      <ul class="test-requirements">
+        {% for q in questions %}
+        <li>
+          <i class="fas fa-circle-dot"></i>
+          {{ q.instruction }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Score -->
+    <div class="test-score-card">
+      <div class="test-score-item">
+        <span class="test-score-label">Score</span>
+        <span class="test-score-val" id="testsPassed">0 / {{ total_points }}</span>
+      </div>
+      <div class="test-score-bar-wrap">
+        <div class="test-score-bar-fill" id="testScoreBar" style="width:0%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Code editor -->
+  <div class="test-right">
+    <div class="test-editor-topbar">
+      <div class="app-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span class="app-filename">solution.py</span>
+      <span class="test-no-help-badge"><i class="fas fa-ban"></i> No hints</span>
+    </div>
+
+    <div class="test-editor-wrap">
+      <textarea id="testEditor"></textarea>
+    </div>
+
+    <div class="app-output-wrap">
+      <div class="app-output-topbar">
+        <span><i class="fas fa-terminal"></i> Output</span>
+        <span class="app-output-status" id="testOutputStatus"></span>
+      </div>
+      <div class="app-output-body" id="testOutputBody">
+        <span class="app-output-placeholder">Run your code to see output...</span>
+      </div>
+    </div>
+
+    <div class="app-run-bar">
+      <button class="app-run-btn" id="testRunBtn">
+        <i class="fas fa-play"></i> Run
+      </button>
+      <form method="POST" action="{% url 'complete_section' section.id %}" style="margin-left:auto;">
+        {% csrf_token %}
+        <button type="submit" class="app-complete-btn hidden" id="testCompleteBtn">
+          <i class="fas fa-trophy"></i> Submit &amp; Complete
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+</div>
+
+<canvas id="appConfetti"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
+<script>
+  const QUESTIONS     = {{ questions_json|safe }};
+  const TOTAL_QUESTIONS = {{ total_questions }};
+  const TOTAL_POINTS  = {{ total_points }};
+</script>
+<script src="{% static 'js/test.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Account — EVA Academy{% endblock %}
+
+{% block links %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card auth-card--wide">
+
+    <div class="auth-logo">
+      <i class="fas fa-code"></i>
+    </div>
+
+    <h1 class="auth-title">Create your account</h1>
+    <p class="auth-sub">Choose your learning path and get started</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="auth-error">
+          <i class="fas fa-exclamation-circle"></i>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'register' %}" class="auth-form" id="registerForm">
+      {% csrf_token %}
+
+      <!-- ── STEP 1: Choose path ── -->
+      <div class="reg-step" id="step1">
+        <p class="reg-step-label">Step 1 of 2 — Choose your path</p>
+        <div class="path-options" id="pathOptions">
+
+          <label class="path-option {% if age_group == 'child' %}selected{% endif %}">
+            <input type="radio" name="age_group" value="child"
+                   {% if age_group == 'child' %}checked{% endif %} required/>
+            <div class="path-opt-icon pink"><i class="fas fa-star"></i></div>
+            <div class="path-opt-info">
+              <strong>Child</strong>
+              <span>Ages 7–12</span>
+            </div>
+            <span class="custom-radio"></span>
+          </label>
+
+          <label class="path-option {% if age_group == 'teen' %}selected{% endif %}">
+            <input type="radio" name="age_group" value="teen"
+                   {% if age_group == 'teen' %}checked{% endif %}/>
+            <div class="path-opt-icon blue"><i class="fas fa-rocket"></i></div>
+            <div class="path-opt-info">
+              <strong>Teenager</strong>
+              <span>Ages 13–18</span>
+            </div>
+            <span class="custom-radio"></span>
+          </label>
+
+          <label class="path-option {% if age_group == 'adult' %}selected{% endif %}">
+            <input type="radio" name="age_group" value="adult"
+                   {% if age_group == 'adult' %}checked{% endif %}/>
+            <div class="path-opt-icon orange"><i class="fas fa-bullseye"></i></div>
+            <div class="path-opt-info">
+              <strong>Adult</strong>
+              <span>Ages 18+</span>
+            </div>
+            <span class="custom-radio"></span>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- ── STEP 2a: Teen / Adult fields ── -->
+      <div class="reg-step" id="stepAdult">
+        <p class="reg-step-label">Step 2 of 2 — Your details</p>
+
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrap">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" name="adult_username"
+                   value="{% if age_group != 'child' %}{{ username|default:'' }}{% endif %}"
+                   placeholder="alex_johnson"
+                   class="form-input" autocomplete="username"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="email" name="email"
+                   value="{{ email|default:'' }}"
+                   placeholder="you@example.com"
+                   class="form-input" autocomplete="email"/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="password" name="password"
+                     placeholder="Min. 8 characters"
+                     class="form-input" autocomplete="new-password"/>
+              <button type="button" class="toggle-pw" data-target="password">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group half">
+            <label for="confirm">Confirm</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock input-icon"></i>
+              <input type="password" id="confirm" name="confirm"
+                     placeholder="••••••••"
+                     class="form-input" autocomplete="new-password"/>
+              <button type="button" class="toggle-pw" data-target="confirm">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── STEP 2b: Child fields ── -->
+      <div class="reg-step" id="stepChild">
+        <p class="reg-step-label">Step 2 of 2 — Create your hero</p>
+
+        <!-- Avatar picker -->
+        <div class="form-group">
+          <label>Choose your character</label>
+          <div class="child-avatar-grid">
+            {% for avatar in avatars %}
+              <label class="child-avatar-card">
+                <input type="radio" name="avatar_id" value="{{ avatar.id }}"
+                       {% if avatar.id|stringformat:'s' == request.POST.avatar_id %}checked{% endif %}/>
+                <img src="{{ avatar.image.url }}" alt="{{ avatar.name }}"/>
+                <span>{{ avatar.name }}</span>
+              </label>
+            {% empty %}
+              <p class="child-avatar-loading">No characters available yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="child_username">Your hero name</label>
+          <div class="input-wrap">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="child_username" name="username"
+                   placeholder="SuperCoder7"
+                   class="form-input" autocomplete="username"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Secret code <span class="child-hint">(4 numbers)</span></label>
+          <div class="child-pin-row">
+            <input type="password" inputmode="numeric" maxlength="1" class="child-pin-input" id="pin1"/>
+            <input type="password" inputmode="numeric" maxlength="1" class="child-pin-input" id="pin2"/>
+            <input type="password" inputmode="numeric" maxlength="1" class="child-pin-input" id="pin3"/>
+            <input type="password" inputmode="numeric" maxlength="1" class="child-pin-input" id="pin4"/>
+          </div>
+          <!-- Hidden field that holds the combined PIN -->
+          <input type="hidden" name="pin" id="pinHidden"/>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn-auth-primary" id="submitBtn">
+        <i class="fas fa-rocket"></i> Create Account
+      </button>
+
+    </form>
+
+    <p class="auth-footer-text">
+      Already have an account?
+      <a href="{% url 'login' %}" class="purple-link">Sign in</a>
+    </p>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/register.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Dashboard — EVA Academy{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  {% block links %}{% endblock %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@r3dz0n3/fontawesome-pro@6.3.0/css/all.css">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+    
+    {% block content %}{% endblock %}
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+        <div class="footer-brand">
+            <div class="logo">
+            <div class="logo-icon"><i class="fas fa-code"></i></div>
+            <span>EVA Academy</span>
+            </div>
+            <p>Learn Python through interactive games and challenges.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Programs</h4>
+            <ul>
+            <li><a href="{% url 'children' %}">For Children</a></li>
+            <li><a href="{% url 'teen' %}">For Teenagers</a></li>
+            <li><a href="{% url 'adult' %}">For Adults</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Account</h4>
+            <ul>
+            {% if request.user.is_authenticated %}
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'logout' %}">Sign Out</a></li>
+            {% else %}
+                <li><a href="{% url 'login' %}">Sign In</a></li>
+                <li><a href="{% url 'register' %}">Create Account</a></li>
+            {% endif %}
+            <li><a href="#">Privacy Policy</a></li>
+            </ul>
+        </div>
+        </div>
+        <div class="footer-bottom">
+        <p>&copy; 2026 EVA Academy. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
