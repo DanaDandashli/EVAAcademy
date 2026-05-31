@@ -131,7 +131,7 @@
         <p class="reg-step-label">Step 2 of 2 — Create your hero</p>
 
         <!-- Avatar picker -->
-        <div class="form-group">
+        {% comment %} <div class="form-group">
           <label>Choose your character</label>
           <div class="child-avatar-grid">
             {% for avatar in avatars %}
@@ -145,7 +145,7 @@
               <p class="child-avatar-loading">No characters available yet — you can add one later!</p>
             {% endfor %}
           </div>
-        </div>
+        </div> {% endcomment %}
 
         <div class="form-group">
           <label for="child_username">Your hero name</label>
