@@ -19,7 +19,8 @@
          Build real Python skills through interactive games, coding challenges, and creative projects designed for children, teenagers, and adults. From beginner-friendly visual learning to advanced programming concepts, every learner progresses through engaging hands-on experiences.
         </p>
         <div class="hero-cta">
-          <a href="/register/" class="btn-primary" id="openTrialHero">
+          {% comment %} <a href="/register/" class="btn-primary" id="openTrialHero"> {% endcomment %}
+          <a href="{% url 'login' %}" class="btn-primary" id="openTrialHero">
             Start Your Journey <i class="fas fa-arrow-right"></i>
           </a>
           <button class="btn-ghost" id="watchDemo">
@@ -142,7 +143,8 @@
     <div class="cta-container" data-aos="fade-up">
       <h2>Ready to Start Your Coding Adventure?</h2>
       <p>Join thousands of students already learning Python through games</p>
-      <a href="/register/" class="btn-cta-white" id="openTrialCta">
+      {% comment %} <a href="/register/" class="btn-cta-white" id="openTrialCta"> {% endcomment %}
+      <a href="{% url 'login' %}" class="btn-cta-white" id="openTrialCta">
         Start Free Trial – No Credit Card Required
       </a>
       <div class="cta-notes">

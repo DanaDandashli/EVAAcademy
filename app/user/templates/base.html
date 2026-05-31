@@ -33,7 +33,7 @@
             <a href="{% url 'logout' %}"    class="btn-signin mobile-btn">Sign Out</a>
           {% else %}
             <a href="{% url 'login' %}"    class="btn-signin mobile-btn">Sign In</a>
-            <a href="{% url 'register' %}" class="btn-trial mobile-btn">Start Free Trial</a>
+            {% comment %} <a href="{% url 'register' %}" class="btn-trial mobile-btn">Start Free Trial</a> {% endcomment %}
           {% endif %}
         </li>
       </ul>
@@ -45,7 +45,7 @@
           <a href="{% url 'logout' %}"    class="btn-signin">Sign Out</a>
         {% else %}
           <a href="{% url 'login' %}"    class="btn-signin">Sign In</a>
-          <a href="{% url 'register' %}" class="btn-trial">Start Free Trial</a>
+          {% comment %} <a href="{% url 'register' %}" class="btn-trial">Start Free Trial</a> {% endcomment %}
         {% endif %}
       </div>
 
@@ -92,7 +92,7 @@
             <li><a href="{% url 'logout' %}">Sign Out</a></li>
           {% else %}
             <li><a href="{% url 'login' %}">Sign In</a></li>
-            <li><a href="{% url 'register' %}">Create Account</a></li>
+            {% comment %} <li><a href="{% url 'register' %}">Create Account</a></li> {% endcomment %}
           {% endif %}
           <li><a href="#">Privacy Policy</a></li>
         </ul>
