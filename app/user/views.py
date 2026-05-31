@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -45,13 +46,26 @@ def LoginView(request):
             messages.error(request, 'Password is required.')
             return render(request, 'login.html', {'username': username})
 
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            messages.error(request, 'Invalid username or password.')
+        # ── Rate limiting ──
+        cache_key = f'login_attempts_{username}'
+        attempts = cache.get(cache_key, 0)
+
+        if attempts >= 5:
+            messages.error(
+                request, 'Too many failed attempts. Please try again in 15 minutes.')
             return render(request, 'login.html', {'username': username})
 
-        login(request, user)
-        return redirect('dashboard')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            cache.delete(cache_key)
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            cache.set(cache_key, attempts + 1, timeout=900)
+            remaining = 4 - attempts
+            messages.error(request, f'Invalid username or password. {remaining} attempts remaining.')
+            return render(request, 'login.html', {'username': username})
 
     return render(request, 'login.html')
 
