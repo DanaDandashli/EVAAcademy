@@ -88,9 +88,9 @@ def RegisterView(request):
             return render(request, 'register.html', ctx)
 
         if age_group == 'child':
-            if not avatar_id:
-                messages.error(request, 'Please choose your character.')
-                return render(request, 'register.html', ctx)
+            # if not avatar_id:
+            #     messages.error(request, 'Please choose your character.')
+            #     return render(request, 'register.html', ctx)
             if len(pin) < 4:
                 messages.error(request, 'Please enter a 4-digit secret code.')
                 return render(request, 'register.html', ctx)

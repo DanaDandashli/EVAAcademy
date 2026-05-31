@@ -36,6 +36,8 @@ class User(AbstractUser):
         TEEN = "teen", "Teen"
         ADULT = "adult", "Adult"
 
+    email = models.EmailField(unique=True, blank=True, null=True)
+    
     age = models.PositiveIntegerField(
         null=True,
         blank=True
