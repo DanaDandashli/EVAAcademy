@@ -1,6 +1,6 @@
 :root {
-  --purple: #7c3aed;
-  --dk-purple2: #a855f7;
+  --purple: #008080;
+  --dk-purple2: #00a0a0;
   --green: #10b981;
   --gold: #f59e0b;
   --red: #ef4444;
@@ -29,7 +29,7 @@
   flex-direction: column;
   gap: 14px;
   padding: 16px;
-  border-left: 1.5px solid rgba(124,58,237,0.1);
+  border-left: 1.5px solid rgba(0, 128, 128,0.1);
   background: #fff;
   overflow-y: auto;
 }
@@ -39,7 +39,7 @@
 .compete-coder-initial {
   width: 100%; height: 100%;
   border-radius: 50%;
-  background: var(--purple);
+  background: var(--primary);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.2rem; font-weight: 800;
   color: #fff; font-family: 'Nunito', sans-serif;
@@ -76,21 +76,21 @@
 .app-run-btn {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 22px; border-radius: 10px;
-  background: var(--purple); color: #fff; border: none;
+  background: var(--primary); color: #fff; border: none;
   font-size: 0.88rem; font-weight: 800; cursor: pointer;
   font-family: 'Nunito', sans-serif; transition: all 0.2s;
 }
-.app-run-btn:hover { background: #6d28d9; transform: scale(1.03); }
+.app-run-btn:hover { background: #006666; transform: scale(1.03); }
 
 .app-complete-btn {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, var(--purple), var(--dk-purple2));
+  background: linear-gradient(135deg, var(--primary), #00a0a0);
   color: #fff; border: none; border-radius: 14px;
   font-size: 0.9rem; font-weight: 800; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 20px rgba(124,58,237,0.3);
+  box-shadow: 0 6px 20px rgba(0, 128, 128,0.3);
   font-family: 'Nunito', sans-serif; transition: all 0.2s;
 }
 .app-complete-btn:hover { transform: translateY(-2px); }
@@ -115,7 +115,7 @@
   padding: 0 10px;
   font-size: 0.85rem;
   font-weight: 900;
-  color: rgba(124,58,237,0.3);
+  color: rgba(0, 128, 128,0.3);
   font-family: 'Nunito', sans-serif;
   padding-top: 60px;
 }
@@ -128,8 +128,8 @@
   padding: 40px 24px;
   background: #fff;
   border-radius: 20px;
-  border: 1.5px solid rgba(124,58,237,0.1);
-  box-shadow: 0 4px 20px rgba(124,58,237,0.08);
+  border: 1.5px solid rgba(0, 128, 128,0.1);
+  box-shadow: 0 4px 20px rgba(0, 128, 128,0.08);
   width: 100%;
 }
 
@@ -150,9 +150,9 @@
 }
 
 
-.countdown-ring-bg  { fill: none; stroke: rgba(124,58,237,0.12); stroke-width: 8; }
+.countdown-ring-bg  { fill: none; stroke: rgba(0, 128, 128,0.12); stroke-width: 8; }
 .countdown-ring-fill {
-  fill: none; stroke: var(--purple);
+  fill: none; stroke: var(--primary);
   stroke-width: 8; stroke-linecap: round;
   stroke-dasharray: 326.7; stroke-dashoffset: 0;
   transition: stroke-dashoffset 1s linear;
@@ -169,7 +169,7 @@
   justify-content: center;
   font-size: 3rem;
   font-weight: 900;
-  color: var(--purple);
+  color: var(--primary);
   font-family: 'Nunito', sans-serif;
 }
 
@@ -201,15 +201,15 @@
 .compete-coder-card {
   background: #fff;
   border-radius: 16px;
-  border: 1.5px solid rgba(124,58,237,0.1);
+  border: 1.5px solid rgba(0, 128, 128,0.1);
   padding: 16px;
-  box-shadow: 0 2px 12px rgba(124,58,237,0.06);
+  box-shadow: 0 2px 12px rgba(0, 128, 128,0.06);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.you-card { border-color: rgba(124,58,237,0.25); }
+.you-card { border-color: rgba(0, 128, 128,0.25); }
 .opp-card { border-color: rgba(16,185,129,0.2); }
 
 .compete-coder-header {
@@ -227,7 +227,7 @@
 .compete-coder-meta { display: block; font-size: 0.72rem; color: #9ca3af; }
 
 .you-badge {
-  background: var(--purple);
+  background: var(--primary);
   color: #fff;
   font-size: 0.62rem;
   font-weight: 900;
@@ -243,7 +243,7 @@
   gap: 8px;
   padding: 9px 22px;
   border-radius: 10px;
-  background: var(--purple);
+  background: var(--primary);
   color: #fff;
   border: none;
   font-size: 0.88rem;
@@ -277,7 +277,7 @@
 }
 
 .you-fill {
-  background: linear-gradient(90deg, var(--purple), #a855f7);
+  background: linear-gradient(90deg, var(--primary), #00a0a0);
 }
 
 .opp-fill {
@@ -291,7 +291,7 @@
   background: #fff;
   border-radius: 12px;
   padding: 10px 16px;
-  border: 1.5px solid rgba(124,58,237,0.1);
+  border: 1.5px solid rgba(0, 128, 128,0.1);
   width: 100%;
 }
 
@@ -305,7 +305,7 @@
 
 .compete-timer-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--purple), #ec4899);
+  background: linear-gradient(90deg, var(--primary), #ec4899);
   border-radius: 99px;
   width: 100%;
   transition: width 1s linear;
@@ -314,7 +314,7 @@
 .compete-timer-val {
   font-size: 0.88rem;
   font-weight: 900;
-  color: var(--purple);
+  color: var(--primary);
   font-family: 'Nunito', monospace;
   min-width: 38px;
   text-align: right;
