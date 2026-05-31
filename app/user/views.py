@@ -115,7 +115,7 @@ def RegisterView(request):
                 pass
 
         if age_group == 'child':
-            user = User(username=username, age_group=age_group,
+            user = User(username=username, email=email, age_group=age_group,
                         gender='other', role='student', avatar=avatar)
             user.set_password(password)
             user.save()
