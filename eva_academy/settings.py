@@ -158,3 +158,10 @@ CORS_ALLOWED_ORIGINS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ── Session security ──
+SESSION_COOKIE_AGE = 1800           # 30 minutes inactivity
+SESSION_SAVE_EVERY_REQUEST = True   # Reset timer on every request
+SESSION_COOKIE_HTTPONLY = True      # JS cannot access session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'     # Prevent CSRF via cross-site requests
+SESSION_COOKIE_SECURE = not DEBUG   # HTTPS only in production
