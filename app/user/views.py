@@ -8,6 +8,8 @@ from django.db import models
 from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -99,6 +101,9 @@ def RegisterView(request):
             if not email:
                 messages.error(request, 'Email is required.')
                 return render(request, 'register.html', ctx)
+            if email and User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already registered.')
+                return render(request, 'register.html', ctx)
             if len(password) < 8:
                 messages.error(
                     request, 'Password must be at least 8 characters.')
@@ -106,7 +111,12 @@ def RegisterView(request):
             if password != confirm:
                 messages.error(request, 'Passwords do not match.')
                 return render(request, 'register.html', ctx)
-
+            try:
+                validate_password(password)
+            except ValidationError as e:
+                messages.error(request, ' '.join(e.messages))
+                return render(request, 'register.html', ctx)
+            
         avatar = None
         if age_group == 'child' and avatar_id:
             try:
