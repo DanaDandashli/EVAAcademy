@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
+from functools import wraps
 
 User = get_user_model()
 
@@ -161,7 +162,18 @@ def LogoutView(request):
     return redirect('index')
 
 
-@login_required(login_url='/login/')
+def student_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        if request.user.role != 'student':
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@student_required
 def DashboardView(request):
     user = request.user
     profile, _ = StudentProfile.objects.get_or_create(user=user)
@@ -437,7 +449,7 @@ def DashboardView(request):
     return render(request, 'dashboard-kids.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 def IntroductionView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='introduction')
@@ -452,7 +464,7 @@ def IntroductionView(request, section_id):
     return render(request, 'nodes/introduction.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 @require_POST
 def CompleteSectionView(request, section_id):
     section = get_object_or_404(Section, id=section_id)
@@ -479,7 +491,7 @@ def CompleteSectionView(request, section_id):
         # Lesson complete — go back to dashboard
         return redirect('dashboard')
 
-@login_required(login_url='/login/')
+@student_required
 def ApplicationView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='application')
@@ -504,7 +516,7 @@ def ApplicationView(request, section_id):
     return render(request, 'nodes/application.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 def CompetitionView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='competition')
@@ -519,7 +531,7 @@ def CompetitionView(request, section_id):
     return render(request, 'nodes/competition.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 def TestView(request, section_id):
     section = get_object_or_404(Section, id=section_id, node_type='test')
     questions = section.questions.all()
@@ -544,7 +556,7 @@ def TestView(request, section_id):
     return render(request, 'nodes/test.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 def CompeteRoomView(request):
     profile = StudentProfile.objects.get(user=request.user)
 
@@ -568,7 +580,7 @@ def CompeteRoomView(request):
     return render(request, 'compete-room.html', context)
 
 
-@login_required(login_url='/login/')
+@student_required
 @require_POST
 def CompeteResultView(request):
     import json
