@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion, UserProgress, Quest, UserQuest
+from .models import Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion, UserProgress, Quest, UserQuest, EVAConversation
 
 
 @admin.register(User)
@@ -56,6 +56,14 @@ class QuestAdmin(admin.ModelAdmin):
 @admin.register(Avatar)
 class AvatarAdmin(admin.ModelAdmin):
     list_display = ['name', 'image']
+
+
+@admin.register(EVAConversation)
+class EVAConversationAdmin(admin.ModelAdmin):
+    list_display = ['user', 'role', 'lesson', 'created_at']
+    list_filter = ['role', 'lesson']
+    search_fields = ['user__username', 'content']
+    ordering = ['-created_at']
 
 
 admin.site.register(Slide)

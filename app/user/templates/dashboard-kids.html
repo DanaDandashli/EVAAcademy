@@ -679,7 +679,7 @@
             </div>
 
             <div class="adv-chat-messages" id="advChatMessages">
-              <div class="adv-msg eva">
+              {% comment %} <div class="adv-msg eva">
                 <div class="adv-msg-avatar">
                   <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
                 </div>
@@ -698,7 +698,7 @@
                   </p>
                   <p>What would you like to build today?</p>
                 </div>
-              </div>
+              </div> {% endcomment %}
 
               <div class="adv-msg eva typing-indicator" id="evaTyping" style="display:none">
                 <div class="adv-msg-avatar">
@@ -709,7 +709,7 @@
                   <span class="dot"></span>
                   <span class="dot"></span>
                 </div>
-              </div>
+              </div>    
             </div>
 
             <div class="adv-chat-input-wrap">
@@ -860,9 +860,19 @@
 </main>
 
 <canvas id="confettiCanvas"></canvas>
-
+<form id="csrfForm" style="display:none;">{% csrf_token %}</form>
 {% endblock %}
 
 {% block scripts %}
   <script src="{% static 'js/dashboard-kids.js' %}"></script>
+  <script>
+    const EVA_CONTEXT = {
+      level: {{ level }},
+      completedCount: {{ completed_sections_count }},
+      weakAreas: [{% for w in eva_context.weak_areas %}{"lesson": "{{ w.lesson }}", "nodeType": "{{ w.node_type }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
+      completedLessons: [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}]
+    };
+  </script>
+  <script src="https://skulpt.org/js/skulpt.min.js"></script>
+  <script src="https://skulpt.org/js/skulpt-stdlib.js"></script>
 {% endblock %}

@@ -429,3 +429,20 @@ class UserQuest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.quest.title}"
+
+
+class EVAConversation(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='eva_conversations')
+    role = models.CharField(max_length=10)  # 'user' or 'assistant'
+    content = models.TextField()
+    lesson = models.CharField(max_length=200, blank=True, default='')
+    # code the user had at that moment
+    code = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.role} - {self.created_at}"

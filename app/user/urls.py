@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     IndexView, ChildrenView, TeenView, AdultView,
     LoginView, RegisterView, LogoutView, DashboardView,
-    IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView
+    IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView,
+    AdvisorChatView
 )
 
 urlpatterns = [
@@ -22,4 +23,7 @@ urlpatterns = [
 
     path('compete/', CompeteRoomView, name='compete_room'),
     path('compete/result/', CompeteResultView, name='compete_result'),
+
+    # AI Generation
+    path('advisor/chat/', AdvisorChatView, name='advisor_chat'),
 ]

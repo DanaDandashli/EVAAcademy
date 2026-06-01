@@ -5,13 +5,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils import timezone
 from django.db import models
-from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest
+from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
+from .ai import eva_chat
 
 User = get_user_model()
 
@@ -400,6 +401,34 @@ def DashboardView(request):
     completed_topics = ', '.join(completed_lessons) if completed_lessons else 'No topics yet'
     completed_quests_count = sum(1 for uq in user_quests if uq['is_complete'])
 
+    # ── EVA Advisor context ──
+    weak_areas = []
+    for lesson in lessons_data:
+        if lesson['is_locked']:
+            continue  # skip locked lessons
+        if lesson['completed_count'] == 0:
+            continue  # skip lessons user hasn't started
+        for section in lesson['sections']:
+            if not section['is_completed'] and section['section'].node_type in ['application', 'test']:
+                weak_areas.append({
+                    'lesson': lesson['lesson'].title,
+                    'node_type': section['section'].node_type,
+                })
+                break
+
+    eva_context = {
+        'level':              level,
+        'completed_count':    completed_sections_count,
+        'weak_areas':         weak_areas[:3],  # top 3 weak areas
+        'completed_lessons':  completed_lessons,
+    }
+
+    # ── EVA conversation history ──
+    eva_history = EVAConversation.objects.filter(
+        user=user
+    ).order_by('-created_at')[:10]
+    eva_history = list(reversed(eva_history))
+
     context = {
         'user':       user,
         'profile':    profile,
@@ -445,6 +474,9 @@ def DashboardView(request):
 
         'completed_lessons': completed_lessons,
         'completed_topics':  completed_topics,
+
+        'eva_context': eva_context,
+        'eva_history': eva_history,
     }
     return render(request, 'dashboard-kids.html', context)
 
@@ -490,6 +522,7 @@ def CompleteSectionView(request, section_id):
     else:
         # Lesson complete — go back to dashboard
         return redirect('dashboard')
+
 
 @student_required
 def ApplicationView(request, section_id):
@@ -593,3 +626,66 @@ def CompeteResultView(request):
         profile.save()
 
     return JsonResponse({'status': 'ok'})
+
+
+#--- AI Generation ---#
+@student_required
+def AdvisorChatView(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    import json
+    # try:
+    #     data = json.loads(request.body)
+    #     print("AdvisorChat data:", data)
+    # except Exception as e:
+    #     print("Error parsing JSON:", e)
+    #     return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    data = json.loads(request.body)
+    user_message = data.get('message', '').strip()
+    user_code = data.get('code', '')
+    lesson_title = data.get('lesson', 'Python')
+    eva_context = data.get('eva_context', {})
+    is_greeting = data.get('is_greeting', False)
+
+    if not user_message:
+        return JsonResponse({'error': 'No message'}, status=400)
+
+    # ── Load conversation history from DB ──
+    history = list(
+        EVAConversation.objects.filter(user=request.user)
+        .order_by('-created_at')[:10]
+        .values('role', 'content')
+    )
+    history = list(reversed(history))
+
+    # ── Save user message (skip if auto greeting) ──
+    if not is_greeting:
+        EVAConversation.objects.create(
+            user=request.user,
+            role='user',
+            content=user_message,
+            lesson=lesson_title,
+            code=user_code,
+        )
+
+    # ── Get EVA response ──
+    reply = eva_chat(
+        user_message,
+        user_code,
+        lesson_title,
+        age_group=request.user.age_group,
+        eva_context=eva_context,
+        history=history,
+    )
+
+    # ── Save EVA response ──
+    EVAConversation.objects.create(
+        user=request.user,
+        role='assistant',
+        content=reply,
+        lesson=lesson_title,
+        code='',
+    )
+
+    return JsonResponse({'reply': reply})

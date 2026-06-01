@@ -31,7 +31,7 @@ A Python learning platform designed for children, teenagers, and adults. EVA Aca
 
 ```bash
 
-pip install django djangorestframework django-cors-headers python-dotenv Pillow djangorestframework-simplejwt openai django-codemirror2 gunicorn whitenoise
+pip install django djangorestframework django-cors-headers python-dotenv Pillow djangorestframework-simplejwt openai django-codemirror2 gunicorn whitenoise requests
 
 # Clone the repository
 git clone https://github.com/yourusername/EVAAcademy.git
@@ -62,6 +62,7 @@ python manage.py runserver
 ## Environment Variables
 
 ```env
+OPENROUTER_API_KEY=your-api-key
 SECRET_KEY=your-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1

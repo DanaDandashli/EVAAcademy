@@ -1,9 +1,12 @@
 "use strict";
 
-/* ============================================================
-   DASHBOARD — animations and UI only
-   All data comes from Django template variables
-============================================================ */
+function getCsrf() {
+  return (
+    document.querySelector("[name=csrfmiddlewaretoken]")?.value ||
+    document.cookie.match(/csrftoken=([^;]+)/)?.[1] ||
+    ""
+  );
+}
 
 /* ── Reveal on scroll ── */
 const revealEls = document.querySelectorAll(".reveal");
@@ -73,9 +76,43 @@ window.addEventListener("load", () => {
   }
 });
 
-/* ── Panel switcher ── */
+/* ── Advisor vars ── */
 let advEditor = null;
+let evaGreeted = false;
 
+/* ── EVA Auto Greeting ── */
+async function sendAutoGreeting() {
+  const evaTyping = document.getElementById("evaTyping");
+  const chatMessages = document.getElementById("advChatMessages");
+  if (!evaTyping || !chatMessages) return;
+
+  evaTyping.style.display = "flex";
+
+  try {
+    const response = await fetch("/advisor/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrf(),
+      },
+      body: JSON.stringify({
+        message: "Hello EVA! What should I practice today?",
+        code: "",
+        lesson: "General Python",
+        eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+        is_greeting: true,
+      }),
+    });
+
+    const data = await response.json();
+    evaTyping.style.display = "none";
+    appendEvaMsg(data.reply || "Hi! What would you like to practice today?");
+  } catch (err) {
+    evaTyping.style.display = "none";
+  }
+}
+
+/* ── Panel switcher ── */
 function switchPanel(panelId, btn) {
   document
     .querySelectorAll(".mid-panel")
@@ -122,6 +159,17 @@ function switchPanel(panelId, btn) {
         }
       }
       if (advEditor) advEditor.refresh();
+
+      if (!evaGreeted) {
+        evaGreeted = true;
+        const msgs = document.getElementById("advChatMessages");
+        const existingMessages = msgs
+          ? msgs.querySelectorAll(".adv-msg.eva:not(.typing-indicator)").length
+          : 0;
+        if (existingMessages === 0) {
+          sendAutoGreeting();
+        }
+      }
     }, 200);
   }
 }
@@ -151,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ── Avatar initial color ──
   const el = document.querySelector(".profile-avatar-initial");
   if (el) {
     const letter = el.textContent.trim().toUpperCase();
@@ -182,15 +229,16 @@ const canvas = document.getElementById("confettiCanvas");
 const ctx = canvas?.getContext("2d");
 let confettiRAF = null;
 const COLORS = [
-  "#7c3aed",
-  "#a855f7",
+  "#008080",
+  "#00a0a0",
   "#ec4899",
   "#f59e0b",
   "#10b981",
   "#3b82f6",
 ];
 
-function launchConfetti(count = 120) {
+function launchConfetti(count) {
+  count = count || 120;
   if (!canvas || !ctx) return;
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -243,7 +291,8 @@ function launchConfetti(count = 120) {
 
 /* ── XP Toast ── */
 const xpToast = document.getElementById("xpToast");
-function showXPToast(msg = "+50 XP earned!") {
+function showXPToast(msg) {
+  msg = msg || "+50 XP earned!";
   if (!xpToast) return;
   xpToast.querySelector("span").textContent = msg;
   xpToast.classList.add("show");
@@ -277,8 +326,13 @@ function showToast(type, message) {
     error: "fa-exclamation-circle",
   };
   const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `<i class="fas ${icons[type] || icons.info} toast-icon"></i><span class="toast-msg">${message}</span>`;
+  toast.className = "toast " + type;
+  toast.innerHTML =
+    '<i class="fas ' +
+    (icons[type] || icons.info) +
+    ' toast-icon"></i><span class="toast-msg">' +
+    message +
+    "</span>";
   toastContainer.appendChild(toast);
   setTimeout(() => {
     toast.classList.add("removing");
@@ -296,7 +350,7 @@ document.querySelectorAll(".lb-item").forEach((item) => {
     const name =
       item.querySelector(".lb-name")?.textContent?.trim() || "Player";
     const xp = item.querySelector(".lb-xp")?.textContent?.trim() || "";
-    showToast("info", `${name} — ${xp}`);
+    showToast("info", name + " - " + xp);
   });
 });
 
@@ -304,27 +358,12 @@ document.querySelectorAll(".lb-item").forEach((item) => {
 document.querySelectorAll(".badge-item.earned").forEach((item) => {
   item.addEventListener("click", () => {
     const name = item.querySelector("span")?.textContent || "Badge";
-    showToast("success", `"${name}" badge earned! 🎖️`);
+    showToast("success", '"' + name + '" badge earned!');
     launchConfetti(60);
   });
 });
 
-/* ── Keyboard shortcut L = level up demo ── */
-document.addEventListener("keydown", (e) => {
-  if (e.key === "l" || e.key === "L") showLevelUp();
-});
-
 /* ── Advisor chat ── */
-const evaResponses = [
-  "Good thinking! What happens if the guess is lower than the secret number?",
-  "You're on the right track! Python's `if/elif/else` handles exactly three outcomes.",
-  "Think about it: if you guess too low, what should your program say?",
-  "What keyword creates a loop that runs until a condition is false?",
-  "Can you explain what you expect line 8 to do? Saying it out loud helps!",
-  "Look at what you learned in the Introduction — which concepts apply here?",
-];
-let evaIdx = 0;
-
 const chatMessages = document.getElementById("advChatMessages");
 const chatInput = document.getElementById("advChatInput");
 const chatSend = document.getElementById("advChatSend");
@@ -338,38 +377,85 @@ function appendUserMsg(text) {
   if (!chatMessages) return;
   const div = document.createElement("div");
   div.className = "adv-msg user";
-  div.innerHTML = `<div class="adv-msg-bubble user-bubble"><p>${escHtml(text)}</p></div><span class="adv-msg-meta">Me</span>`;
-  chatMessages.appendChild(div);
+  div.innerHTML =
+    '<div class="adv-msg-bubble user-bubble"><p>' +
+    escHtml(text) +
+    '</p></div><span class="adv-msg-meta">Me</span>';
+  chatMessages.insertBefore(div, evaTyping);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+function parseMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/`(.*?)`/g, "<code>$1</code>");
+}
+
+let currentEvaTask = "";
 
 function appendEvaMsg(text) {
   if (!chatMessages || !evaTyping) return;
-  evaTyping.style.display = "flex";
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  setTimeout(
-    () => {
-      evaTyping.style.display = "none";
-      const div = document.createElement("div");
-      div.className = "adv-msg eva";
-      div.innerHTML = `
-      <div class="adv-msg-avatar">
-        <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
-      </div>
-      <div class="adv-msg-bubble"><p>${text}</p></div>`;
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    },
-    1200 + Math.random() * 600,
-  );
+  evaTyping.style.display = "none";
+
+  // Save as current task
+  currentEvaTask = text;
+
+  const div = document.createElement("div");
+  div.className = "adv-msg eva";
+  div.innerHTML =
+    '<div class="adv-msg-avatar"><img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/></div><div class="adv-msg-bubble"><p>' +
+    parseMarkdown(text) +
+    "</p></div>";
+  chatMessages.insertBefore(div, evaTyping);
+  setTimeout(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 100);
 }
 
-function sendMessage() {
+async function sendMessage() {
   const text = chatInput?.value.trim();
   if (!text) return;
   appendUserMsg(text);
   chatInput.value = "";
-  appendEvaMsg(evaResponses[evaIdx++ % evaResponses.length]);
+
+  const code = advEditor ? advEditor.getValue() : "";
+  const lesson =
+    document.querySelector(".adv-task-title")?.textContent || "Python";
+
+  if (evaTyping) {
+    evaTyping.style.display = "flex";
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  try {
+    const response = await fetch("/advisor/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrf(),
+      },
+      body: JSON.stringify({
+        message:
+          'CURRENT TASK: "' +
+          currentEvaTask.substring(0, 150) +
+          '". Student says: ' +
+          text,
+        code: code,
+        lesson: lesson,
+        eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+        // history: evaConversationHistory.slice(-4), // reduce to last 4 messages only
+      }),
+    });
+
+    const data = await response.json();
+    if (evaTyping) evaTyping.style.display = "none";
+    appendEvaMsg(data.reply || "I am thinking... try again!");
+  } catch (err) {
+    console.error("EVA fetch error:", err); 
+    if (evaTyping) evaTyping.style.display = "none";
+    appendEvaMsg("I am having trouble connecting. Try again in a moment!");
+  }
 }
 
 chatSend?.addEventListener("click", sendMessage);
@@ -391,46 +477,135 @@ const advRunBtn = document.getElementById("advRunBtn");
 const advOutputBody = document.getElementById("advOutputBody");
 const advOutputStatus = document.getElementById("advOutputStatus");
 
-advRunBtn?.addEventListener("click", () => {
+advRunBtn?.addEventListener("click", async () => {
   const code = advEditor ? advEditor.getValue() : "";
+  if (!code.trim()) return;
+
   advRunBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
   advOutputBody.innerHTML = "";
 
-  const nameMatch = code.match(/name\s*=\s*["']([^"']+)["']/);
-  const userName = nameMatch ? nameMatch[1] : "User";
+  const cmdEl = document.createElement("div");
+  cmdEl.className = "adv-out-line cmd";
+  cmdEl.textContent = "$ python main.py";
+  advOutputBody.appendChild(cmdEl);
 
-  const lines = [
-    { cls: "cmd", text: "$ python main.py" },
-    { cls: "cmd", text: `Hello, ${userName}` },
-    { cls: "cmd", text: "Let's code something amazing!" },
-  ];
+  let outputText = "";
 
-  lines.forEach((line, i) => {
-    setTimeout(
-      () => {
-        const el = document.createElement("div");
-        el.className = `adv-out-line ${line.cls}`;
-        el.textContent = line.text;
-        advOutputBody.appendChild(el);
-        advOutputBody.scrollTop = advOutputBody.scrollHeight;
-      },
-      300 + i * 280,
+  function outf(text) {
+    outputText += text;
+    const el = document.createElement("div");
+    el.className = "adv-out-line cmd";
+    el.textContent = text;
+    advOutputBody.appendChild(el);
+    advOutputBody.scrollTop = advOutputBody.scrollHeight;
+  }
+
+  function builtinRead(x) {
+    if (
+      Sk.builtinFiles === undefined ||
+      Sk.builtinFiles["files"][x] === undefined
+    )
+      throw "File not found: " + x;
+    return Sk.builtinFiles["files"][x];
+  }
+
+  Sk.configure({ output: outf, read: builtinRead });
+
+  try {
+    await Sk.misceval.asyncToPromise(() =>
+      Sk.importMainWithBody("<stdin>", false, code, true),
     );
-  });
 
-  setTimeout(
-    () => {
-      advRunBtn.innerHTML = '<i class="fas fa-play"></i> Run';
-      if (advOutputStatus) {
-        advOutputStatus.textContent = "● done";
-        advOutputStatus.className = "adv-output-status running";
-      }
-      appendEvaMsg(
-        "I can see you ran the code! What would you like to change or add next?",
-      );
-    },
-    300 + lines.length * 280 + 400,
-  );
+    if (advOutputStatus) {
+      advOutputStatus.textContent = "done";
+      advOutputStatus.className = "adv-output-status success";
+    }
+
+    // Send output to EVA
+    const lastEvaMsg = chatMessages
+      ? [
+          ...chatMessages.querySelectorAll(
+            ".adv-msg.eva:not(.typing-indicator)",
+          ),
+        ]
+          .pop()
+          ?.querySelector("p")?.textContent || ""
+      : "";
+
+    const summary = outputText
+      ? 'CURRENT TASK: "' +
+        currentEvaTask.substring(0, 150) +
+        '". My code output was: ' +
+        outputText +
+        ". Did I complete this specific task correctly? If yes give me a completely new challenge. If no, guide me to fix it without writing any code."
+      : 'CURRENT TASK: "' +
+        currentEvaTask.substring(0, 150) +
+        '". I ran my code but got no output. What went wrong?';
+
+    if (evaTyping) evaTyping.style.display = "flex";
+    const evaResponse = await fetch("/advisor/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrf(),
+      },
+      body: JSON.stringify({
+        message: summary,
+        code: code,
+        lesson:
+          document.querySelector(".adv-task-title")?.textContent || "Python",
+        eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+      }),
+    });
+
+    const evaData = await evaResponse.json();
+    if (evaTyping) evaTyping.style.display = "none";
+    appendEvaMsg(evaData.reply || "Great job running your code!");
+  } catch (err) {
+    let errorMsg = "";
+    if (err.toString().includes("printf")) {
+      errorMsg = "NameError: printf is not defined. Did you mean print()?";
+    } else {
+      errorMsg = err
+        .toString()
+        .replace("RangeError: ", "")
+        .replace("undefined", "Error in your code");
+    }
+
+    const errEl = document.createElement("div");
+    errEl.className = "adv-out-line err";
+    errEl.textContent = err.toString();
+    console.log(err);
+    advOutputBody.appendChild(errEl);
+
+    if (advOutputStatus) {
+      advOutputStatus.textContent = "error";
+      advOutputStatus.className = "adv-output-status error";
+    }
+
+    // Tell EVA about the error
+    if (evaTyping) evaTyping.style.display = "flex";
+    const evaResponse = await fetch("/advisor/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrf(),
+      },
+      body: JSON.stringify({
+        message: "I got this error: " + err.toString(),
+        code: code,
+        lesson:
+          document.querySelector(".adv-task-title")?.textContent || "Python",
+        eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+      }),
+    });
+
+    const evaData = await evaResponse.json();
+    if (evaTyping) evaTyping.style.display = "none";
+    appendEvaMsg(evaData.reply || "Looks like there is an error. Let me help!");
+  }
+
+  advRunBtn.innerHTML = '<i class="fas fa-play"></i> Run';
 });
 
 /* ── Achievement detail panel ── */
