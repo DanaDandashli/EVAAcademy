@@ -195,15 +195,10 @@ document.addEventListener("DOMContentLoaded", () => {
           "X-CSRFToken": CSRF_TOKEN,
         },
         body: JSON.stringify({
-          message:
-            'VALIDATE TASK. Task: "' +
-            instruction +
-            '". Code: ' +
-            code +
-            '. Output: "' +
-            output +
-            '". Did the student demonstrate understanding of the concept? Reply with PASS or FAIL on the first line only, then your feedback on the next line. No code in feedback.',
+          message: instruction,
           code: code,
+          output: output,
+          mode: "validate",
           lesson: document.title || "Python",
           eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
           is_greeting: false,

@@ -14,7 +14,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
-from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, generate_next_task, should_complete_application
+from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, generate_next_task, should_complete_application, validate_task
 
 User = get_user_model()
 
@@ -197,14 +197,17 @@ def DashboardView(request):
     # Add competition wins XP (50 XP per win)
     xp_from_progress += profile.competition_wins * 50
 
-    # ── Level thresholds ──
-    LEVEL_THRESHOLDS = [0, 200, 500, 900, 1400, 2000, 2700, 3500, 4400, 5400]
+    # ── Unlimited level formula ──
+    def get_level_threshold(level):
+        """XP needed to reach this level."""
+        if level <= 1:
+            return 0
+        return int(100 * (level ** 1.8))
 
     def get_level(xp):
         level = 1
-        for i, threshold in enumerate(LEVEL_THRESHOLDS):
-            if xp >= threshold:
-                level = i + 1
+        while get_level_threshold(level + 1) <= xp:
+            level += 1
         return level
 
     new_level = get_level(xp_from_progress)
@@ -216,10 +219,8 @@ def DashboardView(request):
 
     xp_cur = profile.xp_total
     level = profile.level
-    xp_next = LEVEL_THRESHOLDS[level] if level < len(
-        LEVEL_THRESHOLDS) else LEVEL_THRESHOLDS[-1] + 1000
-    xp_prev = LEVEL_THRESHOLDS[level - 1] if level - \
-        1 < len(LEVEL_THRESHOLDS) else 0
+    xp_next = get_level_threshold(level + 1)
+    xp_prev = get_level_threshold(level)
     xp_range = xp_next - xp_prev
     xp_pct = min(round(((xp_cur - xp_prev) / xp_range) * 100),
                  100) if xp_range else 0
@@ -266,7 +267,6 @@ def DashboardView(request):
         sections = lesson.sections.all()
         lesson_sections = []
         lesson_completed = len(sections) > 0
-        
         for section in sections:
             is_completed = section.id in completed_section_ids
             if not is_completed:
@@ -304,13 +304,11 @@ def DashboardView(request):
     for lesson_data in lessons_data:
         lr = lesson_data['lesson'].level_required
         if prev_level_required is not None and lr != prev_level_required:
-            xp_needed = LEVEL_THRESHOLDS[lr - 1] if lr - \
-                1 < len(LEVEL_THRESHOLDS) else 0
             level_gates.append({
                 'before_lesson': lesson_data['lesson'].id,
                 'level':         lr,
                 'unlocked':      level >= lr,
-                'xp_needed':     xp_needed,
+                'xp_needed':     get_level_threshold(lr),
             })
         prev_level_required = lr
 
@@ -341,12 +339,7 @@ def DashboardView(request):
     xp_today = min(xp_today, daily_goal)
     daily_goal_pct = round((xp_today / daily_goal) * 100) if daily_goal else 0
 
-
     # ── Achievements ──
-    # completed_progress = UserProgress.objects.filter(
-    #     user=user, completed=True
-    # ).select_related('section')
-
     earned_achievements = []
     unearned_achievements = []
 
@@ -392,14 +385,12 @@ def DashboardView(request):
             'is_complete': is_complete,
         })
 
-
-    # ── Completed topics for competition ──
+    # ── Completed topics ──
     completed_lessons = [
         l['lesson'].title
         for l in lessons_data
         if l['completed_count'] > 0
     ]
-
     completed_topics = ', '.join(completed_lessons) if completed_lessons else 'No topics yet'
     completed_quests_count = sum(1 for uq in user_quests if uq['is_complete'])
 
@@ -419,10 +410,10 @@ def DashboardView(request):
                 break
 
     eva_context = {
-        'level':              level,
-        'completed_count':    completed_sections_count,
-        'weak_areas':         weak_areas[:3],  # top 3 weak areas
-        'completed_lessons':  completed_lessons,
+        'level':             level,
+        'completed_count':   completed_sections_count,
+        'weak_areas':        weak_areas[:3],  # top 3 weak areas
+        'completed_lessons': completed_lessons,
     }
 
     # ── EVA conversation history ──
@@ -679,8 +670,6 @@ def GenerateNextTaskView(request, section_id):
     failed_count  = attempts.filter(passed=False).count()
     avg_attempts  = attempts.aggregate(avg=db_models.Avg('attempts'))['avg'] or 1
 
-    print(f"passed_count={passed_count}, failed_count={failed_count}, avg_attempts={avg_attempts}")
-
     # Check if node should be completed
     if should_complete_application(passed_count, failed_count, avg_attempts):
         return JsonResponse({'complete': True, 'passed_count': passed_count})
@@ -821,63 +810,69 @@ def CompeteResultView(request):
     return JsonResponse({'status': 'ok'})
 
 
-#--- AI Generation ---#
+# --- AI Generation ---#
+
+
 @student_required
 def AdvisorChatView(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
-    # try:
-    #     data = json.loads(request.body)
-    #     print("AdvisorChat data:", data)
-    # except Exception as e:
-    #     print("Error parsing JSON:", e)
-    #     return JsonResponse({'error': 'Invalid JSON'}, status=400)
     data = json.loads(request.body)
     user_message = data.get('message', '').strip()
     user_code = data.get('code', '')
     lesson_title = data.get('lesson', 'Python')
     eva_context = data.get('eva_context', {})
     is_greeting = data.get('is_greeting', False)
+    mode = data.get('mode', 'chat')
+    output = data.get('output', '')
 
     if not user_message:
         return JsonResponse({'error': 'No message'}, status=400)
 
-    # ── Load conversation history from DB ──
-    history = list(
-        EVAConversation.objects.filter(user=request.user)
-        .order_by('-created_at')[:10]
-        .values('role', 'content')
-    )
-    history = list(reversed(history))
-
-    # ── Save user message (skip if auto greeting) ──
-    if not is_greeting:
-        EVAConversation.objects.create(
-            user=request.user,
-            role='user',
-            content=user_message,
-            lesson=lesson_title,
+    if mode == 'validate':
+        reply = validate_task(
+            instruction=user_message,
             code=user_code,
+            output=output,
+            age_group=request.user.age_group,
+        )
+    else:
+        # Load conversation history from DB
+        history = list(
+            EVAConversation.objects.filter(user=request.user)
+            .order_by('-created_at')[:10]
+            .values('role', 'content')
+        )
+        history = list(reversed(history))
+
+        # ── Save user message (skip if auto greeting) ──
+        if not is_greeting:
+            EVAConversation.objects.create(
+                user=request.user,
+                role='user',
+                content=user_message,
+                lesson=lesson_title,
+                code=user_code,
+            )
+
+        # ── Get EVA response ──
+        reply = eva_chat(
+            user_message,
+            user_code,
+            lesson_title,
+            age_group=request.user.age_group,
+            eva_context=eva_context,
+            history=history,
         )
 
-    # ── Get EVA response ──
-    reply = eva_chat(
-        user_message,
-        user_code,
-        lesson_title,
-        age_group=request.user.age_group,
-        eva_context=eva_context,
-        history=history,
-    )
-
-    # ── Save EVA response ──
-    EVAConversation.objects.create(
-        user=request.user,
-        role='assistant',
-        content=reply,
-        lesson=lesson_title,
-        code='',
-    )
+        # ── Save EVA response ──
+        EVAConversation.objects.create(
+            user=request.user,
+            role='assistant',
+            content=reply,
+            lesson=lesson_title,
+            code='',
+        )
 
     return JsonResponse({'reply': reply})

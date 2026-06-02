@@ -200,6 +200,48 @@ Return ONLY valid JSON, no markdown, no explanation:
         return []
 
 
+def validate_task(instruction, code, output, age_group='child'):
+    """Strictly validate if student completed the task."""
+
+    prompt = f"""You are a strict Python coding task validator.
+
+Task: "{instruction}"
+Student code:
+{code}
+Output: "{output}"
+
+Evaluate if the student genuinely understood and completed the task.
+
+General validation principles:
+- The student must show real understanding, not just copy placeholder text
+- Generic or meaningless values that don't relate to the task show lack of understanding
+- The code structure must match what the task requires
+- Output must be meaningful and relevant to the task
+
+Reply EXACTLY with:
+PASS
+[1-2 sentences of encouraging feedback]
+
+OR
+
+FAIL
+[1 guiding question to help them think deeper, no code or syntax]"""
+
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=__MaxTokens__,
+            temperature=__Temperature__,
+            messages=[
+                {"role": "system", "content": "You are a strict but fair task validator. First line must be exactly PASS or FAIL."},
+                {"role": "user",   "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return "FAIL\nI am having trouble validating. Try again!"
+    
+
 def generate_next_task(lesson_title, task_number, previous_tasks=None, student_performance=None, age_group='child', completed_lessons=None, student_context=None):
     """Generate ONE task based on student performance so far."""
     if completed_lessons is None:
