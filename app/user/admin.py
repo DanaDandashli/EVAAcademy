@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion, UserProgress, Quest, UserQuest, EVAConversation
+from .models import Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion, UserProgress, Quest, UserQuest, EVAConversation, TaskAttempt
 
 
 @admin.register(User)
@@ -64,6 +64,14 @@ class EVAConversationAdmin(admin.ModelAdmin):
     list_filter = ['role', 'lesson']
     search_fields = ['user__username', 'content']
     ordering = ['-created_at']
+
+
+@admin.register(TaskAttempt)
+class TaskAttemptAdmin(admin.ModelAdmin):
+    list_display = ['user', 'section', 'task_order',
+                    'passed', 'attempts', 'created_at']
+    list_filter = ['passed']
+    search_fields = ['user__username']
 
 
 admin.site.register(Slide)

@@ -5,14 +5,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils import timezone
 from django.db import models
-from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation
+from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
-from .ai import eva_chat
+from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION
 
 User = get_user_model()
 
@@ -483,15 +483,60 @@ def DashboardView(request):
 
 @student_required
 def IntroductionView(request, section_id):
-    section = get_object_or_404(
-        Section, id=section_id, node_type='introduction')
-    slides = section.slides.all()
+    section = get_object_or_404(Section, id=section_id, node_type='introduction')
+    slides = list(section.slides.all().order_by('order'))
+
+    # ── Generate slides if none exist ──
+    if not slides:
+        user = request.user
+        completed_lessons = list(
+            Lesson.objects.filter(
+                sections__userprogress__user=user,
+                sections__userprogress__completed=True
+            ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+        )
+        student_context = get_student_context(user)
+
+        # Get topics from curriculum
+        lesson_topics = []
+        for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+            if curriculum_lesson['title'] == section.lesson.title:
+                lesson_topics = curriculum_lesson['topics']
+                break
+
+        generated = generate_slides(
+            lesson_title=section.lesson.title,
+            age_group=user.age_group,
+            completed_lessons=completed_lessons,
+            student_context=student_context,
+            lesson_topics=lesson_topics,
+        )
+
+        for slide_data in generated:
+            code = slide_data.get('code', '')
+            # Remove surrounding quotes if AI added them
+            if code.startswith('"') and code.endswith('"'):
+                code = code[1:-1]
+            if code.startswith("'") and code.endswith("'"):
+                code = code[1:-1]
+
+            Slide.objects.create(
+                section=section,
+                order=slide_data.get('order', 1),
+                title=slide_data.get('title', ''),
+                explanation=slide_data.get('explanation', ''),
+                code=code,
+            )
+
+        slides = list(section.slides.all().order_by('order'))
+    import json
     context = {
-        'section': section,
-        'lesson':  section.lesson,
-        'user':    request.user,
-        'slides':  slides,
-        'total_slides': slides.count(),
+        'section':      section,
+        'lesson':       section.lesson,
+        'user':         request.user,
+        'slides':       slides,
+        'total_slides': len(slides),
+        'slides_json':  json.dumps([{'order': i+1, 'code': s.code} for i, s in enumerate(slides)]),
     }
     return render(request, 'nodes/introduction.html', context)
 

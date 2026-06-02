@@ -446,3 +446,28 @@ class EVAConversation(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.role} - {self.created_at}"
+
+
+class TaskAttempt(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='task_attempts'
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name='task_attempts'
+    )
+    task_order = models.IntegerField(default=1)
+    code = models.TextField(blank=True, default='')
+    passed = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        unique_together = ('user', 'section', 'task_order')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.section.title} - Task {self.task_order}"
