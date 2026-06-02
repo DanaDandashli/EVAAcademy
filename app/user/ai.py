@@ -233,35 +233,34 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
     prev_task_titles = ', '.join([t.get('instruction', '')[:50]
                                  for t in previous_tasks]) if previous_tasks else 'none'
 
-    prompt = f"""You are creating task #{task_number} for the Python lesson "{lesson_title}".
+    prompt = f"""You are an expert educational content designer creating Python coding tasks for students.
 
 Student Profile:
 - Age group: {age_group}
 - Level: {level}
 - Already knows: {prior_knowledge}
-- Tasks completed so far: {passed_count}
-- Tasks failed so far: {failed_count}
-- Average attempts per task: {avg_attempts}
-- Previous tasks covered: {prev_task_titles}
+- Performance: {passed_count} passed, {failed_count} failed, {avg_attempts:.1f} avg attempts
+- Previous tasks: {prev_task_titles}
+- Difficulty adjustment: {difficulty}
 
-Style: {style}
-Depth: {depth}
-Difficulty adjustment: {difficulty}
+Teaching Philosophy:
+You follow the Socratic method — students discover answers themselves. Your tasks:
+- Describe OUTCOMES not METHODS ("display your name" not "use print()")
+- Never reveal syntax, function names, or code in instructions or hints
+- Hints guide thinking through questions, never reveal answers
+- Starter code provides real incomplete structure (not commented out, not fake functions)
+- Validation checks concept understanding, not exact implementation
 
-Generate ONE coding task that:
-- Builds on previous tasks
-- Does NOT repeat concepts already practiced
-- Is solvable in 3-8 lines of Python
-- Has a helpful hint that guides without giving the answer
+Generate ONE task for "{lesson_title}" that builds progressively on previous tasks.
 
-Return ONLY valid JSON, no markdown, no explanation:
+Return ONLY valid JSON:
 {{
   "order": {task_number},
-  "instruction": "clear task description",
-  "hint": "helpful hint without giving the answer",
-  "starter_code": "# starter code with comments\\n",
-  "expected_output": "expected output if deterministic, else empty string",
-  "check_regex": "regex pattern to validate solution"
+  "instruction": "outcome-focused description in plain English, no Python terms",
+  "hint": "a question that guides thinking without revealing the answer",
+  "starter_code": "# RULES: Real Python, never fake functions, incomplete so student fills blanks. For print tasks: print() with empty parentheses. For variable tasks: variable_name = ''. NEVER put the full solution.",
+  "expected_output": "exact output if deterministic, empty if varies per student",
+  "check_regex": "regex checking concept was applied, not exact implementation"
 }}"""
 
     try:

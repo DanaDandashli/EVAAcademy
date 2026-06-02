@@ -235,7 +235,8 @@
 }
 
 .app-complete-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 128, 128,0.4); }
-.app-complete-btn.hidden { display: none; }
+/* .app-complete-btn.hidden { display: none; } */
+.hidden { display: none !important; }
 
 @keyframes completePop {
   0%   { transform: scale(0.8); opacity: 0; }

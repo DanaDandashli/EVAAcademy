@@ -167,6 +167,13 @@ class Task(models.Model):
         on_delete=models.CASCADE,
         related_name='tasks'
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tasks'
+    )
     order = models.IntegerField()
     instruction = models.TextField()
     hint = models.TextField(blank=True, default='')

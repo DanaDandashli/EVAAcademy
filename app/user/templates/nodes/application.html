@@ -55,6 +55,8 @@
         </button>
       </form>
 
+      <input type="hidden" id="sectionId" value="{{ section.id }}"/>
+      <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
     </div>
 
     <!-- MIDDLE: Code editor -->
@@ -108,15 +110,6 @@
       </div>
 
       <div class="app-eva-messages" id="evaMessages">
-        <div class="app-eva-msg">
-          <div class="app-eva-msg-avatar">
-            <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
-          </div>
-          <div class="app-eva-msg-bubble">
-            <p>👋 Welcome! Let's build something together.</p>
-            <p>Start with <strong>Step 1</strong> — create a variable called <code>name</code>. Type it in the editor and click <strong>Run</strong>!</p>
-          </div>
-        </div>
       </div>
 
       <div class="app-eva-typing hidden" id="evaTyping">
@@ -145,8 +138,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 <script>
+  const SECTION_ID = {{ section.id }};
   const TASKS = {{ tasks_json|safe }};
   const TOTAL_TASKS = {{ total_tasks }};
+  const EVA_CONTEXT = {
+    level: {{ level }},
+    completedCount: {{ completed_sections_count|default:0 }},
+    weakAreas: [],
+    completedLessons: [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}]
+  };
 </script>
 <script src="{% static 'js/application.js' %}"></script>
 {% endblock %}

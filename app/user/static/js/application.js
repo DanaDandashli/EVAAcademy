@@ -2,16 +2,12 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // ── State ──
-  let currentStep = 1;
-
-  // Build steps from database tasks
-  const steps = TASKS.map((task) => ({
-    check: (code) => new RegExp(task.check_regex).test(code),
-    hint: task.hint,
-    success: `✅ Step ${task.order} complete! Keep going!`,
-  }));
-
-  const totalSteps = TOTAL_TASKS;
+  let currentTask = TASKS[0] || null;
+  let taskNumber = 1;
+  let failCount = 0;
+  let passCount = 0;
+  const CSRF_TOKEN =
+    document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
 
   // ── Init CodeMirror ──
   const editor = CodeMirror.fromTextArea(
@@ -28,40 +24,221 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   );
 
-  editor.setValue("# Write your Python code here\n\n");
+  if (currentTask) {
+    editor.setValue(
+      currentTask.starter_code || "# Write your Python code here\n\n",
+    );
+  }
   setTimeout(() => editor.refresh(), 100);
 
-  // ── Helpers ──
-  function updateProgress() {
-    const pct = ((currentStep - 1) / totalSteps) * 100;
-    document.getElementById("progressFill").style.width = pct + "%";
+  // ── Skulpt execution ──
+  function runCode(code) {
+    return new Promise((resolve) => {
+      let output = "";
+
+      function outf(text) {
+        output += text;
+      }
+
+      function builtinRead(x) {
+        if (
+          Sk.builtinFiles === undefined ||
+          Sk.builtinFiles["files"][x] === undefined
+        )
+          throw "File not found: " + x;
+        return Sk.builtinFiles["files"][x];
+      }
+
+      Sk.configure({ output: outf, read: builtinRead });
+
+      Sk.misceval
+        .asyncToPromise(() =>
+          Sk.importMainWithBody("<stdin>", false, code, true),
+        )
+        .then(() => resolve({ output, error: null }))
+        .catch((err) => resolve({ output, error: err.toString() }));
+    });
   }
 
-  function setStepStatus(stepNum, status) {
-    const stepEl = document.querySelector(`.app-step[data-step="${stepNum}"]`);
-    if (!stepEl) return;
+  // ── Display output ──
+  function showOutput(output, error) {
+    const body = document.getElementById("outputBody");
+    const status = document.getElementById("outputStatus");
+    body.innerHTML = "";
 
-    stepEl.dataset.status = status;
-    const dot = stepEl.querySelector(".app-step-dot");
-    dot.className = "app-step-dot " + status;
+    const cmdEl = document.createElement("div");
+    cmdEl.className = "adv-out-line cmd";
+    cmdEl.textContent = "$ python main.py";
+    body.appendChild(cmdEl);
 
-    if (status === "done") {
-      dot.innerHTML = '<i class="fas fa-check"></i>';
-      stepEl.querySelector(".app-step-label").style.color = "#10b981";
-    } else if (status === "active") {
-      dot.innerHTML = `<span>${stepNum}</span>`;
+    if (output) {
+      output.split("\n").forEach((line) => {
+        if (!line) return;
+        const el = document.createElement("div");
+        el.className = "adv-out-line cmd";
+        el.textContent = line;
+        body.appendChild(el);
+      });
+    }
+
+    if (error) {
+      error.split("\n").forEach((line) => {
+        if (!line) return;
+        const el = document.createElement("div");
+        el.className = "adv-out-line err";
+        el.textContent = line;
+        body.appendChild(el);
+      });
+      status.textContent = "error";
+      status.className = "app-output-status error";
     } else {
-      dot.innerHTML = '<i class="fas fa-lock"></i>';
+      status.textContent = "done";
+      status.className = "app-output-status success";
     }
   }
 
-  function showXpBadge(stepNum) {
-    const badge = document.getElementById(`xp-${stepNum}`);
-    if (badge) badge.classList.remove("hidden");
+  // ── Update left panel ──
+  function updateStepsPanel() {
+    const list = document.getElementById("stepsList");
+    if (!list) return;
+    list.innerHTML = "";
+
+    for (let i = 1; i < taskNumber; i++) {
+      const div = document.createElement("div");
+      div.className = "app-step";
+      div.innerHTML = `
+        <div class="app-step-indicator">
+          <div class="app-step-dot done"><i class="fas fa-check"></i></div>
+        </div>
+        <div class="app-step-content">
+          <span class="app-step-label" style="color:#10b981">Step ${i} — Complete</span>
+        </div>`;
+      list.appendChild(div);
+    }
+
+    if (currentTask) {
+      const div = document.createElement("div");
+      div.className = "app-step";
+      div.innerHTML = `
+        <div class="app-step-indicator">
+          <div class="app-step-dot active"><span>${taskNumber}</span></div>
+        </div>
+        <div class="app-step-content">
+          <span class="app-step-label" style="color:var(--primary)">Step ${taskNumber} — Current</span>
+          <p class="app-step-task">${currentTask.instruction}</p>
+          ${failCount >= 2 ? '<p style="font-size:0.78rem;color:#f59e0b;margin-top:6px;">💡 ' + currentTask.hint + "</p>" : ""}
+        </div>`;
+      list.appendChild(div);
+    }
+
+    const pct = ((taskNumber - 1) / Math.max(taskNumber, 3)) * 100;
+    const fill = document.getElementById("progressFill");
+    if (fill) fill.style.width = pct + "%";
   }
 
+  // ── EVA simple message ──
+  async function addEvaAIMessage(userContext) {
+    const messages = document.getElementById("evaMessages");
+    const typing = document.getElementById("evaTyping");
+    if (!messages || !typing) return;
+
+    typing.classList.remove("hidden");
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+      const response = await fetch("/advisor/chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          message: userContext,
+          code: editor.getValue(),
+          lesson: document.title || "Python",
+          eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+          is_greeting: false,
+        }),
+      });
+
+      const data = await response.json();
+      typing.classList.add("hidden");
+
+      const div = document.createElement("div");
+      div.className = "app-eva-msg";
+      div.innerHTML = `
+        <div class="app-eva-msg-avatar">
+          <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
+        </div>
+        <div class="app-eva-msg-bubble"><p>${data.reply || "Keep going!"}</p></div>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    } catch (err) {
+      typing.classList.add("hidden");
+    }
+  }
+
+  // ── EVA validation ──
+  async function askEvaToValidate(instruction, code, output) {
+    const messages = document.getElementById("evaMessages");
+    const typing = document.getElementById("evaTyping");
+    if (!messages || !typing) return { passed: false };
+
+    typing.classList.remove("hidden");
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+      const response = await fetch("/advisor/chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          message:
+            'VALIDATE TASK. Task: "' +
+            instruction +
+            '". Code: ' +
+            code +
+            '. Output: "' +
+            output +
+            '". Did the student demonstrate understanding of the concept? Reply with PASS or FAIL on the first line only, then your feedback on the next line. No code in feedback.',
+          code: code,
+          lesson: document.title || "Python",
+          eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+          is_greeting: false,
+        }),
+      });
+
+      const data = await response.json();
+      const reply = data.reply || "";
+      const lines = reply.split("\n").filter((l) => l.trim());
+      const first = lines[0]?.trim().toUpperCase();
+      const feedback = lines.slice(1).join(" ").trim() || reply;
+
+      typing.classList.add("hidden");
+
+      const div = document.createElement("div");
+      div.className = "app-eva-msg";
+      div.innerHTML = `
+        <div class="app-eva-msg-avatar">
+          <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
+        </div>
+        <div class="app-eva-msg-bubble"><p>${feedback}</p></div>`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+
+      return { passed: first === "PASS", reply: feedback };
+    } catch (err) {
+      typing.classList.add("hidden");
+      return { passed: false, reply: "Having trouble connecting. Try again!" };
+    }
+  }
+
+  // ── XP float ──
   function floatXP(text) {
     const container = document.getElementById("xpFloatContainer");
+    if (!container) return;
     const el = document.createElement("div");
     el.className = "xp-float";
     el.textContent = text;
@@ -71,40 +248,17 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => el.remove(), 1200);
   }
 
-  function addEvaMessage(html) {
-    const messages = document.getElementById("evaMessages");
-    const typing = document.getElementById("evaTyping");
-
-    typing.classList.remove("hidden");
-    messages.scrollTop = messages.scrollHeight;
-
-    setTimeout(
-      () => {
-        typing.classList.add("hidden");
-        const div = document.createElement("div");
-        div.className = "app-eva-msg";
-        div.innerHTML = `
-        <div class="app-eva-msg-avatar">
-          <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
-        </div>
-        <div class="app-eva-msg-bubble"><p>${html}</p></div>
-      `;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-      },
-      1000 + Math.random() * 500,
-    );
-  }
-
+  // ── Confetti ──
   function launchConfetti() {
     const canvas = document.getElementById("appConfetti");
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const colors = [
-      "#7c3aed",
-      "#a855f7",
+      "#008080",
+      "#00a0a0",
       "#10b981",
       "#f59e0b",
       "#ec4899",
@@ -147,90 +301,112 @@ document.addEventListener("DOMContentLoaded", () => {
     draw();
   }
 
-  // ── Run button ──
-  document.getElementById("runBtn").addEventListener("click", () => {
-    const code = editor.getValue();
-    const output = document.getElementById("outputBody");
-    const status = document.getElementById("outputStatus");
-    const runBtn = document.getElementById("runBtn");
-    const hint = document.getElementById("stepHint");
+  // ── Load next task ──
+  async function loadNextTask() {
+    try {
+      const response = await fetch("/lesson/" + SECTION_ID + "/next-task/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          passed_task_order: taskNumber,
+          code: editor.getValue(),
+        }),
+      });
 
+      const data = await response.json();
+
+      if (data.complete) {
+        launchConfetti();
+        floatXP("+30 XP BONUS!");
+        document.getElementById("progressFill").style.width = "100%";
+        document.getElementById("completeBtn").classList.remove("hidden");
+        addEvaAIMessage(
+          "The student has completed all application tasks successfully. Congratulate them warmly in 2 sentences and tell them they are ready for the next challenge.",
+        );
+        return;
+      }
+
+      currentTask = data.task;
+      taskNumber++;
+      failCount = 0;
+      passCount++;
+
+      editor.setValue(currentTask.starter_code || "# Write your code here\n\n");
+      updateStepsPanel();
+      addEvaAIMessage(
+        "The student just passed a task. Congratulate them in 1 sentence and encourage them to try the next challenge shown on the left panel. Do NOT write code or repeat the task.",
+      );
+    } catch (err) {
+      console.error("Error loading next task:", err);
+    }
+  }
+
+  // ── Run button ──
+  document.getElementById("runBtn").addEventListener("click", async () => {
+    if (!currentTask) return;
+
+    const runBtn = document.getElementById("runBtn");
     runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
     runBtn.disabled = true;
 
-    setTimeout(() => {
-      runBtn.innerHTML = '<i class="fas fa-play"></i> Run';
-      runBtn.disabled = false;
+    const code = editor.getValue();
+    const result = await runCode(code);
 
-      const stepData = steps[currentStep - 1];
+    showOutput(result.output, result.error);
 
-      if (stepData.check(code)) {
-        // ✅ Step passed
-        output.innerHTML = `<span class="adv-out-line cmd">✓ Step ${currentStep} complete!</span>`;
-        status.textContent = "● Passed";
-        status.className = "app-output-status success";
+    runBtn.innerHTML = '<i class="fas fa-play"></i> Run';
+    runBtn.disabled = false;
 
-        setStepStatus(currentStep, "done");
-        showXpBadge(currentStep);
-        floatXP("+10 XP");
-        addEvaMessage(stepData.success);
-        hint.textContent = "";
+    if (result.error) {
+      failCount++;
+      await askEvaToValidate(
+        currentTask.instruction,
+        code,
+        "ERROR: " + result.error,
+      );
+      updateStepsPanel();
+      return;
+    }
 
-        updateProgress();
+    const validation = await askEvaToValidate(
+      currentTask.instruction,
+      code,
+      result.output,
+    );
 
-        if (currentStep < totalSteps) {
-          currentStep++;
-          setStepStatus(currentStep, "active");
-        } else {
-          // All steps done
-          launchConfetti();
-          floatXP("+40 XP BONUS!");
-          document.getElementById("progressFill").style.width = "100%";
-          document.getElementById("completeBtn").classList.remove("hidden");
-          addEvaMessage(
-            "🏆 <strong>You did it!</strong> All steps complete! Click <strong>Complete & Continue</strong> to move on.",
-          );
-        }
-      } else {
-        // ❌ Step failed
-        output.innerHTML = `<span class="adv-out-line err">Step ${currentStep} not complete yet — check your code.</span>`;
-        status.textContent = "● Check again";
-        status.className = "app-output-status error";
-        hint.textContent = "";
-
-        addEvaMessage(`💡 Not quite! ${stepData.hint}`);
-      }
-    }, 700);
+    if (validation.passed) {
+      floatXP("+10 XP");
+      passCount++;
+      failCount = 0;
+      updateStepsPanel();
+      await loadNextTask();
+    } else {
+      failCount++;
+      updateStepsPanel();
+    }
   });
 
   // ── Reset ──
   document.getElementById("resetBtn").addEventListener("click", () => {
-    editor.setValue("# Write your Python code here\n\n");
+    if (currentTask) {
+      editor.setValue(currentTask.starter_code || "# Write your code here\n\n");
+    }
     document.getElementById("outputBody").innerHTML =
       '<span class="app-output-placeholder">Run your code to see output...</span>';
     document.getElementById("outputStatus").textContent = "";
-    document.getElementById("outputStatus").className = "app-output-status";
-    document.getElementById("stepHint").textContent = "";
-    document.getElementById("completeBtn").classList.add("hidden");
-    document.getElementById("progressFill").style.width = "0%";
-
-    currentStep = 1;
-    for (let i = 1; i <= totalSteps; i++) {
-      setStepStatus(i, i === 1 ? "active" : "locked");
-      const badge = document.getElementById(`xp-${i}`);
-      if (badge) badge.classList.add("hidden");
-    }
-    addEvaMessage(
-      "🔄 Reset! Let's start fresh. Begin with Step 1 — " +
-        TASKS[0].instruction,
+    addEvaAIMessage(
+      "The student reset their code. Encourage them to try again in 1 sentence.",
     );
   });
 
-  // ── Init ──
-  updateProgress();
-  setStepStatus(1, "active");
-  addEvaMessage(
-    "👋 Welcome! Let's build something together. Start with <strong>Step 1</strong> — " +
-      TASKS[0].instruction,
-  );
+  // ── Initialize ──
+  updateStepsPanel();
+  if (currentTask) {
+    addEvaAIMessage(
+      "Greet the student warmly in 1 sentence. Tell them EVA is here to help if they get stuck. Do NOT mention the task, do NOT write any code.",
+    );
+  }
 });

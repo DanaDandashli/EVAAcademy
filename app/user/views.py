@@ -1,3 +1,4 @@
+import json, re
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -5,14 +6,15 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils import timezone
 from django.db import models
-from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation
+from django.db import models as db_models
+from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
-from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION
+from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, generate_next_task, should_complete_application
 
 User = get_user_model()
 
@@ -529,7 +531,7 @@ def IntroductionView(request, section_id):
             )
 
         slides = list(section.slides.all().order_by('order'))
-    import json
+    
     context = {
         'section':      section,
         'lesson':       section.lesson,
@@ -573,25 +575,172 @@ def CompleteSectionView(request, section_id):
 def ApplicationView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='application')
-    tasks = section.tasks.all()
+    user = request.user
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+    )
+    student_context = get_student_context(user)
+
+    # Get task attempts for this section
+    attempts = TaskAttempt.objects.filter(
+        user=user, section=section).order_by('task_order')
+    passed_count = attempts.filter(passed=True).count()
+    failed_count = attempts.filter(passed=False).count()
+    avg_attempts = attempts.aggregate(avg=models.Avg('attempts'))['avg'] or 1
+
+    # Check if already completed
+    already_completed = UserProgress.objects.filter(
+        user=user, section=section, completed=True
+    ).exists()
+
+    # Get tasks for THIS student only
+    tasks = list(section.tasks.filter(user=user).order_by('order'))
+
+    # Generate first task if none exist for this student
+    if not tasks:
+        task_data = generate_next_task(
+            lesson_title=section.lesson.title,
+            task_number=1,
+            previous_tasks=[],
+            student_performance={
+                'passed_count': 0,
+                'failed_count': 0,
+                'avg_attempts': 1,
+            },
+            age_group=user.age_group,
+            completed_lessons=completed_lessons,
+            student_context=student_context,
+        )
+        if task_data:
+            Task.objects.create(
+                section=section,
+                user=user,
+                order=1,
+                instruction=task_data.get('instruction', ''),
+                hint=task_data.get('hint', ''),
+                starter_code=task_data.get('starter_code', ''),
+                expected_output=task_data.get('expected_output', ''),
+                check_regex=task_data.get('check_regex', ''),
+            )
+            tasks = list(section.tasks.filter(user=user).order_by('order'))
+
     context = {
-        'section':     section,
-        'lesson':      section.lesson,
-        'user':        request.user,
-        'tasks':       tasks,
-        'total_tasks': tasks.count(),
-        'tasks_json':  [
-            {
-                'id':          t.id,
-                'order':       t.order,
-                'instruction': t.instruction,
-                'hint':        t.hint,
-                'check_regex': t.check_regex,
-            }
-            for t in tasks
-        ],
+        'section':                  section,
+        'lesson':                   section.lesson,
+        'user':                     user,
+        'tasks':                    tasks,
+        'tasks_json':               json.dumps([{
+            'id':             t.id,
+            'order':          t.order,
+            'instruction':    t.instruction,
+            'hint':           t.hint,
+            'starter_code':   t.starter_code,
+            'expected_output': t.expected_output,
+            'check_regex':    t.check_regex,
+        } for t in tasks]),
+        'total_tasks':              len(tasks),
+        'passed_count':             passed_count,
+        'already_completed':        already_completed,
+        'completed_lessons':        completed_lessons,
+        'level':                    student_context.get('level', 1),
+        'completed_sections_count': TaskAttempt.objects.filter(user=user, passed=True).count(),
     }
     return render(request, 'nodes/application.html', context)
+
+
+@student_required
+@require_POST
+def GenerateNextTaskView(request, section_id):
+    section = get_object_or_404(Section, id=section_id, node_type='application')
+    user    = request.user
+    data    = json.loads(request.body)
+
+    passed_task_order = data.get('passed_task_order', 1)
+    student_code      = data.get('code', '')
+
+    # Save task attempt
+    attempt, _ = TaskAttempt.objects.get_or_create(
+        user       = user,
+        section    = section,
+        task_order = passed_task_order,
+    )
+    attempt.passed   = True
+    attempt.code     = student_code
+    attempt.attempts = attempt.attempts + 1
+    attempt.save()
+
+    # Get performance stats
+    attempts      = TaskAttempt.objects.filter(user=user, section=section)
+    passed_count  = attempts.filter(passed=True).count()
+    failed_count  = attempts.filter(passed=False).count()
+    avg_attempts  = attempts.aggregate(avg=db_models.Avg('attempts'))['avg'] or 1
+
+    print(f"passed_count={passed_count}, failed_count={failed_count}, avg_attempts={avg_attempts}")
+
+    # Check if node should be completed
+    if should_complete_application(passed_count, failed_count, avg_attempts):
+        return JsonResponse({'complete': True, 'passed_count': passed_count})
+
+    # Get existing tasks
+    existing_tasks = list(section.tasks.filter(user=user).order_by('order').values(
+        'instruction', 'hint', 'starter_code'
+    ))
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+    )
+    student_context = get_student_context(user)
+
+    # Generate next task
+    next_order = section.tasks.filter(user=user).count() + 1
+    task_data  = generate_next_task(
+        lesson_title        = section.lesson.title,
+        task_number         = next_order,
+        previous_tasks      = existing_tasks,
+        student_performance = {
+            'passed_count': passed_count,
+            'failed_count': failed_count,
+            'avg_attempts': avg_attempts,
+        },
+        age_group           = user.age_group,
+        completed_lessons   = completed_lessons,
+        student_context     = student_context,
+    )
+
+    if not task_data:
+        return JsonResponse({'error': 'Failed to generate task'}, status=500)
+
+    # Save new task
+    new_task = Task.objects.create(
+        section         = section,
+        user            = user,
+        order           = next_order,
+        instruction     = task_data.get('instruction', ''),
+        hint            = task_data.get('hint', ''),
+        starter_code    = task_data.get('starter_code', ''),
+        expected_output = task_data.get('expected_output', ''),
+        check_regex     = task_data.get('check_regex', ''),
+    )
+
+    return JsonResponse({
+        'complete': False,
+        'task': {
+            'id':             new_task.id,
+            'order':          new_task.order,
+            'instruction':    new_task.instruction,
+            'hint':           new_task.hint,
+            'starter_code':   new_task.starter_code,
+            'expected_output': new_task.expected_output,
+            'check_regex':    new_task.check_regex,
+        }
+    })
 
 
 @student_required
@@ -661,7 +810,6 @@ def CompeteRoomView(request):
 @student_required
 @require_POST
 def CompeteResultView(request):
-    import json
     data = json.loads(request.body)
     won = data.get('won', False)
     profile = StudentProfile.objects.get(user=request.user)
@@ -678,8 +826,7 @@ def CompeteResultView(request):
 def AdvisorChatView(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-    import json
+    
     # try:
     #     data = json.loads(request.body)
     #     print("AdvisorChat data:", data)
