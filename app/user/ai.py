@@ -558,3 +558,33 @@ Your Teaching Philosophy:
 
     except Exception:
         return "I am having trouble thinking right now. Try again in a moment!"
+
+
+def generate_solution(instruction, age_group='child'):
+    """Generate a solution with explanation for a challenge."""
+    style = _get_style(age_group)
+
+    prompt = f"""A student just finished a Python challenge. Show them the correct solution.
+
+Challenge: "{instruction}"
+
+Provide:
+1. The complete Python solution in a code block
+2. A brief explanation of each line in simple terms
+
+Style: {style}
+Be encouraging and educational."""
+
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=__MaxTokens__,
+            temperature=__Temperature__,
+            messages=[
+                {"role": "system", "content": "You are an educational Python tutor. Always provide the solution when asked after a challenge is completed."},
+                {"role": "user",   "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception:
+        return "Solution unavailable. Practice the challenge again!"

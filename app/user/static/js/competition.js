@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
             '". Show the Python code in a code block, then explain each line simply in 2-3 sentences. Keep it encouraging and educational.',
           code: "",
           lesson: "Python",
+          mode: "solution",
           eva_context: {},
           is_greeting: false,
         }),

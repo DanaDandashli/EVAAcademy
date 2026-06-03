@@ -17,7 +17,7 @@ from django.core.cache import cache
 from functools import wraps
 from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
                  generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test,
-                 generate_competition_challenge)
+                 generate_competition_challenge, generate_solution)
 
 User = get_user_model()
 
@@ -1085,6 +1085,11 @@ def AdvisorChatView(request):
             instruction=user_message,
             code=user_code,
             output=output,
+            age_group=request.user.age_group,
+        )
+    elif mode == 'solution':
+        reply = generate_solution(
+            instruction=user_message,
             age_group=request.user.age_group,
         )
     else:
