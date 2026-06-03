@@ -7,14 +7,16 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db import models
 from django.db import models as db_models
-from .models import NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt
+from .models import (NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, 
+                     ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt, TestQuestion, TestAttempt)
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
-from .ai import eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, generate_next_task, should_complete_application, validate_task
+from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
+                 generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test)
 
 User = get_user_model()
 
@@ -613,7 +615,7 @@ def ApplicationView(request, section_id):
                 order=1,
                 instruction=task_data.get('instruction', ''),
                 hint=task_data.get('hint', ''),
-                starter_code=task_data.get('starter_code', ''),
+                starter_code='# Write your solution here\n',
                 expected_output=task_data.get('expected_output', ''),
                 check_regex=task_data.get('check_regex', ''),
             )
@@ -713,7 +715,7 @@ def GenerateNextTaskView(request, section_id):
         order           = next_order,
         instruction     = task_data.get('instruction', ''),
         hint            = task_data.get('hint', ''),
-        starter_code    = task_data.get('starter_code', ''),
+        starter_code    = '# Write your solution here\n',
         expected_output = task_data.get('expected_output', ''),
         check_regex     = task_data.get('check_regex', ''),
     )
@@ -750,26 +752,223 @@ def CompetitionView(request, section_id):
 @student_required
 def TestView(request, section_id):
     section = get_object_or_404(Section, id=section_id, node_type='test')
-    questions = section.questions.all()
+    user = request.user
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+    )
+    student_context = get_student_context(user)
+
+    # Get weak areas from application node attempts
+    app_section = Section.objects.filter(
+        lesson=section.lesson, node_type='application'
+    ).first()
+
+    weak_areas = []
+    if app_section:
+        failed_attempts = TaskAttempt.objects.filter(
+            user=user, section=app_section, passed=False
+        ).values_list('task_order', flat=True)
+        if failed_attempts:
+            weak_areas = [f"tasks {list(failed_attempts)}"]
+
+    # Get test attempts
+    attempts = TestAttempt.objects.filter(user=user, section=section)
+    passed_count = attempts.filter(passed=True).count()
+    total_score = passed_count * 20
+
+    # Already completed
+    already_completed = UserProgress.objects.filter(
+        user=user, section=section, completed=True
+    ).exists()
+
+    # Get questions for this student
+    questions = list(section.questions.filter(user=user).order_by('order'))
+
+    # Get lesson topics from curriculum
+    lesson_topics = []
+    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+        if curriculum_lesson['title'] == section.lesson.title:
+            lesson_topics = curriculum_lesson['topics']
+            break
+
+    # Get what was actually taught in Introduction slides
+    intro_section = Section.objects.filter(
+        lesson=section.lesson, node_type='introduction').first()
+    taught_concepts = []
+    if intro_section:
+        taught_concepts = list(
+            intro_section.slides.all().values_list('title', flat=True))
+
+    # Generate first question if none exist
+    if not questions:
+        question_data = generate_next_test_question(
+            lesson_title=section.lesson.title,
+            question_number=1,
+            weak_areas=weak_areas,
+            previous_questions=[],
+            age_group=user.age_group,
+            completed_lessons=completed_lessons,
+            lesson_topics=lesson_topics,
+            taught_concepts=taught_concepts,
+            student_context=student_context,
+        )
+        if question_data:
+            TestQuestion.objects.create(
+                section=section,
+                user=user,
+                order=1,
+                instruction=question_data.get('instruction', ''),
+                starter_code='# Write your solution here\n',
+                expected_output=question_data.get('expected_output', ''),
+                check_regex=question_data.get('check_regex', ''),
+                points=20,
+            )
+            questions = list(section.questions.filter(
+                user=user).order_by('order'))
+
     context = {
-        'section':        section,
-        'lesson':         section.lesson,
-        'user':           request.user,
-        'questions':      questions,
-        'total_questions': questions.count(),
-        'total_points':   sum(q.points for q in questions),
-        'questions_json': [
-            {
-                'id':          q.id,
-                'order':       q.order,
-                'instruction': q.instruction,
-                'check_regex': q.check_regex,
-                'points':      q.points,
-            }
-            for q in questions
-        ],
+        'section':          section,
+        'lesson':           section.lesson,
+        'user':             user,
+        'questions':        questions,
+        'questions_json':   json.dumps([{
+            'id':             q.id,
+            'order':          q.order,
+            'instruction':    q.instruction,
+            'starter_code':   q.starter_code,
+            'expected_output': q.expected_output,
+            'check_regex':    q.check_regex,
+            'points':         q.points,
+        } for q in questions]),
+        'total_questions':  len(questions),
+        'passed_count':     passed_count,
+        'total_score':      total_score,
+        'already_completed': already_completed,
+        'section_id':       section.id,
     }
     return render(request, 'nodes/test.html', context)
+
+
+@student_required
+@require_POST
+def GenerateNextTestQuestionView(request, section_id):
+    section = get_object_or_404(Section, id=section_id, node_type='test')
+    user = request.user
+    data = json.loads(request.body)
+
+    passed_question_order = data.get('passed_question_order', 1)
+    student_code = data.get('code', '')
+
+    # Save test attempt
+    attempt, _ = TestAttempt.objects.get_or_create(
+        user=user,
+        section=section,
+        question_order=passed_question_order,
+    )
+    attempt.passed = True
+    attempt.code = student_code
+    attempt.attempts = attempt.attempts + 1
+    attempt.save()
+
+    MAX_QUESTIONS = 5
+
+    # Get performance stats
+    attempts = TestAttempt.objects.filter(user=user, section=section)
+    passed_count = attempts.filter(passed=True).count()
+    total_score = passed_count * 20
+    avg_attempts = attempts.aggregate(
+        avg=db_models.Avg('attempts'))['avg'] or 1
+
+    # Complete when all 5 passed
+    if passed_count >= MAX_QUESTIONS:
+        return JsonResponse({'complete': True, 'score': 100})
+
+    # Get existing questions
+    existing_questions = list(section.questions.filter(user=user).order_by('order').values(
+        'instruction', 'starter_code'
+    ))
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+    )
+    student_context = get_student_context(user)
+
+    # Get weak areas
+    app_section = Section.objects.filter(
+        lesson=section.lesson, node_type='application'
+    ).first()
+    weak_areas = []
+    if app_section:
+        failed_attempts = TaskAttempt.objects.filter(
+            user=user, section=app_section, passed=False
+        ).values_list('task_order', flat=True)
+        if failed_attempts:
+            weak_areas = [f"tasks {list(failed_attempts)}"]
+
+    # Get lesson topics from curriculum
+    lesson_topics = []
+    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+        if curriculum_lesson['title'] == section.lesson.title:
+            lesson_topics = curriculum_lesson['topics']
+            break
+
+    # Get what was actually taught in Introduction slides
+    intro_section = Section.objects.filter(
+        lesson=section.lesson, node_type='introduction').first()
+    taught_concepts = []
+    if intro_section:
+        taught_concepts = list(
+            intro_section.slides.all().values_list('title', flat=True))
+
+    # Generate next question
+    next_order = section.questions.filter(user=user).count() + 1
+    question_data = generate_next_test_question(
+        lesson_title=section.lesson.title,
+        question_number=next_order,
+        weak_areas=weak_areas,
+        previous_questions=existing_questions,
+        age_group=user.age_group,
+        completed_lessons=completed_lessons,
+        lesson_topics=lesson_topics,
+        taught_concepts=taught_concepts,
+        student_context=student_context,
+        avg_attempts=avg_attempts,
+    )
+
+    if not question_data:
+        return JsonResponse({'error': 'Failed to generate question'}, status=500)
+
+    new_question = TestQuestion.objects.create(
+        section=section,
+        user=user,
+        order=next_order,
+        instruction=question_data.get('instruction', ''),
+        starter_code='# Write your solution here\n',
+        expected_output=question_data.get('expected_output', ''),
+        check_regex=question_data.get('check_regex', ''),
+        points=20,
+    )
+
+    return JsonResponse({
+        'complete': False,
+        'score':    total_score,
+        'question': {
+            'id':             new_question.id,
+            'order':          new_question.order,
+            'instruction':    new_question.instruction,
+            'starter_code':   new_question.starter_code,
+            'expected_output': new_question.expected_output,
+            'check_regex':    new_question.check_regex,
+            'points':         new_question.points,
+        }
+    })
 
 
 @student_required
@@ -811,8 +1010,6 @@ def CompeteResultView(request):
 
 
 # --- AI Generation ---#
-
-
 @student_required
 def AdvisorChatView(request):
     if request.method != 'POST':

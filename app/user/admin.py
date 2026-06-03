@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion, UserProgress, Quest, UserQuest, EVAConversation, TaskAttempt
+from .models import (Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion,
+                     UserProgress, Quest, UserQuest, EVAConversation, TaskAttempt, TestAttempt)
 
 
 @admin.register(User)
@@ -69,6 +70,14 @@ class EVAConversationAdmin(admin.ModelAdmin):
 @admin.register(TaskAttempt)
 class TaskAttemptAdmin(admin.ModelAdmin):
     list_display = ['user', 'section', 'task_order',
+                    'passed', 'attempts', 'created_at']
+    list_filter = ['passed']
+    search_fields = ['user__username']
+
+
+@admin.register(TestAttempt)
+class TestAttemptAdmin(admin.ModelAdmin):
+    list_display = ['user', 'section', 'question_order',
                     'passed', 'attempts', 'created_at']
     list_filter = ['passed']
     search_fields = ['user__username']

@@ -3,7 +3,7 @@ from .views import (
     IndexView, ChildrenView, TeenView, AdultView,
     LoginView, RegisterView, LogoutView, DashboardView,
     IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView,
-    AdvisorChatView, GenerateNextTaskView
+    AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView
 )
 
 urlpatterns = [
@@ -21,7 +21,7 @@ urlpatterns = [
     path('lesson/<int:section_id>/next-task/', GenerateNextTaskView, name='next_task'),
     path('lesson/<int:section_id>/competition/',  CompetitionView,  name='competition'),
     path('lesson/<int:section_id>/test/', TestView, name='test'),
-
+    path('lesson/<int:section_id>/next-question/', GenerateNextTestQuestionView, name='next_question'),
     path('compete/', CompeteRoomView, name='compete_room'),
     path('compete/result/', CompeteResultView, name='compete_result'),
 

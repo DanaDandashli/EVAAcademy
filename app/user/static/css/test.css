@@ -293,3 +293,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.82rem;
 }
+
+.test-feedback.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.test-feedback.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.test-feedback.warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }

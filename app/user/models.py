@@ -194,6 +194,13 @@ class TestQuestion(models.Model):
         on_delete=models.CASCADE,
         related_name='questions'
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='test_questions'
+    )
     order = models.IntegerField()
     instruction = models.TextField()
     starter_code = models.TextField(blank=True, default='')
@@ -208,6 +215,31 @@ class TestQuestion(models.Model):
         return f"{self.section.lesson.title} → Question {self.order}"
     
 
+class TestAttempt(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='test_attempts'
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name='test_attempts'
+    )
+    question_order = models.IntegerField(default=1)
+    code = models.TextField(blank=True, default='')
+    passed = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        unique_together = ('user', 'section', 'question_order')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.section.title} - Q{self.question_order}"
+    
+    
 class UserProgress(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE, related_name='progress')

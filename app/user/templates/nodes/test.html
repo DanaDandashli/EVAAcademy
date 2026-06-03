@@ -19,46 +19,34 @@
         <h1 class="test-title">Final Test</h1>
         <p class="test-subtitle">{{ lesson.title }} · No hints · No EVA · Solo</p>
       </div>
-      <!-- Timer -->
-      <div class="test-timer" id="testTimer">
-        <i class="fas fa-clock"></i>
-        <span id="timerVal">10:00</span>
-      </div>
     </div>
 
     <!-- Rules banner -->
     <div class="test-rules-banner">
       <div class="test-rule"><i class="fas fa-ban"></i> No hints</div>
       <div class="test-rule"><i class="fas fa-robot"></i> No EVA</div>
-      <div class="test-rule"><i class="fas fa-clock"></i> Timed</div>
       <div class="test-rule"><i class="fas fa-user"></i> Solo</div>
     </div>
 
     <!-- Task -->
-    <div class="test-task-card">
-      <h2>Your Challenge</h2>
-      <p>Write a complete Python program that demonstrates everything you learned about <strong>{{ lesson.title }}</strong>.</p>
-      <ul class="test-requirements">
-        {% for q in questions %}
-        <li>
-          <i class="fas fa-circle-dot"></i>
-          {{ q.instruction }}
-        </li>
-        {% endfor %}
-      </ul>
+    <div class="test-task-card" id="testTaskCard">
+      <h2>Question 1</h2>
+      {% if questions %}
+      <p>{{ questions.0.instruction }}</p>
+      {% endif %}
     </div>
 
     <!-- Score -->
     <div class="test-score-card">
       <div class="test-score-item">
         <span class="test-score-label">Score</span>
-        <span class="test-score-val" id="testsPassed">0 / {{ total_points }}</span>
+        <span class="test-score-val" id="testsPassed">0 / 0</span>
       </div>
       <div class="test-score-bar-wrap">
         <div class="test-score-bar-fill" id="testScoreBar" style="width:0%"></div>
       </div>
     </div>
-
+    <div id="testFeedback" class="test-feedback" style="display:none;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:600;margin-top:8px;"></div>
   </div>
 
   <!-- RIGHT: Code editor -->
@@ -104,15 +92,16 @@
 </div>
 
 <canvas id="appConfetti"></canvas>
+<input type="hidden" id="sectionId" value="{{ section_id }}"/>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 <script>
-  const QUESTIONS     = {{ questions_json|safe }};
+  const SECTION_ID      = {{ section_id }};
+  const QUESTIONS       = {{ questions_json|safe }};
   const TOTAL_QUESTIONS = {{ total_questions }};
-  const TOTAL_POINTS  = {{ total_points }};
 </script>
 <script src="{% static 'js/test.js' %}"></script>
 {% endblock %}

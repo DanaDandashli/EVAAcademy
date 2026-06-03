@@ -8,7 +8,7 @@ client = OpenAI(
     api_key=settings.OPENROUTER_API_KEY
 )
 __Model__ = "google/gemini-2.5-flash-lite"
-__Temperature__ = 0.7
+__Temperature__ = 0.2
 __MaxTokens__ = 2000
 
 # ── Python Curriculum Foundation ──
@@ -290,7 +290,6 @@ You follow the Socratic method — students discover answers themselves. Your ta
 - Describe OUTCOMES not METHODS ("display your name" not "use print()")
 - Never reveal syntax, function names, or code in instructions or hints
 - Hints guide thinking through questions, never reveal answers
-- Starter code provides real incomplete structure (not commented out, not fake functions)
 - Validation checks concept understanding, not exact implementation
 
 Generate ONE task for "{lesson_title}" that builds progressively on previous tasks.
@@ -300,7 +299,6 @@ Return ONLY valid JSON:
   "order": {task_number},
   "instruction": "outcome-focused description in plain English, no Python terms",
   "hint": "a question that guides thinking without revealing the answer",
-  "starter_code": "# RULES: Real Python, never fake functions, incomplete so student fills blanks. For print tasks: print() with empty parentheses. For variable tasks: variable_name = ''. NEVER put the full solution.",
   "expected_output": "exact output if deterministic, empty if varies per student",
   "check_regex": "regex checking concept was applied, not exact implementation"
 }}"""
@@ -338,8 +336,8 @@ def should_complete_application(passed_count, failed_count, avg_attempts):
     return False
 
 
-def generate_next_test_question(lesson_title, question_number, weak_areas=None, previous_questions=None, age_group='child', completed_lessons=None, student_context=None):
-    """Generate ONE test question targeting weak areas."""
+def generate_next_test_question(lesson_title, question_number, weak_areas=None, previous_questions=None, age_group='child', completed_lessons=None, student_context=None, lesson_topics=None, taught_concepts=None, avg_attempts=1):
+    """Generate ONE test question based on what was actually taught."""
     if completed_lessons is None:
         completed_lessons = []
     if student_context is None:
@@ -348,50 +346,68 @@ def generate_next_test_question(lesson_title, question_number, weak_areas=None, 
         weak_areas = []
     if previous_questions is None:
         previous_questions = []
+    if lesson_topics is None:
+        lesson_topics = []
+    if taught_concepts is None:
+        taught_concepts = []
+
+    # Difficulty based on performance
+    if avg_attempts <= 1.2:
+        difficulty = "challenging"
+    elif avg_attempts >= 2.5:
+        difficulty = "easy"
+    else:
+        difficulty = "moderate"
 
     style = _get_style(age_group)
-    prior_knowledge = ', '.join(
-        completed_lessons) if completed_lessons else 'none'
     level = student_context.get('level', 1)
 
-    weak_context = f"Focus on these weak areas: {', '.join(weak_areas)}." if weak_areas else ''
+    # Assign one specific topic per question
+    if lesson_topics:
+        current_topic = lesson_topics[(
+            question_number - 1) % len(lesson_topics)]
+    else:
+        current_topic = lesson_title
+
     prev_q_titles = ', '.join([q.get('instruction', '')[
                               :50] for q in previous_questions]) if previous_questions else 'none'
+    weak_context = f"Weak areas: {', '.join(weak_areas)}." if weak_areas else ''
+    taught_str = ', '.join(taught_concepts) if taught_concepts else ''
 
-    prompt = f"""You are creating test question #{question_number} for the Python lesson "{lesson_title}".
+    prompt = f"""Create Python test question #{question_number} of 5 for lesson "{lesson_title}".
 
-Student Profile:
-- Age group: {age_group}
-- Level: {level}
-- Already knows: {prior_knowledge}
-- {weak_context}
-- Previous questions covered: {prev_q_titles}
+Test ONLY this topic: {current_topic}
+Concepts actually taught in this lesson: {taught_str}
+Previous questions covered: {prev_q_titles} — do NOT repeat.
+{weak_context}
 
+Student: age_group={age_group}, level={level}, difficulty={difficulty}
 Style: {style}
 
-Generate ONE test question that:
-- Tests deeper understanding of "{lesson_title}"
-- Does NOT repeat concepts from previous questions
-- Is harder than application tasks
-- Worth 25 points
+Rules:
+- ONLY test concepts from this list: {taught_str}
+- Do NOT test any concept not in the taught list
+- Student must WRITE Python code — no theory, no explanations
+- Do NOT specify exact variable names or values — test the concept, not memorization
+- Questions must test concept understanding, not exact implementation
+- This is question {question_number} of 5
 
-Return ONLY valid JSON, no markdown, no explanation:
+Return ONLY valid JSON:
 {{
   "order": {question_number},
-  "instruction": "clear question description",
-  "starter_code": "# starter code\\n",
-  "expected_output": "expected output if deterministic, else empty string",
-  "check_regex": "regex pattern to validate solution",
-  "points": 25
+  "instruction": "Write a Python program that...",
+  "expected_output": "exact output if deterministic, else empty string",
+  "check_regex": "simple regex validating correct concept was used",
+  "points": 20
 }}"""
 
     try:
         response = client.chat.completions.create(
             model=__Model__,
-            max_tokens=1000,
+            max_tokens=__MaxTokens__,
             temperature=__Temperature__,
             messages=[
-                {"role": "system", "content": "You return only raw valid JSON. No markdown. No explanation."},
+                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
                 {"role": "user",   "content": prompt}
             ]
         )
@@ -399,7 +415,7 @@ Return ONLY valid JSON, no markdown, no explanation:
     except Exception as e:
         print(f"generate_next_test_question error: {e}")
         return None
-
+    
 
 def should_complete_test(passed_count, total_questions, total_score, max_score):
     """Decide if student has passed the test."""
