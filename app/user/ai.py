@@ -498,9 +498,17 @@ def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child
     if completed:
         progress_summary += f"Completed lessons: {', '.join(completed)}. "
     if weak_areas:
-        areas = ', '.join(
-            [f"{w['lesson']} - {w['nodeType']} node" for w in weak_areas])
-        progress_summary += f"Student needs practice in: {areas}. Give them a specific coding challenge related to these topics, not a quiz. IMPORTANT: Check the conversation history carefully and never repeat a challenge already assigned. Always progress to something new."
+        areas = []
+        for w in weak_areas:
+            concept = w.get('concept', '')
+            attempts = w.get('attempts', 0)
+            if concept:
+                areas.append(
+                    f"{w['lesson']} — struggled {attempts}x with: {concept[:60]}")
+            else:
+                areas.append(f"{w['lesson']} ({w.get('nodeType', '')})")
+
+        progress_summary += f"Student's specific weak areas: {'; '.join(areas)}. IMPORTANT: Immediately assign ONE targeted practice challenge that addresses the first weak area. Do not just mention the weak area — give a specific coding task related to it."
     else:
         progress_summary += " IMPORTANT: Check the conversation history carefully and never repeat a challenge already assigned. Always progress to something new."
     
@@ -516,6 +524,8 @@ Student's current code:
 ```python
 {user_code}
 ```
+
+IMPORTANT: Always analyze the student's code above, not just their message. If the code doesn't use the required concept (variables, loops, etc.), the task is NOT complete regardless of the output.
 
 Your Teaching Philosophy:
 1. TASK ASSIGNMENT — Assign ONE clear challenge at a time. State exactly what the student needs to DO, not how to do it. Never mention specific variable names or syntax in the task description.

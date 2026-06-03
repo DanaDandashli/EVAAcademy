@@ -404,18 +404,47 @@ def DashboardView(request):
             continue  # skip locked lessons
         if lesson['completed_count'] == 0:
             continue  # skip lessons user hasn't started
-        for section in lesson['sections']:
-            if not section['is_completed'] and section['section'].node_type in ['application', 'test']:
-                weak_areas.append({
-                    'lesson': lesson['lesson'].title,
-                    'node_type': section['section'].node_type,
-                })
-                break
+
+        lesson_obj = lesson['lesson']
+
+        # Get application section
+        app_section = Section.objects.filter(lesson=lesson_obj, node_type='application').first()
+
+        if app_section:
+            # Get failed task attempts for this section - failed at least 2 times
+            failed_tasks = TaskAttempt.objects.filter(user = user, section = app_section, passed = False, attempts__gte = 2).order_by('-attempts')
+
+            for attempt in failed_tasks[:2]:
+                # Get the task instruction
+                task = Task.objects.filter(section = app_section, user = user, order = attempt.task_order).first()
+                if task:
+                    weak_areas.append({
+                        'lesson': lesson_obj.title,
+                        'node_type': 'application',
+                        'concept': task.instruction[:80],
+                        'attempts': attempt.attempts,
+                    })
+
+        # Get test section    
+        test_section = Section.objects.filter(lesson=lesson_obj, node_type='test').first()
+
+        if test_section:
+            failed_questions = TestAttempt.objects.filter(user=user, section=test_section, passed=False, attempts__gte=2).order_by('-attempts')  
+
+            for attempt in failed_questions[:2]:
+                question = TestQuestion.objects.filter(section=test_section, user=user, order=attempt.question_order).first()
+                if question:
+                    weak_areas.append({
+                        'lesson': lesson_obj.title,
+                        'node_type': 'test',
+                        'concept': question.instruction[:80],
+                        'attempts': attempt.attempts,
+                    })
 
     eva_context = {
         'level':             level,
         'completed_count':   completed_sections_count,
-        'weak_areas':        weak_areas[:3],  # top 3 weak areas
+        'weak_areas':        weak_areas[:5],  # top 5 weak areas
         'completed_lessons': completed_lessons,
     }
 

@@ -868,11 +868,20 @@
   <script>
     const EVA_CONTEXT = {
       level: {{ level }},
-      completedCount: {{ completed_sections_count }},
-      weakAreas: [{% for w in eva_context.weak_areas %}{"lesson": "{{ w.lesson }}", "nodeType": "{{ w.node_type }}"}{% if not forloop.last %},{% endif %}{% endfor %}],
+      completedCount: {{ completed_sections_count|default:0 }},
+      weakAreas: [
+        {% for w in eva_context.weak_areas %}
+        {
+          "lesson":   "{{ w.lesson }}",
+          "nodeType": "{{ w.node_type }}",
+          "concept":  "{{ w.concept|escapejs }}",
+          "attempts": {{ w.attempts }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ],
       completedLessons: [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}]
     };
-  </script>
+  </script> 
   <script src="https://skulpt.org/js/skulpt.min.js"></script>
   <script src="https://skulpt.org/js/skulpt-stdlib.js"></script>
 {% endblock %}

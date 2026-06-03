@@ -96,7 +96,7 @@ async function sendAutoGreeting() {
         "X-CSRFToken": getCsrf(),
       },
       body: JSON.stringify({
-        message: "Hello EVA! What should I practice today?",
+        message: "Assign me a targeted practice challenge based on my weak areas. Follow the teaching philosophy strictly — describe WHAT to achieve without mentioning syntax, or expected output.",
         code: "",
         lesson: "General Python",
         eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
@@ -441,7 +441,7 @@ async function sendMessage() {
           currentEvaTask.substring(0, 150) +
           '". Student says: ' +
           text,
-        code: code,
+        code: advEditor ? advEditor.getValue() : "",
         lesson: lesson,
         eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
         // history: evaConversationHistory.slice(-4), // reduce to last 4 messages only
@@ -535,12 +535,16 @@ advRunBtn?.addEventListener("click", async () => {
     const summary = outputText
       ? 'CURRENT TASK: "' +
         currentEvaTask.substring(0, 150) +
-        '". My code output was: ' +
+        '". My code:\n' +
+        code +
+        "\nOutput: " +
         outputText +
-        ". Did I complete this specific task correctly? If yes give me a completely new challenge. If no, guide me to fix it without writing any code."
+        ". Check if I used the correct Python concept in my code. If yes give me a new challenge. If no, guide me without writing code."
       : 'CURRENT TASK: "' +
         currentEvaTask.substring(0, 150) +
-        '". I ran my code but got no output. What went wrong?';
+        '". My code:\n' +
+        code +
+        "\nI ran my code but got no output. What went wrong?";
 
     if (evaTyping) evaTyping.style.display = "flex";
     const evaResponse = await fetch("/advisor/chat/", {
