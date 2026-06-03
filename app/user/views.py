@@ -1,4 +1,4 @@
-import json, re
+import json, re, random
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -16,7 +16,8 @@ from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
 from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
-                 generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test)
+                 generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test,
+                 generate_competition_challenge)
 
 User = get_user_model()
 
@@ -738,13 +739,65 @@ def GenerateNextTaskView(request, section_id):
 def CompetitionView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='competition')
-    profile = StudentProfile.objects.get(user=request.user)
+    user = request.user
+    profile = StudentProfile.objects.get(user=user)
+
+    # Get lesson topics from curriculum
+    lesson_topics = []
+    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+        if curriculum_lesson['title'] == section.lesson.title:
+            lesson_topics = curriculum_lesson['topics']
+            break
+
+    # Get taught concepts from Introduction slides
+    intro_section = Section.objects.filter(
+        lesson=section.lesson, node_type='introduction').first()
+    taught_concepts = []
+    if intro_section:
+        taught_concepts = list(
+            intro_section.slides.all().values_list('title', flat=True))
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
+    )
+    student_context = get_student_context(user)
+
+    # Generate challenge
+    challenge = generate_competition_challenge(
+        lesson_title=section.lesson.title,
+        age_group=user.age_group,
+        completed_lessons=completed_lessons,
+        student_context=student_context,
+        lesson_topics=taught_concepts if taught_concepts else lesson_topics,
+    )
+
+    # AI opponent based on student ELO
+    elo = profile.elo_rating
+    opp_level = profile.level
+
+    # Professional AI opponent names
+    opp_names = [
+        'EVA Challenger',
+        'EVA Pro',
+        'EVA Elite',
+        'EVA Master',
+        'EVA Champion',
+    ]
+    opp_name = random.choice(opp_names)
 
     context = {
-        'section': section,
-        'lesson':  section.lesson,
-        'user':    request.user,
-        'profile': profile,
+        'section':         section,
+        'lesson':          section.lesson,
+        'user':            user,
+        'profile':         profile,
+        'challenge':       challenge,
+        'challenge_json':  json.dumps(challenge) if challenge else '{}',
+        'opp_name':        opp_name,
+        'opp_level':       opp_level,
+        'section_id':      section.id,
     }
     return render(request, 'nodes/competition.html', context)
 

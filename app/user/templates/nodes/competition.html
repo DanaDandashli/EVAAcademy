@@ -4,6 +4,8 @@
 {% block links %}
 <link rel="stylesheet" href="{% static 'css/dashboard-kids.css' %}">
 <link rel="stylesheet" href="{% static 'css/competition.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/dracula.min.css">
 {% endblock %}
 
 {% block content %}
@@ -29,11 +31,16 @@
     <!-- Task card -->
     <div class="compete-task-card">
       <div class="compete-task-top">
-        <span class="compete-eva-pill"><i class="fas fa-shield-halved"></i> EVA TASK</span>
+        <span class="compete-eva-pill"><i class="fas fa-shield-halved"></i> EVA CHALLENGE</span>
         <span class="compete-xp-pill">+50 XP</span>
       </div>
-      <h3 class="compete-task-title">{{ lesson.title }} Challenge</h3>
-      <p class="compete-task-desc">Apply what you learned about <strong>{{ lesson.title }}</strong>. Write a complete Python program that demonstrates your understanding. Your opponent is solving the same challenge!</p>
+      {% if challenge %}
+        <h3 class="compete-task-title">{{ challenge.title }}</h3>
+        <p class="compete-task-desc">{{ challenge.description }}</p>
+      {% else %}
+        <h3 class="compete-task-title">{{ lesson.title }} Challenge</h3>
+        <p class="compete-task-desc">Apply what you learned about <strong>{{ lesson.title }}</strong>.</p>
+      {% endif %}
     </div>
 
     <!-- Phase 0: Matchmaking -->
@@ -56,10 +63,10 @@
 
         <div class="compete-player opp-player">
           <div class="compete-player-avatar-wrap">
-            <div class="compete-player-avatar" style="background:#10b981;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#fff;font-family:'Nunito',sans-serif;">O</div>
+            <div class="compete-player-initial">{{ opp_name|first|upper }}</div>
           </div>
-          <div class="compete-player-name" id="oppName">Finding opponent...</div>
-          <div class="compete-player-meta" id="oppMeta">Searching...</div>
+          <div class="compete-player-name" id="oppName">{{ opp_name }}</div>
+          <div class="compete-player-meta" id="oppMeta">Lv.{{ opp_level }} · AI Opponent</div>
           <span class="compete-online-dot"></span>
         </div>
       </div>
@@ -114,8 +121,8 @@
             <span class="compete-status-pill coding" id="youStatusCoding"><i class="fas fa-code"></i> Coding...</span>
           </div>
           <div class="compete-tests-row">
-            <span class="compete-tests-label">Tests passed</span>
-            <span class="compete-tests-val" id="youTestsVal">0/5</span>
+            <span class="compete-tests-label">Status</span>
+            <span class="compete-tests-val" id="youTestsVal">In Progress</span>
           </div>
           <div class="compete-tests-bar">
             <div class="compete-tests-fill you-fill" id="youTestsFill" style="width:0%"></div>
@@ -124,22 +131,32 @@
           <button class="app-run-btn" id="battleRunBtn" style="margin-top:8px;">
             <i class="fas fa-play"></i> Run & Test
           </button>
+          <!-- output panel -->
+          <div class="app-output-wrap">
+            <div class="app-output-topbar">
+              <span><i class="fas fa-terminal"></i> Output</span>
+              <span class="app-output-status" id="battleOutputStatus"></span>
+            </div>
+            <div class="app-output-body" id="battleOutputBody">
+              <span class="app-output-placeholder">Run your code to see output...</span>
+            </div>
+          </div>
         </div>
 
         <div class="compete-vs-divider">VS</div>
 
         <div class="compete-coder-card opp-card">
           <div class="compete-coder-header">
-            <div class="compete-coder-avatar" style="background:#10b981;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:800;color:#fff;border-radius:10px;">O</div>
+             <div class="compete-coder-initial">{{ opp_name|first|upper }}</div>
             <div class="compete-coder-info">
-              <span class="compete-coder-name" id="oppNameBattle">Opponent</span>
+              <span class="compete-coder-name" id="oppNameBattle">Opponent </span>
               <span class="compete-coder-meta" id="oppMetaBattle">Lv.1</span>
             </div>
             <span class="compete-status-pill coding" id="oppStatusCoding"><i class="fas fa-code"></i> Coding...</span>
           </div>
           <div class="compete-tests-row">
-            <span class="compete-tests-label">Tests passed</span>
-            <span class="compete-tests-val" id="oppTestsVal">0/5</span>
+            <span class="compete-tests-label">Status</span>
+            <span class="compete-tests-val" id="oppTestsVal">In Progress</span>
           </div>
           <div class="compete-tests-bar">
             <div class="compete-tests-fill opp-fill" id="oppTestsFill" style="width:0%"></div>
@@ -158,17 +175,22 @@
         <span id="resultBannerText">Result loading...</span>
         <i class="fas fa-fire compete-winner-fire"></i>
       </div>
-      <form method="POST" action="{% url 'complete_section' section.id %}">
-        {% csrf_token %}
-        <button type="submit" class="app-complete-btn" style="margin-top:16px;">
-          <i class="fas fa-arrow-right"></i> Continue
+      <div class="compete-result-actions">
+        <button id="viewSolutionBtn" class="app-complete-btn" style="display:none;">
+          <i class="fas fa-graduation-cap"></i> View EVA Solution
         </button>
-      </form>
+        <form method="POST" action="{% url 'complete_section' section.id %}">
+          {% csrf_token %}
+          <button type="submit" class="app-complete-btn">
+            <i class="fas fa-arrow-right"></i> Continue
+          </button>
+        </form>
+      </div>
     </div>
 
   </div>
 
-  <!-- RIGHT: EVA watching -->
+  <!-- RIGHT: EVA panel -->
   <div class="comp-right">
     <div class="compete-eva-header">
       <div class="compete-eva-avatar-circle">
@@ -176,40 +198,51 @@
       </div>
       <div class="compete-eva-header-info">
         <h3 class="compete-eva-title">EVA is watching</h3>
-        <p class="compete-eva-desc">Monitoring both coders — hints only, no answers!</p>
+        <p class="compete-eva-desc">Monitoring the battle — hints only, no answers!</p>
       </div>
     </div>
 
-    <div class="compete-commentary-section">
+    <!-- Live commentary -->
+    <div class="compete-commentary-section" id="commentarySection">
       <h4 class="compete-section-heading">
         <i class="fas fa-circle-dot compete-live-dot"></i> LIVE COMMENTARY
       </h4>
-      <ul class="compete-commentary-list" id="competeCommentary">
-        <li class="commentary-item system">
-          <div class="commentary-sys-icon"><i class="fas fa-circle-info"></i></div>
-          <p>Waiting for the battle to start...</p>
-        </li>
-      </ul>
+      <ul class="compete-commentary-list" id="competeCommentary"></ul>
     </div>
 
-    <div class="compete-quickchat-section">
-      <h4 class="compete-section-heading">QUICK CHAT</h4>
-      <div class="compete-emoji-chips">
-        <button class="compete-emoji-btn" data-chat="gl hf!"><i class="fas fa-hand-peace"></i></button>
-        <button class="compete-emoji-btn" data-chat="This is fire!"><i class="fas fa-fire"></i></button>
-        <button class="compete-emoji-btn" data-chat="haha!"><i class="fas fa-face-grin-tears"></i></button>
-        <button class="compete-emoji-btn" data-chat="need a hint?"><i class="fas fa-lightbulb"></i></button>
-        <button class="compete-emoji-btn" data-chat="gg!"><i class="fas fa-trophy"></i></button>
-      </div>
-      <div class="compete-chat-log" id="competeChatLog"></div>
+    <!-- Hint button (shown during battle) -->
+    <div id="hintSection" style="display:none;padding:0 16px;">
+      <button class="compete-hint-btn" id="hintBtn">
+        <i class="fas fa-lightbulb"></i> Need a Hint?
+      </button>
+      <div id="hintText" class="compete-hint-text"></div>
     </div>
   </div>
 
 </div>
 
 <canvas id="appConfetti"></canvas>
+<!-- Solution Modal -->
+<div id="solutionModal" class="compete-solution-modal">
+  <div class="solution-modal-content">
+    <button id="closeSolutionModal" class="close-solution-modal"><i class="fas fa-times"></i></button>
+    <h3 class="solution-modal-title"><i class="fas fa-graduation-cap" style="color:var(--primary)"></i> EVA Solution Review</h3>
+    <div id="solutionContent" class="solution-modal-content">
+      <div id="solutionLoading" class="solution-loading">EVA is preparing the solution...</div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
+<script>
+  const SECTION_ID  = {{ section_id }};
+  const CHALLENGE   = {{ challenge_json|safe }};
+  const OPP_NAME    = "{{ opp_name }}";
+  const OPP_LEVEL   = {{ opp_level }};
+  const CSRF_TOKEN  = "{{ csrf_token }}";
+</script>
 <script src="{% static 'js/competition.js' %}"></script>
 {% endblock %}

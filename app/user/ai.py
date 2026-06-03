@@ -203,20 +203,21 @@ Return ONLY valid JSON, no markdown, no explanation:
 def validate_task(instruction, code, output, age_group='child'):
     """Strictly validate if student completed the task."""
 
-    prompt = f"""You are a strict Python coding task validator.
+    prompt = f"""You are a strict Python task validator.
 
 Task: "{instruction}"
 Student code:
 {code}
 Output: "{output}"
 
-Evaluate if the student genuinely understood and completed the task.
-
-General validation principles:
-- The student must show real understanding, not just copy placeholder text
-- Generic or meaningless values that don't relate to the task show lack of understanding
-- The code structure must match what the task requires
-- Output must be meaningful and relevant to the task
+CRITICAL RULES:
+- Check if the student actually used the CONCEPT required by the task, not just achieved the output
+- If the task says "create a variable", the student MUST use assignment operator (=)
+- If the task says "use a loop", the student MUST use a loop
+- If the task says "define a function", the student MUST use def
+- Getting the right output through a different approach = FAIL
+- The student must demonstrate they learned the specific concept mentioned in the task
+- Placeholder values or generic strings that don't relate to the task = FAIL
 
 Reply EXACTLY with:
 PASS
@@ -225,7 +226,7 @@ PASS
 OR
 
 FAIL
-[1 guiding question to help them think deeper, no code or syntax]"""
+[1 guiding question that helps student understand what concept they missed, no code]"""
 
     try:
         response = client.chat.completions.create(
@@ -425,6 +426,55 @@ def should_complete_test(passed_count, total_questions, total_score, max_score):
     # Must answer at least 3 questions and score 70%+
     return total_questions >= 3 and score_pct >= 70
 
+
+def generate_competition_challenge(lesson_title, age_group='child', completed_lessons=None, student_context=None, lesson_topics=None):
+    """Generate a competition challenge based on completed lessons."""
+    if completed_lessons is None: completed_lessons = []
+    if student_context   is None: student_context   = {}
+    if lesson_topics     is None: lesson_topics     = []
+
+    style = _get_style(age_group)
+    level = student_context.get('level', 1)
+    topics_str = ', '.join(lesson_topics) if lesson_topics else lesson_title
+
+    prompt = f"""Create a Python competition challenge for lesson "{lesson_title}".
+
+Topics to test: {topics_str}
+Student level: {level}
+Style: {style}
+
+The challenge must:
+- Be solvable in 3-8 lines of Python
+- Test practical coding skills
+- Have a clear expected output
+- Be exciting and competitive
+- Be harder than application tasks but not impossible
+
+Return ONLY valid JSON:
+{{
+  "title": "short challenge title",
+  "description": "exciting challenge description",
+  "instruction": "Write a Python program that...",
+  "expected_output": "exact expected output",
+  "check_regex": "regex to validate solution",
+  "time_limit": 300
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=__MaxTokens__,
+            temperature=__Temperature__,
+            messages=[
+                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
+                {"role": "user",   "content": prompt}
+            ]
+        )
+        return json.loads(_clean_json(response.choices[0].message.content))
+    except Exception as e:
+        print(f"generate_competition_challenge error: {e}")
+        return None
+    
 
 def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child', eva_context={}, history=[]):
     """EVA Advisor chat — returns AI response."""
