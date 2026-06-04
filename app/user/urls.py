@@ -3,7 +3,7 @@ from .views import (
     IndexView, ChildrenView, TeenView, AdultView,
     LoginView, RegisterView, LogoutView, DashboardView,
     IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView,
-    AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView
+    AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView, LeaderboardAPIView
 )
 
 urlpatterns = [
@@ -27,4 +27,5 @@ urlpatterns = [
 
     # AI Generation
     path('advisor/chat/', AdvisorChatView, name='advisor_chat'),
+    path('leaderboard/', LeaderboardAPIView, name='leaderboard_api'),
 ]

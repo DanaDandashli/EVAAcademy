@@ -187,7 +187,7 @@ def DashboardView(request):
     # ── Completed sections ──
     completed_progress = UserProgress.objects.filter(
         user=user, completed=True
-    ).select_related('section')
+    ).select_related('section', 'section__lesson').order_by('-completed_at')
 
     completed_section_ids = set(p.section_id for p in completed_progress)
 
@@ -234,7 +234,8 @@ def DashboardView(request):
         (range(3,  6),   'Intermediate Coder'),
         (range(6,  9),   'Advanced Coder'),
         (range(9,  12),  'Expert Coder'),
-        (range(12, 999), 'Master Coder'),
+        (range(12, 100), 'Master Coder'),
+        (range(100, 999), 'Python Developer'),
     ]
     rank_title = 'Beginner Coder'
     for r, title in level_titles:
@@ -249,7 +250,7 @@ def DashboardView(request):
 
     # ── Track ──
     track_labels = {
-        'child': 'Kids Track',
+        'child': 'Child Track',
         'teen':  'Teen Track',
         'adult': 'Adult Track'
     }
@@ -257,7 +258,7 @@ def DashboardView(request):
 
     # ── Learning path ──
     lessons = Lesson.objects.filter(
-        age_group=user.age_group
+        age_group='child'  # all users share the same lessons
     ).prefetch_related('sections').order_by('order')
 
     lessons_data = []
@@ -397,6 +398,15 @@ def DashboardView(request):
     completed_topics = ', '.join(completed_lessons) if completed_lessons else 'No topics yet'
     completed_quests_count = sum(1 for uq in user_quests if uq['is_complete'])
 
+    # ── Certs (completed lessons = earned certs) ──
+    certs_earned = sum(1 for l in lessons_data if l['is_completed'])
+
+    # ── Per-node-type completion counts (for charts) ──
+    intro_count = sum(1 for p in completed_progress if p.section.node_type == 'introduction')
+    app_count   = sum(1 for p in completed_progress if p.section.node_type == 'application')
+    comp_count  = sum(1 for p in completed_progress if p.section.node_type == 'competition')
+    test_count  = sum(1 for p in completed_progress if p.section.node_type == 'test')
+
     # ── EVA Advisor context ──
     weak_areas = []
     for lesson in lessons_data:
@@ -499,11 +509,21 @@ def DashboardView(request):
 
         'completed_lessons': completed_lessons,
         'completed_topics':  completed_topics,
+        'completed_progress': completed_progress,
+        'certs_earned': certs_earned,
+        'intro_count':  intro_count,
+        'app_count':    app_count,
+        'comp_count':   comp_count,
+        'test_count':   test_count,
 
         'eva_context': eva_context,
         'eva_history': eva_history,
     }
-    return render(request, 'dashboard-kids.html', context)
+    if user.age_group == 'child':
+        template = 'dashboard-kids.html'
+    else:
+        template = 'dashboard-teen-adult.html'
+    return render(request, template, context)
 
 
 @student_required
@@ -1160,3 +1180,34 @@ def AdvisorChatView(request):
         )
 
     return JsonResponse({'reply': reply})
+
+
+@student_required
+def LeaderboardAPIView(request):
+    offset = int(request.GET.get('offset', 0))
+    limit = 10
+    user = request.user
+
+    profiles = StudentProfile.objects.select_related('user').filter(
+        user__age_group=user.age_group
+    ).order_by('-xp_total', 'created_at')
+
+    total = profiles.count()
+    batch = profiles[offset: offset + limit]
+
+    rows = []
+    for i, p in enumerate(batch):
+        rank = offset + i + 1
+        rows.append({
+            'rank':     rank,
+            'username': p.user.username,
+            'level':    p.level,
+            'xp':       p.xp_total,
+            'is_you':   p.user_id == user.id,
+        })
+
+    return JsonResponse({
+        'rows':     rows,
+        'total':    total,
+        'has_more': (offset + limit) < total,
+    })

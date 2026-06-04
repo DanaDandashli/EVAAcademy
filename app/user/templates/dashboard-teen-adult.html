@@ -1,0 +1,834 @@
+{% extends "base-dashboard.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'css/dashboard-teen-adult.css' %}">
+{% endblock %}
+
+{% block title %} Dashboard {% endblock %}
+
+{% block content %}
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+  <a href="{% url 'index' %}" class="logo">
+      <div class="logo-icon"><i class="fas fa-code"></i></div>
+      <span>EVA Academy</span>
+  </a>
+  <div class="topbar-right">
+    <div class="xp-badge"><i class="fa-solid fa-bolt"></i> {{ xp_cur }} XP</div>
+    <div class="user-chip">
+      <div class="user-avatar-sm">{{ user.username|first|upper }}</div>
+      <span>{{ user.username }}</span>
+    </div>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-profile">
+    <div class="avatar-initials">
+      {{ user.username|first|upper }}
+      <div class="level-ring" style="--xp-pct:{{ xp_pct }};"></div>
+    </div>
+    <h3>{{user.username}}</h3>
+    <p class="role">{{ rank_title }}</p>
+    <div class="level-info">
+      <span class="level-badge">Lv.{{ level }}</span>
+      <span class="xp-text">{{ xp_cur }} XP</span>
+    </div>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-fill" data-pct="{{ xp_pct }}" style="width:{{ xp_pct }}%;background:var(--gradient1);"></div>
+    </div>
+    <p class="xp-left-text">{{ xp_remain }}% to Level {{ level_next }}</p>
+    <div class="stats-row">
+      <div class="stat-chip"><div class="val">#{{ user_rank }}</div><div class="lbl">Rank</div></div>
+      <div class="stat-chip"><div class="val">{{ total_completed }}</div><div class="lbl">Solved</div></div>
+      <div class="stat-chip"><div class="val">{{ certs_earned }}</div><div class="lbl">Certs</div></div>
+    </div>
+  </div>
+
+  <p class="nav-section-label">Navigation</p>
+
+  <button class="nav-item active" data-panel="dashboard" onclick="navigateTo('home',this)">
+    <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span> Dashboard
+  </button>
+  <button class="nav-item" data-panel="learning-path" onclick="navigateTo('learning-path',this)">
+    <span class="nav-icon"><i class="fa-solid fa-map"></i></span> Learning Path
+  </button>
+  <button class="nav-item" data-panel="leaderboard" onclick="navigateTo('leaderboard',this)">
+    <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span> Leaderboard
+  </button>
+  <button class="nav-item" data-panel="challenges" onclick="navigateTo('challenges',this)">
+    <span class="nav-icon"><i class="fa-solid fa-swords"></i></span> Challenges
+    <span class="nav-badge">3</span>
+  </button>
+  <button class="nav-item" data-panel="progress" onclick="navigateTo('progress',this)">
+    <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span> Progress
+  </button>
+  <button class="nav-item" data-panel="compete" onclick="navigateTo('compete',this)">
+    <span class="nav-icon"><i class="fa-solid fa-shield-halved"></i></span> 1v1 Compete
+  </button>
+  <button class="nav-item" data-panel="eva" onclick="navigateTo('eva',this)">
+    <span class="nav-icon"><i class="fa-solid fa-robot"></i></span> EVA Advisor
+    <span class="nav-badge ai">AI</span>
+    <span class="notif-dot"></span>
+  </button>
+  <button class="nav-item" data-panel="certificates" onclick="navigateTo('certificates',this)">
+    <span class="nav-icon"><i class="fa-solid fa-certificate"></i></span> Certificates
+  </button>
+  <div class="sidebar-footer">
+    <a class="sidebar-user" onclick="navigateTo('settings',this)">
+      <div class="user-avatar-sm" style="width:34px;height:34px;border-radius:50%;background:var(--gradient1);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:white;flex-shrink:0;">{{user.username|first|upper}}</div>
+      <div class="info">
+        <div class="name">{{user.username}}</div>
+        <div class="sub">Profile & Settings</div>
+      </div>
+      <i class="fa-solid fa-gear" style="color:var(--text-muted);font-size:0.85rem;"></i>
+    </a>
+  </div>
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ═══════════════ PANEL: HOME (Dashboard) ═══════════════ -->
+  <div class="page-panel active" id="panel-home">
+    <div class="page-header">
+      <h1>Welcome back, {{ user.username }} <i class="fa-solid fa-hand-wave" style="font-size:1.3rem;-webkit-text-fill-color:initial;"></i></h1>
+      <p>{{ track_label }} &bull; Level {{ level }} &bull; <span style="color:var(--accent3);font-weight:600;"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete</span> — Keep the momentum going!</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card gold">
+        <div class="stat-card-icon"><i class="fa-solid fa-trophy"></i></div>
+        <div class="stat-card-label">Global Rank</div>
+        <div class="stat-card-value">#{{ user_rank }}</div>
+        <div class="stat-card-sub">Out of {{ total_players }} players</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-card-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="stat-card-label">Total XP</div>
+        <div class="stat-card-value">{{ xp_cur }}</div>
+        <div class="stat-card-sub">{{ xp_pct }}% to Lv.{{ level_next }}</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <div class="stat-card-label">Level</div>
+        <div class="stat-card-value">{{ level }}</div>
+        <div class="stat-card-sub">{{ rank_title }}</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-card-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-card-label">Nodes Completed</div>
+        <div class="stat-card-value">{{ total_completed }}</div>
+        <div class="stat-card-sub">{{ overall_pct }}% overall progress</div>
+      </div>
+    </div>
+
+    <!-- 3-COL -->
+    <div class="three-col">
+      <!-- LEFT: Lesson Progress -->
+      <div class="left-col">
+        <div class="card">
+          <div class="skill-card">
+            <h3><i class="fa-solid fa-brain" style="color:var(--accent)"></i> Lesson Progress</h3>
+            {% for l in lessons_data %}
+              {% if l.completed_count > 0 or l.is_current or forloop.counter <= 3 %}
+                <div class="skill-item">
+                  <div class="skill-top">
+                    <span class="skill-name">{{ l.lesson.title }}</span>
+                    <span class="skill-pct" style="color:#a78bfa">{{ l.completed_count }}/{{ l.total_count }}</span>
+                  </div>
+                  <div class="skill-bar">
+                    <div class="skill-fill" data-w="{% if l.total_count %}{% widthratio l.completed_count l.total_count 100 %}{% else %}0{% endif %}" style="background:linear-gradient(90deg,#6c63ff,#a78bfa)"></div>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER/RIGHT: EVA Summary + Achievements -->
+      <div class="right-col" style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- EVA Summary -->
+        <div class="card">
+          <div class="skill-card">
+            <h3><i class="fa-solid fa-robot" style="color:var(--accent2)"></i> EVA Summary</h3>
+
+            {% if eva_context.weak_areas %}
+              <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Areas to improve:</p>
+              {% for w in eva_context.weak_areas|slice:":3" %}
+              <div class="skill-item">
+                <div class="skill-top">
+                  <span class="skill-name" style="font-size:0.7rem;">{{ w.lesson }}</span>
+                  <span class="skill-pct" style="color:#ff6b9d;font-size:0.68rem;">{{ w.attempts }}x failed</span>
+                </div>
+                <div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ w.concept|truncatechars:45 }}</div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:0.75rem;color:var(--text-muted);padding:8px 0;">No weak areas detected yet. Keep completing lessons!</p>
+            {% endif %}
+
+            {% if current_section %}
+            <a href="{% if current_section.node_type == 'introduction' %}{% url 'introduction' current_section.id %}{% elif current_section.node_type == 'application' %}{% url 'application' current_section.id %}{% elif current_section.node_type == 'competition' %}{% url 'competition' current_section.id %}{% elif current_section.node_type == 'test' %}{% url 'test' current_section.id %}{% endif %}" style="text-decoration:none;">
+              <div style="margin-top:12px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:10px;padding:10px 12px;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='rgba(0,212,255,0.15)'" onmouseout="this.style.background='rgba(0,212,255,0.08)'">
+                <div style="font-size:0.65rem;color:var(--accent2);font-weight:700;margin-bottom:3px;"><i class="fa-solid fa-play fa-xs"></i> CONTINUE</div>
+                <div style="font-size:0.75rem;font-weight:600;">{{ current_lesson.title }}</div>
+                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">{{ current_section.node_type|capfirst }} node</div>
+              </div>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Achievements -->
+        {% comment %} <div class="card">
+          <div class="skill-card">
+            <h3><i class="fa-solid fa-medal" style="color:var(--accent4)"></i> Achievements <span style="font-size:0.68rem;color:var(--text-muted);font-weight:500;">{{ total_badges }} earned</span></h3>
+
+            {% if earned_achievements %}
+              {% for ach in earned_achievements|slice:":3" %}
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(108,99,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="{{ ach.icon }}" style="color:{{ ach.color }};font-size:0.85rem;"></i>
+                </div>
+                <div>
+                  <div style="font-size:0.73rem;font-weight:600;">{{ ach.name }}</div>
+                  <div style="font-size:0.62rem;color:var(--text-muted);">{{ ach.description }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <p style="font-size:0.75rem;color:var(--text-muted);padding:8px 0;">Complete nodes to earn badges!</p>
+            {% endif %}
+
+            {% if unearned_achievements %}
+            <div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:0.65rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:1px;">{{ unearned_achievements|length }} locked</div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:3px;">Next: {{ unearned_achievements.0.name }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div> {% endcomment %}
+
+      </div>
+
+      <!-- RIGHT: Leaderboard -->
+      <div class="right-col">
+        <div class="lb-mini">
+          <div class="lb-mini-header">
+            <h3><i class="fa-solid fa-ranking-star" style="color:var(--accent4)"></i> Global Ranks</h3>
+          </div>
+          <div class="lb-list">
+            {% for entry in leaderboard %}
+            <div class="lb-item {% if entry.user == user %}you{% endif %}">
+              <div class="lb-rank" style="{% if forloop.counter == 1 %}color:#ffd166{% elif forloop.counter == 2 %}color:#c0c0c0{% elif forloop.counter == 3 %}color:#cd7f32{% endif %}">
+                {% if forloop.counter <= 3 %}<i class="fa-solid fa-medal"></i>{% else %}{{ forloop.counter }}{% endif %}
+              </div>
+              <div class="lb-avatar" style="background:var(--gradient1)">{{ entry.user.username|first|upper }}{{ entry.user.username|slice:"1:2"|upper }}</div>
+              <div class="lb-info">
+                <div class="lb-name">{{ entry.user.username }}
+                  {% if entry.user == user %}<span style="font-size:0.58rem;background:rgba(108,99,255,0.2);color:var(--accent);padding:1px 5px;border-radius:4px">YOU</span>{% endif %}
+                </div>
+                <div class="lb-level">Lv.{{ entry.level }}</div>
+              </div>
+              <div class="lb-xp">{{ entry.xp_total }} XP</div>
+            </div>
+            {% endfor %}
+          </div>
+          <button class="lb-see-all" onclick="navigateTo('leaderboard', document.querySelector('[data-panel=leaderboard]'))">See all {{ total_players }} players <i class="fa-solid fa-arrow-right fa-xs"></i></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CHARTS -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><h3><i class="fa-solid fa-chart-area" style="color:var(--accent)"></i> XP Progress</h3><p>Total XP earned so far</p></div>
+          <div class="chart-badges"><span class="chart-badge">{{ xp_cur }} XP</span><span class="chart-badge green"><i class="fa-solid fa-arrow-trend-up fa-xs"></i> Lv.{{ level }}</span></div>
+        </div>
+        <div class="chart-canvas-wrap"><canvas id="xpChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><h3><i class="fa-solid fa-spider-web" style="color:var(--accent)"></i> Node Completion</h3><p>Progress across all node types</p></div>
+          <div class="chart-badges"><span class="chart-badge">Level {{ level }}</span></div>
+        </div>
+        <div class="chart-canvas-wrap"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- Recent Activity -->
+      <div class="activity-card">
+        <h3><i class="fa-solid fa-bolt-lightning" style="color:var(--accent4)"></i> Recent Activity</h3>
+        {% for progress in completed_progress|slice:":5" %}
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(6,214,160,0.13);color:var(--green)"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="activity-text">
+            <div class="main-text">Completed {{ progress.section.node_type|capfirst }} — {{ progress.section.lesson.title }}</div>
+            <div class="time"><i class="fa-regular fa-clock fa-xs"></i> {{ progress.completed_at|timesince }} ago</div>
+          </div>
+          <div class="activity-xp">
+            {% if progress.section.node_type == 'introduction' %}+10
+            {% elif progress.section.node_type == 'application' %}+30
+            {% elif progress.section.node_type == 'competition' %}+50
+            {% elif progress.section.node_type == 'test' %}+100
+            {% endif %} XP
+          </div>
+        </div>
+        {% empty %}
+        <div style="color:var(--text-muted);font-size:0.82rem;padding:10px 0;">No activity yet. Start learning!</div>
+        {% endfor %}
+      </div>
+
+      <!-- Up Next -->
+      <div class="upnext-card">
+        <h3><i class="fa-solid fa-rocket" style="color:var(--accent)"></i> Up Next</h3>
+        {% for lesson_data in lessons_data %}
+          {% if not lesson_data.is_locked %}
+            {% for section_data in lesson_data.sections %}
+              {% if section_data.is_current %}
+              {% if section_data.section.node_type == 'introduction' %}
+              <a href="{% url 'introduction' section_data.section.id %}" style="text-decoration:none;">
+              {% elif section_data.section.node_type == 'application' %}
+              <a href="{% url 'application' section_data.section.id %}" style="text-decoration:none;">
+              {% elif section_data.section.node_type == 'competition' %}
+              <a href="{% url 'competition' section_data.section.id %}" style="text-decoration:none;">
+              {% elif section_data.section.node_type == 'test' %}
+              <a href="{% url 'test' section_data.section.id %}" style="text-decoration:none;">
+              {% endif %}
+                <div class="upnext-item">
+                  <div class="upnext-icon"><i class="fa-solid fa-play"></i></div>
+                  <div class="upnext-info">
+                    <div class="upnext-name">{{ lesson_data.lesson.title }}</div>
+                    <div class="upnext-meta">{{ section_data.section.node_type|capfirst }}</div>
+                  </div>
+                  <div class="upnext-xp">
+                    {% if section_data.section.node_type == 'introduction' %}+10
+                    {% elif section_data.section.node_type == 'application' %}+30
+                    {% elif section_data.section.node_type == 'competition' %}+50
+                    {% elif section_data.section.node_type == 'test' %}+100
+                    {% endif %} XP
+                  </div>
+                  <div class="upnext-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                </div>
+              </a>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: Learning Path ═══════════════ -->
+  <div class="page-panel" id="panel-learning-path">
+    <div class="path-header">
+      <div class="page-header">
+        <h1><i class="fa-solid fa-map" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Learning Path</h1>
+        <p>{{ track_label }} — {{ completed_sections_count }} / {{ total_sections }} nodes completed</p>
+      </div>
+      {% if current_section %}
+        <button class="btn-trial" onclick="navigateTo('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => document.getElementById('node-{{ current_section.id }}')?.scrollIntoView({behavior:'smooth', block:'center'}), 300)">
+          Next Task
+        </button>
+      {% endif %}
+    </div>
+
+    <div class="lp-wrap">
+      <div class="lp-header">
+        <h2><i class="fa-solid fa-bolt"></i> Python Learning Path</h2>
+        <p>{{ track_label }} — Lesson {{ current_lesson_num }} of {{ total_lessons }}</p>
+        <div class="lp-progress-bar">
+          <div class="lp-progress-fill" id="lpFill" style="width:{{ overall_pct }}%"></div>
+        </div>
+        <div class="lp-progress-text">
+          <span>{{ completed_sections_count }} / {{ total_sections }} nodes</span>
+          <span style="color:var(--accent)">{{ overall_pct }}% Complete</span>
+        </div>
+      </div>
+
+      <div class="lp-body">
+        {% for lesson_data in lessons_data %}
+        {% if not forloop.first %}<div class="lp-divider"></div>{% endif %}
+
+        {% for gate in level_gates %}
+          {% if gate.before_lesson == lesson_data.lesson.id %}
+          <div class="lp-level-gate {% if gate.unlocked %}unlocked{% else %}locked{% endif %}">
+            <div class="lp-level-gate-line"></div>
+            <div class="lp-level-gate-badge">
+              {% if gate.unlocked %}<i class="fa-solid fa-star fa-xs"></i> Level {{ gate.level }} Unlocked
+              {% else %}<i class="fa-solid fa-lock fa-xs"></i> Requires Level {{ gate.level }}{% endif %}
+            </div>
+            <div class="lp-level-gate-line"></div>
+          </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="lp-section">
+          <div class="lp-section-header">
+            <div class="lp-section-num {% if lesson_data.is_completed %}completed{% elif lesson_data.is_locked %}locked-num{% else %}in-progress{% endif %}">
+              {{ forloop.counter }}
+            </div>
+            <span class="lp-section-title">{{ lesson_data.lesson.title }}</span>
+            {% if lesson_data.is_completed %}
+              <span class="lp-section-badge done"><i class="fa-solid fa-check fa-xs"></i> Complete</span>
+            {% elif lesson_data.is_locked %}
+              <span class="lp-section-badge locked"><i class="fa-solid fa-lock fa-xs"></i> Locked</span>
+            {% else %}
+              <span class="lp-section-badge active"><i class="fa-solid fa-play fa-xs"></i> In Progress</span>
+            {% endif %}
+          </div>
+
+          <div class="nodes-path">
+            {% for section_data in lesson_data.sections %}
+            <div class="node-row {% cycle 'left' 'right' 'left' 'right' %}" id="node-{{ section_data.section.id }}">
+              {% if section_data.is_locked or lesson_data.is_locked %}
+              <div class="node-item locked">
+                <div class="node-icon"><i class="fa-solid {% if section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i></div>
+                <div>
+                  <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
+                  <div class="node-xp">Locked</div>
+                </div>
+              </div>
+              {% else %}
+                {% if section_data.section.node_type == 'introduction' %}<a href="{% url 'introduction' section_data.section.id %}" style="text-decoration:none;">
+                {% elif section_data.section.node_type == 'application' %}<a href="{% url 'application' section_data.section.id %}" style="text-decoration:none;">
+                {% elif section_data.section.node_type == 'competition' %}<a href="{% url 'competition' section_data.section.id %}" style="text-decoration:none;">
+                {% elif section_data.section.node_type == 'test' %}<a href="{% url 'test' section_data.section.id %}" style="text-decoration:none;">
+                {% endif %}
+                <div class="node-item {% if section_data.is_completed %}done{% elif section_data.is_current %}current{% else %}locked{% endif %}">
+                  <div class="node-icon">
+                    <i class="fa-solid {% if section_data.is_completed %}fa-check{% elif section_data.is_current %}fa-play{% elif section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i>
+                  </div>
+                  <div>
+                    <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
+                    <div class="node-xp">
+                      {% if section_data.is_completed %}Completed
+                      {% elif section_data.is_current %}Start Now
+                      {% else %}
+                        {% if section_data.section.node_type == 'introduction' %}+10 XP
+                        {% elif section_data.section.node_type == 'application' %}+30 XP
+                        {% elif section_data.section.node_type == 'competition' %}+50 XP
+                        {% elif section_data.section.node_type == 'test' %}+100 XP
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                </a>
+              {% endif %}
+            </div>
+
+            {% if not forloop.last %}
+            {% with next_node=lesson_data.sections|slice:forloop.counter %}
+            <svg class="path-svg" viewBox="0 0 300 36" preserveAspectRatio="none">
+              <path d="M {% cycle '60 0' '240 0' '60 0' '240 0' %} Q 150 18 {% cycle '240 36' '60 36' '240 36' '60 36' %}"
+                stroke="{% if section_data.is_completed %}rgba(108,99,255,0.45){% elif section_data.is_current %}rgba(0,212,255,0.4){% else %}rgba(255,255,255,0.07){% endif %}"
+                stroke-width="2" fill="none"
+                stroke-dasharray="{% if section_data.is_locked or lesson_data.is_locked %}4,4{% else %}5,3{% endif %}"/>
+            </svg>
+            {% endwith %}
+            {% endif %}
+
+            {% endfor %}
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted);padding:20px;text-align:center;">No lessons available yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  
+  <!-- ═══════════════ PANEL: LEADERBOARD ═══════════════ -->
+  <div class="page-panel" id="panel-leaderboard">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-trophy" style="color:#ffd166;-webkit-text-fill-color:initial;font-size:1.4rem;"></i> Global Leaderboard</h1>
+      <p>See how you stack up against coders worldwide &bull; {{ track_label }}</p>
+    </div>
+    <div class="lb-full-card">
+      <div class="lb-full-table-header">
+        <div>Rank</div><div>Player</div><div>Level</div><div>XP</div>
+      </div>
+      <div id="lbFullRows"></div>
+      <div id="lbLoadMoreWrap" style="text-align:center;padding:16px;display:none;">
+        <button id="lbLoadMoreBtn" class="lb-see-all" style="width:100%" onclick="loadLeaderboard()">
+          <i class="fa-solid fa-chevron-down fa-xs"></i> Load More
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <template id="lbRowTemplate">
+    <div class="lb-full-row">
+      <div class="lb-rank"></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="lb-avatar" style="background:var(--gradient1)"></div>
+        <div class="lb-info">
+          <div class="lb-name"></div>
+          <div class="lb-level"></div>
+        </div>
+      </div>
+      <div class="lb-col-level"></div>
+      <div class="lb-col-xp"></div>
+    </div>
+  </template>
+
+  <!-- ═══════════════ PANEL: CHALLENGES ═══════════════ -->
+  <div class="page-panel" id="panel-challenges">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-swords" style="color:var(--accent3);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Challenges</h1>
+      <p>Test your skills — 3 new challenges available today</p>
+    </div>
+    <div class="stats-grid" style="margin-bottom:22px">
+      <div class="stat-card green"><div class="stat-card-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-card-label">Completed</div><div class="stat-card-value">247</div><div class="stat-card-sub">Total solved</div></div>
+      <div class="stat-card cyan"><div class="stat-card-icon"><i class="fa-solid fa-fire-flame-curved"></i></div><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73%</div><div class="stat-card-sub"><span class="up">↑ 5%</span> this month</div></div>
+      <div class="stat-card purple"><div class="stat-card-icon"><i class="fa-solid fa-bolt"></i></div><div class="stat-card-label">XP from Challenges</div><div class="stat-card-value">8,420</div><div class="stat-card-sub">74% of total XP</div></div>
+      <div class="stat-card gold"><div class="stat-card-icon"><i class="fa-solid fa-star"></i></div><div class="stat-card-label">Best Streak</div><div class="stat-card-value">21</div><div class="stat-card-sub">Consecutive days</div></div>
+    </div>
+    <div class="challenges-grid">
+      <div class="challenge-card hard">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-microchip-ai"></i></div><span class="ch-diff">Hard</span></div>
+        <div class="ch-title">Neural Network from Scratch</div>
+        <div class="ch-desc">Build a multi-layer perceptron without external libraries. Implement backpropagation manually.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +800 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~4h</span></div>
+        <button class="ch-start-btn"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+      <div class="challenge-card mid">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-diagram-project"></i></div><span class="ch-diff">Medium</span></div>
+        <div class="ch-title">Graph Pathfinding</div>
+        <div class="ch-desc">Implement Dijkstra's and A* algorithms. Solve shortest-path problems on weighted graphs.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +450 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~2h</span></div>
+        <button class="ch-start-btn" style="background:linear-gradient(135deg,#ffd166,#ff9900)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+      <div class="challenge-card easy">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-list-check"></i></div><span class="ch-diff">Easy</span></div>
+        <div class="ch-title">REST API Builder</div>
+        <div class="ch-desc">Create a fully functional REST API with CRUD operations, authentication, and rate limiting.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +200 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~1h</span></div>
+        <button class="ch-start-btn" style="background:linear-gradient(135deg,#06d6a0,#00d4ff)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+      <div class="challenge-card hard">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-lock"></i></div><span class="ch-diff">Hard</span></div>
+        <div class="ch-title">Cryptography Engine</div>
+        <div class="ch-desc">Implement RSA encryption from scratch. Handle key generation, encryption and decryption pipelines.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +700 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~3.5h</span></div>
+        <button class="ch-start-btn"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+      <div class="challenge-card mid">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-database"></i></div><span class="ch-diff">Medium</span></div>
+        <div class="ch-title">Database Optimizer</div>
+        <div class="ch-desc">Optimize slow SQL queries, design indexes and improve database performance by 10x.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +380 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~1.5h</span></div>
+        <button class="ch-start-btn" style="background:linear-gradient(135deg,#ffd166,#ff9900)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+      <div class="challenge-card easy">
+        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-spider"></i></div><span class="ch-diff">Easy</span></div>
+        <div class="ch-title">Web Scraper Bot</div>
+        <div class="ch-desc">Build an intelligent web scraper using BeautifulSoup and Selenium with anti-detection logic.</div>
+        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +180 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~45min</span></div>
+        <button class="ch-start-btn" style="background:linear-gradient(135deg,#06d6a0,#00d4ff)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: PROGRESS ═══════════════ -->
+  <div class="page-panel" id="panel-progress">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-chart-line" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Progress</h1>
+      <p>Detailed breakdown of your learning journey</p>
+    </div>
+    <div class="progress-grid">
+      <div class="prog-chart-card">
+        <h3><i class="fa-solid fa-chart-area" style="color:var(--accent)"></i> Monthly XP Trend</h3>
+        <div style="height:180px;position:relative"><canvas id="progressChart"></canvas></div>
+      </div>
+      <div class="prog-skills-full">
+        <h3><i class="fa-solid fa-brain" style="color:var(--accent)"></i> Skill Breakdown</h3>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Python Core</span><span class="prog-skill-pct" style="color:#a78bfa">82%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="82" style="background:linear-gradient(90deg,#6c63ff,#a78bfa)"></div></div>
+        </div>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Data Structures & Algorithms</span><span class="prog-skill-pct" style="color:#00d4ff">67%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="67" style="background:linear-gradient(90deg,#00d4ff,#0099cc)"></div></div>
+        </div>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Object-Oriented Programming</span><span class="prog-skill-pct" style="color:#ffd166">74%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="74" style="background:linear-gradient(90deg,#ffd166,#ff9900)"></div></div>
+        </div>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Web APIs & REST</span><span class="prog-skill-pct" style="color:#06d6a0">55%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="55" style="background:linear-gradient(90deg,#06d6a0,#00a878)"></div></div>
+        </div>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Automation & Scripting</span><span class="prog-skill-pct" style="color:#ff6b9d">88%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="88" style="background:linear-gradient(90deg,#ff6b9d,#ff4444)"></div></div>
+        </div>
+        <div class="prog-skill-item">
+          <div class="prog-skill-top"><span class="prog-skill-name">Databases & SQL</span><span class="prog-skill-pct" style="color:#a78bfa">48%</span></div>
+          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="48" style="background:linear-gradient(90deg,#a78bfa,#6c63ff)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="milestones-card">
+      <h3><i class="fa-solid fa-star" style="color:#ffd166"></i> Milestones & Badges</h3>
+      <div class="milestone-grid">
+        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-fire" style="color:#ff6b9d"></i></div><div class="mi-name">14-Day Streak</div><div class="mi-date">Earned May 23</div></div>
+        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-trophy" style="color:#ffd166"></i></div><div class="mi-name">First Boss</div><div class="mi-date">Earned Apr 10</div></div>
+        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-bolt" style="color:var(--accent2)"></i></div><div class="mi-name">Speed Coder</div><div class="mi-date">Earned May 22</div></div>
+        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-graduation-cap" style="color:var(--accent)"></i></div><div class="mi-name">10 Lessons</div><div class="mi-date">Earned Mar 5</div></div>
+        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">Century Solver</div><div class="mi-date">Solve 100 challenges</div></div>
+        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">30-Day Streak</div><div class="mi-date">16 days to go</div></div>
+        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">Top 10 Global</div><div class="mi-date">6 ranks to climb</div></div>
+        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">AI Master</div><div class="mi-date">Complete AI track</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: 1v1 COMPETE ═══════════════ -->
+  <div class="page-panel" id="panel-compete">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-shield-halved" style="color:var(--accent3);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> 1v1 Compete</h1>
+      <p>Challenge other coders to real-time battles</p>
+    </div>
+    <div class="compete-hero">
+      <h2><i class="fa-solid fa-swords" style="-webkit-text-fill-color:initial;font-size:1.4rem;color:var(--accent3)"></i> Ready to Battle?</h2>
+      <p>Match with a coder of similar skill level and compete in live coding challenges</p>
+      <button class="compete-btn"><i class="fa-solid fa-play"></i> Find Match Now</button>
+    </div>
+    <div class="compete-stats">
+      <div class="compete-stat"><div class="cv">38</div><div class="cl"><i class="fa-solid fa-swords fa-sm"></i> Total Matches</div></div>
+      <div class="compete-stat"><div class="cv" style="color:var(--green)">28</div><div class="cl"><i class="fa-solid fa-circle-check fa-sm"></i> Wins</div></div>
+      <div class="compete-stat"><div class="cv" style="color:var(--accent3)">10</div><div class="cl"><i class="fa-solid fa-circle-xmark fa-sm"></i> Losses</div></div>
+    </div>
+    <div class="recent-matches">
+      <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent)"></i> Recent Matches</h3>
+      <div class="match-row">
+        <div class="match-vs">
+          <div class="match-avatar" style="background:linear-gradient(135deg,#ff6b9d,#ff4444)">TB</div>
+          <div class="match-name">Tom Briscoe <span style="font-size:0.62rem;color:var(--text-muted)">Lv.36</span></div>
+        </div>
+        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
+        <div class="match-xp">+120 XP</div>
+      </div>
+      <div class="match-row">
+        <div class="match-vs">
+          <div class="match-avatar" style="background:linear-gradient(135deg,#06d6a0,#0099cc)">YT</div>
+          <div class="match-name">Yuki Tanaka <span style="font-size:0.62rem;color:var(--text-muted)">Lv.35</span></div>
+        </div>
+        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
+        <div class="match-xp">+95 XP</div>
+      </div>
+      <div class="match-row">
+        <div class="match-vs">
+          <div class="match-avatar" style="background:linear-gradient(135deg,#ffd166,#ff9900)">SC</div>
+          <div class="match-name">Sarah Chen <span style="font-size:0.62rem;color:var(--text-muted)">Lv.42</span></div>
+        </div>
+        <span class="match-result loss"><i class="fa-solid fa-xmark fa-xs"></i> Loss</span>
+        <div class="match-xp">+20 XP</div>
+      </div>
+      <div class="match-row">
+        <div class="match-vs">
+          <div class="match-avatar" style="background:linear-gradient(135deg,#a78bfa,#6c63ff)">DF</div>
+          <div class="match-name">Dana Flores <span style="font-size:0.62rem;color:var(--text-muted)">Lv.33</span></div>
+        </div>
+        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
+        <div class="match-xp">+85 XP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: EVA ADVISOR ═══════════════ -->
+  <div class="page-panel" id="panel-eva">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-robot" style="color:var(--accent2);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> EVA Advisor</h1>
+      <p>Your AI-powered learning companion — available 24/7</p>
+    </div>
+    <div class="eva-chat">
+      <div class="eva-chat-header">
+        <div class="eva-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div class="eva-info">
+          <div class="eva-name">EVA — AI Advisor</div>
+          <div class="eva-status">Online & Ready</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button style="background:rgba(255,255,255,0.07);border:1px solid var(--card-border);border-radius:8px;padding:6px 12px;color:var(--text-muted);font-size:0.72rem;cursor:pointer;transition:var(--transition)" onmouseover="this.style.background='rgba(108,99,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'"><i class="fa-solid fa-eraser fa-xs"></i> Clear</button>
+        </div>
+      </div>
+      <div class="eva-messages" id="evaMessages">
+        <div class="msg bot"><div class="msg-bubble"><i class="fa-solid fa-sparkles fa-sm" style="color:var(--accent2);margin-right:4px"></i> Hey Alex! I've analyzed your recent activity. You're crushing it on Automation (88%) but Web APIs could use some work. Want me to create a custom study plan? 🚀</div><div class="msg-time">Just now</div></div>
+        <div class="msg bot"><div class="msg-bubble">Based on your learning pace, you're on track to reach <strong style="color:var(--accent)">Level 40</strong> by end of June. Keep it up! 🎯</div><div class="msg-time">Just now</div></div>
+      </div>
+      <div class="eva-suggestions">
+        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-map fa-xs"></i> Study plan</span>
+        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-chart-bar fa-xs"></i> Weak areas</span>
+        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-lightbulb fa-xs"></i> Daily tip</span>
+        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-code fa-xs"></i> Code review</span>
+      </div>
+      <div class="eva-input-row">
+        <input class="eva-input" id="evaInput" placeholder="Ask EVA anything about your learning journey..." onkeydown="if(event.key==='Enter')sendEvaMsg()"/>
+        <button class="eva-send" onclick="sendEvaMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: CERTIFICATES ═══════════════ -->
+  <div class="page-panel" id="panel-certificates">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-certificate" style="color:var(--accent4);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Certificates</h1>
+      <p>Your earned qualifications and ongoing certifications</p>
+    </div>
+    <div class="certs-grid">
+      <div class="cert-card earned">
+        <div class="cert-card-icon"><i class="fa-brands fa-python"></i></div>
+        <h3>Python Core</h3>
+        <div class="cert-sub">Fundamentals & Advanced Concepts</div>
+        <span class="cert-status"><i class="fa-solid fa-circle-check fa-xs"></i> Earned Jan 2025</span>
+      </div>
+      <div class="cert-card earned">
+        <div class="cert-card-icon"><i class="fa-solid fa-cube"></i></div>
+        <h3>OOP Mastery</h3>
+        <div class="cert-sub">Object-Oriented Design Patterns</div>
+        <span class="cert-status"><i class="fa-solid fa-circle-check fa-xs"></i> Earned Mar 2025</span>
+      </div>
+      <div class="cert-card progress">
+        <div class="cert-card-icon"><i class="fa-solid fa-server"></i></div>
+        <h3>FastAPI Expert</h3>
+        <div class="cert-sub">Modern API Development</div>
+        <div class="cert-prog-bar"><div class="cert-prog-fill" style="width:50%"></div></div>
+        <span class="cert-status"><i class="fa-solid fa-spinner fa-spin fa-xs"></i> 50% Complete</span>
+      </div>
+      <div class="cert-card locked-c">
+        <div class="cert-card-icon"><i class="fa-solid fa-lock"></i></div>
+        <h3>Data Structures</h3>
+        <div class="cert-sub">Arrays, Trees, Graphs & More</div>
+        <div class="cert-prog-bar"><div class="cert-prog-fill" style="width:67%;background:linear-gradient(90deg,rgba(108,99,255,0.5),rgba(167,139,250,0.5))"></div></div>
+        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> 67% — Locked</span>
+      </div>
+      <div class="cert-card locked-c">
+        <div class="cert-card-icon"><i class="fa-solid fa-brain"></i></div>
+        <h3>Machine Learning</h3>
+        <div class="cert-sub">ML Algorithms & Neural Networks</div>
+        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> Requires Lv.45</span>
+      </div>
+      <div class="cert-card locked-c">
+        <div class="cert-card-icon"><i class="fa-solid fa-cloud"></i></div>
+        <h3>Cloud & DevOps</h3>
+        <div class="cert-sub">AWS, Docker & CI/CD Pipelines</div>
+        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> Requires Lv.50</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PANEL: SETTINGS ═══════════════ -->
+  <div class="page-panel" id="panel-settings">
+    <div class="page-header">
+      <h1><i class="fa-solid fa-gear" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Settings</h1>
+      <p>Manage your account, notifications and preferences</p>
+    </div>
+    <div class="settings-sections">
+      <div class="settings-content">
+        <div id="settings-profile">
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-user-pen" style="color:var(--accent)"></i> Profile Information</h3>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-user"></i>Username</span>
+              <div class="s-desc">{{user.username}}</div>
+            </div>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-users"></i>Age Group</span>
+              <div class="s-desc">{{ user.age_group|capfirst }}</div>
+            </div>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-envelope"></i>Email</span>
+              <div class="s-desc">{{ user.email|default:"No email set" }}</div>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-bullseye" style="color:var(--accent)"></i> Progress</h3>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-star"></i>Level</span>
+              <div class="s-desc">Level {{ level }} — {{ rank_title }}</div>
+            </div>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-bolt"></i>Total XP</span>
+              <div class="s-desc">{{ xp_cur }} XP</div>
+            </div>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-trophy"></i>Rank</span>
+              <div class="s-desc">#{{ user_rank }} in {{ track_label }}</div>
+            </div>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-swords"></i>Competition Wins</span>
+              <div class="s-desc">{{ profile.competition_wins }}</div>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3><i class="fa-solid fa-user-lock" style="color:var(--accent)"></i> Account Actions</h3>
+            <div class="setting-row">
+              <span class="s-title"><i class="fas fa-right-from-bracket"></i>Sign Out</span>
+              <a href="{% url 'logout' %}" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/dashboard-teen-adult.js' %}"></script>
+<script>
+const EVA_CONTEXT = {
+  level: {{ level }},
+  completedCount: {{ completed_sections_count|default:0 }},
+  weakAreas: [
+    {% for w in eva_context.weak_areas %}
+    {
+      "lesson":   "{{ w.lesson }}",
+      "nodeType": "{{ w.node_type }}",
+      "concept":  "{{ w.concept|default:''|escapejs }}",
+      "attempts": {{ w.attempts|default:0 }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+  completedLessons: [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}]
+};
+
+const CHART_DATA = {
+  xpCur:        {{ xp_cur }},
+  xpNext:       {{ xp_next }},
+  level:        {{ level }},
+  overallPct:   {{ overall_pct }},
+  totalSections: {{ total_sections }},
+  introCount:   {{ intro_count }},
+  appCount:     {{ app_count }},
+  compCount:    {{ comp_count }},
+  testCount:    {{ test_count }},
+  completedLessons: [{% for l in lessons_data %}{% if l.is_completed %}"{{ l.lesson.title }}"{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}],
+};
+
+function getCsrf() {
+  return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+    document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+}
+</script>
+{% endblock %}
