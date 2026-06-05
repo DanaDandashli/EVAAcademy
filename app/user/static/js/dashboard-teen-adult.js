@@ -42,7 +42,6 @@ function navigateTo(panel, navEl) {
     }
     if (panel === "progress") {
       setTimeout(() => animateSkillBars(".prog-skill-fill", "data-pw"), 200);
-      initProgressChart();
     }
     if (panel === "leaderboard" && lbOffset === 0) {
       loadLeaderboard();
@@ -229,77 +228,6 @@ function initCharts() {
       },
     });
   }
-}
-
-let progressChartInst = null;
-function initProgressChart() {
-  const el = document.getElementById("progressChart");
-  if (!el || progressChartInst) return;
-  const g = el.getContext("2d").createLinearGradient(0, 0, 0, 180);
-  g.addColorStop(0, "rgba(0,212,255,0.35)");
-  g.addColorStop(1, "rgba(0,212,255,0)");
-
-  const completedLessons = CHART_DATA?.completedLessons || [];
-  const labels = [
-    "Start",
-    ...completedLessons.slice(0, 3).map((l, i) => `Lesson ${i + 1}`),
-    "Now",
-  ].slice(0, 5);
-  const xp = CHART_DATA?.xpCur || 0;
-  const dataPoints = labels.map((_, i) => {
-    if (i === 0) return 0;
-    if (i === labels.length - 1) return xp;
-    const fractions = [0.15, 0.4, 0.75];
-    return Math.round(xp * (fractions[i - 1] || 0.5));
-  });
-
-  progressChartInst = new Chart(el, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "XP",
-          data: dataPoints,
-          borderColor: "#00d4ff",
-          borderWidth: 2.5,
-          backgroundColor: g,
-          pointBackgroundColor: "#00d4ff",
-          pointBorderColor: "#fff",
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          tension: 0.4,
-          fill: true,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: "rgba(10,10,26,0.95)",
-          borderColor: "rgba(0,212,255,0.4)",
-          borderWidth: 1,
-          titleColor: "#e8e8ff",
-          bodyColor: "#8888bb",
-          cornerRadius: 8,
-        },
-      },
-      scales: {
-        x: {
-          grid: { color: "rgba(255,255,255,0.04)" },
-          ticks: { color: "#8888bb", font: { size: 11 } },
-        },
-        y: {
-          grid: { color: "rgba(255,255,255,0.04)" },
-          ticks: { color: "#8888bb", font: { size: 11 } },
-        },
-      },
-      animation: { duration: 1200, easing: "easeOutQuart" },
-    },
-  });
 }
 
 // ── EVA Advisor ──

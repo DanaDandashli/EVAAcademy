@@ -553,50 +553,46 @@
       <h1><i class="fa-solid fa-chart-line" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Progress</h1>
       <p>Detailed breakdown of your learning journey</p>
     </div>
-    <div class="progress-grid">
-      <div class="prog-chart-card">
-        <h3><i class="fa-solid fa-chart-area" style="color:var(--accent)"></i> Monthly XP Trend</h3>
-        <div style="height:180px;position:relative"><canvas id="progressChart"></canvas></div>
-      </div>
+    <div class="progress-flex">
       <div class="prog-skills-full">
         <h3><i class="fa-solid fa-brain" style="color:var(--accent)"></i> Skill Breakdown</h3>
+        {% for l in lessons_data %}
         <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Python Core</span><span class="prog-skill-pct" style="color:#a78bfa">82%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="82" style="background:linear-gradient(90deg,#6c63ff,#a78bfa)"></div></div>
+          <div class="prog-skill-top">
+            <span class="prog-skill-name">{{ l.lesson.title }}</span>
+            <span class="prog-skill-pct" style="color:
+              {% cycle '#a78bfa' '#00d4ff' '#ffd166' '#06d6a0' '#ff6b9d' '#a78bfa' %}">
+              {% if l.total_count %}{% widthratio l.completed_count l.total_count 100 %}{% else %}0{% endif %}%
+            </span>
+          </div>
+          <div class="prog-skill-bar">
+            <div class="prog-skill-fill"
+              data-pw="{% if l.total_count %}{% widthratio l.completed_count l.total_count 100 %}{% else %}0{% endif %}"
+              style="background:{% cycle 'linear-gradient(90deg,#6c63ff,#a78bfa)' 'linear-gradient(90deg,#00d4ff,#0099cc)' 'linear-gradient(90deg,#ffd166,#ff9900)' 'linear-gradient(90deg,#06d6a0,#00a878)' 'linear-gradient(90deg,#ff6b9d,#ff4444)' 'linear-gradient(90deg,#a78bfa,#6c63ff)' %}">
+            </div>
+          </div>
         </div>
-        <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Data Structures & Algorithms</span><span class="prog-skill-pct" style="color:#00d4ff">67%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="67" style="background:linear-gradient(90deg,#00d4ff,#0099cc)"></div></div>
-        </div>
-        <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Object-Oriented Programming</span><span class="prog-skill-pct" style="color:#ffd166">74%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="74" style="background:linear-gradient(90deg,#ffd166,#ff9900)"></div></div>
-        </div>
-        <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Web APIs & REST</span><span class="prog-skill-pct" style="color:#06d6a0">55%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="55" style="background:linear-gradient(90deg,#06d6a0,#00a878)"></div></div>
-        </div>
-        <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Automation & Scripting</span><span class="prog-skill-pct" style="color:#ff6b9d">88%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="88" style="background:linear-gradient(90deg,#ff6b9d,#ff4444)"></div></div>
-        </div>
-        <div class="prog-skill-item">
-          <div class="prog-skill-top"><span class="prog-skill-name">Databases & SQL</span><span class="prog-skill-pct" style="color:#a78bfa">48%</span></div>
-          <div class="prog-skill-bar"><div class="prog-skill-fill" data-pw="48" style="background:linear-gradient(90deg,#a78bfa,#6c63ff)"></div></div>
-        </div>
+        {% endfor %}
       </div>
-    </div>
-    <div class="milestones-card">
-      <h3><i class="fa-solid fa-star" style="color:#ffd166"></i> Milestones & Badges</h3>
-      <div class="milestone-grid">
-        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-fire" style="color:#ff6b9d"></i></div><div class="mi-name">14-Day Streak</div><div class="mi-date">Earned May 23</div></div>
-        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-trophy" style="color:#ffd166"></i></div><div class="mi-name">First Boss</div><div class="mi-date">Earned Apr 10</div></div>
-        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-bolt" style="color:var(--accent2)"></i></div><div class="mi-name">Speed Coder</div><div class="mi-date">Earned May 22</div></div>
-        <div class="milestone-item earned"><div class="mi-icon"><i class="fa-solid fa-graduation-cap" style="color:var(--accent)"></i></div><div class="mi-name">10 Lessons</div><div class="mi-date">Earned Mar 5</div></div>
-        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">Century Solver</div><div class="mi-date">Solve 100 challenges</div></div>
-        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">30-Day Streak</div><div class="mi-date">16 days to go</div></div>
-        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">Top 10 Global</div><div class="mi-date">6 ranks to climb</div></div>
-        <div class="milestone-item mi-locked"><div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div><div class="mi-name">AI Master</div><div class="mi-date">Complete AI track</div></div>
+
+      <div class="milestones-card">
+        <h3><i class="fa-solid fa-star" style="color:#ffd166"></i> Milestones & Badges</h3>
+        <div class="milestone-grid">
+          {% for ach in earned_achievements %}
+          <div class="milestone-item earned">
+            <div class="mi-icon"><i class="{{ ach.icon }}" style="color:{{ ach.color }}"></i></div>
+            <div class="mi-name">{{ ach.name }}</div>
+            <div class="mi-date">{{ ach.description }}</div>
+          </div>
+          {% endfor %}
+          {% for ach in unearned_achievements %}
+          <div class="milestone-item mi-locked">
+            <div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div>
+            <div class="mi-name">{{ ach.name }}</div>
+            <div class="mi-date">{{ ach.description }}</div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
     </div>
   </div>

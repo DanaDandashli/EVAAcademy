@@ -544,9 +544,7 @@ body {
 .ch-start-btn:hover { opacity:0.85; transform:scale(1.02); }
 
 /* ── PROGRESS PANEL ── */
-.progress-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
-.prog-chart-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:20px; }
-.prog-chart-card h3 { font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.progress-flex { display:flex; flex-direction: column; gap:18px; margin-bottom:18px; }
 .prog-skills-full { background:var(--card-bg); border:1px solid var(--card-border); border-radius:var(--radius); padding:20px; }
 .prog-skills-full h3 { font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px; }
 .prog-skill-item { margin-bottom:14px; }
