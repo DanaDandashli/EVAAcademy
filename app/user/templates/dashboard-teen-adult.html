@@ -72,7 +72,7 @@
     <span class="nav-icon"><i class="fa-solid fa-shield-halved"></i></span> 1v1 Compete
   </button>
   <button class="nav-item" data-panel="eva" onclick="navigateTo('eva',this)">
-    <span class="nav-icon"><i class="fa-solid fa-robot"></i></span> EVA Advisor
+    <span class="nav-icon"><i class="fa-solid fa-chalkboard-user"></i></span> EVA Advisor
     <span class="nav-badge ai">AI</span>
     <span class="notif-dot"></span>
   </button>
@@ -653,33 +653,130 @@
   <!-- ═══════════════ PANEL: EVA ADVISOR ═══════════════ -->
   <div class="page-panel" id="panel-eva">
     <div class="page-header">
-      <h1><i class="fa-solid fa-robot" style="color:var(--accent2);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> EVA Advisor</h1>
-      <p>Your AI-powered learning companion — available 24/7</p>
+      <h1><i class="fa-solid fa-chalkboard-user" style="color:var(--accent2);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> EVA Advisor</h1>
+      <p>Your AI-powered learning companion — hints only, never gives answers</p>
     </div>
-    <div class="eva-chat">
-      <div class="eva-chat-header">
-        <div class="eva-avatar"><i class="fa-solid fa-robot"></i></div>
-        <div class="eva-info">
-          <div class="eva-name">EVA — AI Advisor</div>
-          <div class="eva-status">Online & Ready</div>
+    <div class="advisor-layout">
+
+      <!-- LEFT: Task card + Sandbox + Output -->
+      <div class="advisor-left">
+
+        <!-- Task card -->
+        <div class="adv-task-card">
+          <div class="adv-task-topbar">
+            <span class="adv-current-task-pill">
+              <i class="fa-solid fa-bolt"></i> FREE PRACTICE
+            </span>
+            <span class="adv-xp-pill">EVA Guided</span>
+          </div>
+          <h2 class="adv-task-title">
+            {% if current_lesson %}
+              Practice: {{ current_lesson.title }}
+            {% else %}
+              Python Sandbox
+            {% endif %}
+          </h2>
+          <p class="adv-task-desc">
+            Your free coding space. Write any Python, run it, and ask EVA for guidance. She'll help you think — but never write code for you.
+          </p>
+          <div class="adv-tags">
+            {% for lesson in completed_lessons %}
+              <span class="adv-tag">{{ lesson }}</span>
+            {% empty %}
+              <span class="adv-tag active-tag">Python Basics</span>
+            {% endfor %}
+          </div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:8px">
-          <button style="background:rgba(255,255,255,0.07);border:1px solid var(--card-border);border-radius:8px;padding:6px 12px;color:var(--text-muted);font-size:0.72rem;cursor:pointer;transition:var(--transition)" onmouseover="this.style.background='rgba(108,99,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'"><i class="fa-solid fa-eraser fa-xs"></i> Clear</button>
+
+        <!-- Sandbox -->
+        <div class="adv-sandbox">
+          <div class="adv-sandbox-bar">
+            <div class="adv-sandbox-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <span class="adv-sandbox-filename">main.py</span>
+            <button class="adv-run-btn" id="advRunBtn">
+              <i class="fa-solid fa-play"></i> Run
+            </button>
+          </div>
+          <div class="adv-editor-wrap">
+            <textarea id="advCodeEditor"># Welcome to your Python sandbox!</textarea>
+          </div>
         </div>
+
+        <!-- Output -->
+        <div class="adv-output">
+          <div class="adv-output-bar">
+            <span class="adv-output-label"><i class="fa-solid fa-terminal"></i> output</span>
+            <span class="adv-output-status" id="advOutputStatus"></span>
+          </div>
+          <div class="adv-output-body" id="advOutputBody">
+            <div class="adv-out-line cursor-blink">&gt;</div>
+          </div>
+        </div>
+
       </div>
-      <div class="eva-messages" id="evaMessages">
-        <div class="msg bot"><div class="msg-bubble"><i class="fa-solid fa-sparkles fa-sm" style="color:var(--accent2);margin-right:4px"></i> Hey Alex! I've analyzed your recent activity. You're crushing it on Automation (88%) but Web APIs could use some work. Want me to create a custom study plan? 🚀</div><div class="msg-time">Just now</div></div>
-        <div class="msg bot"><div class="msg-bubble">Based on your learning pace, you're on track to reach <strong style="color:var(--accent)">Level 40</strong> by end of June. Keep it up! 🎯</div><div class="msg-time">Just now</div></div>
-      </div>
-      <div class="eva-suggestions">
-        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-map fa-xs"></i> Study plan</span>
-        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-chart-bar fa-xs"></i> Weak areas</span>
-        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-lightbulb fa-xs"></i> Daily tip</span>
-        <span class="eva-suggestion" onclick="sendSuggestion(this)"><i class="fa-solid fa-code fa-xs"></i> Code review</span>
-      </div>
-      <div class="eva-input-row">
-        <input class="eva-input" id="evaInput" placeholder="Ask EVA anything about your learning journey..." onkeydown="if(event.key==='Enter')sendEvaMsg()"/>
-        <button class="eva-send" onclick="sendEvaMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+
+      <!-- RIGHT: EVA Chat -->
+      <div class="adv-chat-panel">
+        <div class="adv-chat-header">
+          <div class="adv-eva-avatar">
+            <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+          </div>
+          <div class="adv-eva-info">
+            <h3 class="adv-eva-name">EVA — AI Advisor</h3>
+            <p class="adv-eva-sub">Hints only. Never gives answers.</p>
+          </div>
+          <span class="adv-online-pill">
+            <span class="adv-online-dot"></span> Online
+          </span>
+          <button id="evaClearBtn" class="adv-clear-btn" onmouseover="this.style.background='rgba(108,99,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+            <i class="fa-solid fa-eraser fa-xs"></i> Clear
+          </button>
+        </div>
+
+        <div class="adv-rule-banner">
+          <i class="fa-solid fa-lightbulb adv-rule-icon"></i>
+          <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction — the thinking is yours.</p>
+        </div>
+
+        <div class="adv-quick-chips">
+          <button class="adv-chip" data-msg="I'm stuck">
+            <i class="fa-solid fa-circle-question"></i> I'm stuck
+          </button>
+          <button class="adv-chip" data-msg="Explain this concept">
+            <i class="fa-solid fa-magnifying-glass"></i> Explain this
+          </button>
+          <button class="adv-chip" data-msg="Why is my code not working?">
+            <i class="fa-solid fa-triangle-exclamation"></i> Not working?
+          </button>
+          <button class="adv-chip" data-msg="Give me a challenge">
+            <i class="fa-solid fa-chess"></i> Challenge me
+          </button>
+        </div>
+
+        <div class="adv-chat-messages" id="advChatMessages">
+          <div class="adv-msg eva typing-indicator" id="evaTyping" style="display:none">
+            <div class="adv-eva-avatar">
+              <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+            </div>
+            <div class="adv-msg-bubble typing-bubble">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="adv-chat-input-wrap">
+          <input type="text" class="adv-chat-input" id="advChatInput"
+                 placeholder="Ask EVA — she'll guide, not solve..."/>
+          <button class="adv-chat-send" id="advChatSend">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
