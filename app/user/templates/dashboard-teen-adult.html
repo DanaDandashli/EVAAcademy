@@ -19,7 +19,7 @@
   </a>
   <div class="topbar-right">
     <div class="xp-badge"><i class="fa-solid fa-bolt"></i> {{ xp_cur }} XP</div>
-    <div class="user-chip">
+    <div class="user-chip" onclick="navigateTo('settings',this)">
       <div class="user-avatar-sm">{{ user.username|first|upper }}</div>
       <span>{{ user.username }}</span>
     </div>
