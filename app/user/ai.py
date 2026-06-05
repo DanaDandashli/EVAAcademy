@@ -8,14 +8,14 @@ client = OpenAI(
     api_key=settings.OPENROUTER_API_KEY
 )
 __Model__ = "google/gemini-2.5-flash-lite"
-__Temperature__ = 0.2
+__Temperature__ = 0.7
 __MaxTokens__ = 2000
 
 # ── Python Curriculum Foundation ──
 PYTHON_CURRICULUM_FOUNDATION = [
     # ── Beginner ──
     {'order': 1,  'title': 'The Basics',                    'level_required': 1,  'category': 'beginner',
-        'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'arithmetic operators', 'string concatenation']},
+        'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /)', 'string concatenation']},
     {'order': 2,  'title': 'Control Flow',                  'level_required': 1,  'category': 'beginner',
         'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values']},
     {'order': 3,  'title': 'Functions',                     'level_required': 2,  'category': 'beginner',
@@ -221,24 +221,35 @@ Return ONLY valid JSON, no markdown, no explanation:
         return []
 
 
-def validate_task(instruction, code, output, age_group='child'):
+def validate_task(instruction, code, output, age_group='child', task_type='free_code', correct_answer='', fail_count=0):
     """Strictly validate if student completed the task."""
 
-    prompt = f"""You are a strict Python task validator.
+    # ── Bug fix: compare against correct answer ──
+    if task_type == 'bug_fix' and correct_answer:
+        task_context = f"""Task type: BUG FIX
+The correct fixed code is:
+{correct_answer}
+
+PASS if the student's code achieves the same result as the correct fix — exact match not required.
+FAIL if the bug is still present or the logic is wrong."""
+    else:
+        task_context = """CRITICAL RULES:
+- Check if the student used the CONCEPT required, not just achieved the output
+- The student must demonstrate they learned the specific concept
+- NEVER require a specific function when multiple functions solve the task correctly
+- If code uses input(), output will vary — do NOT compare exact output values
+- Placeholder values or generic strings = FAIL"""
+
+    retry_note = f"\nThis is attempt #{fail_count + 1} — evaluate ONLY the current code independently." if fail_count > 0 else ""
+
+    prompt = f"""You are a strict Python task validator.{retry_note}
 
 Task: "{instruction}"
 Student code:
 {code}
 Output: "{output}"
 
-CRITICAL RULES:
-- Check if the student actually used the CONCEPT required by the task, not just achieved the output
-- If the task says "create a variable", the student MUST use assignment operator (=)
-- If the task says "use a loop", the student MUST use a loop
-- If the task says "define a function", the student MUST use def
-- Getting the right output through a different approach = FAIL
-- The student must demonstrate they learned the specific concept mentioned in the task
-- Placeholder values or generic strings that don't relate to the task = FAIL
+{task_context}
 
 Reply EXACTLY with:
 PASS
@@ -264,7 +275,7 @@ FAIL
         return "FAIL\nI am having trouble validating. Try again!"
     
 
-def generate_next_task(lesson_title, task_number, previous_tasks=None, student_performance=None, age_group='child', completed_lessons=None, student_context=None):
+def generate_next_task(lesson_title, task_number, previous_tasks=None, student_performance=None, age_group='child', completed_lessons=None, student_context=None, lesson_topics=None):
     """Generate ONE task based on student performance so far."""
     if completed_lessons is None:
         completed_lessons = []
@@ -274,55 +285,88 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
         previous_tasks = []
     if student_performance is None:
         student_performance = {}
+    if lesson_topics is None:
+        lesson_topics = []
 
-    style = _get_style(age_group)
-    prior_knowledge = ', '.join(
-        completed_lessons) if completed_lessons else 'none'
-    learning_speed = student_context.get('learning_speed', 'normal')
     level = student_context.get('level', 1)
-    depth = _get_depth(learning_speed)
-
-    # Build performance summary
     passed_count = student_performance.get('passed_count', 0)
     failed_count = student_performance.get('failed_count', 0)
     avg_attempts = student_performance.get('avg_attempts', 1)
 
+    # ── Difficulty adjustment ──
     if failed_count > passed_count:
-        difficulty = "easier — student is struggling. Simplify the concept."
+        difficulty_adj = "easier"
     elif avg_attempts == 1 and passed_count >= 2:
-        difficulty = "harder — student is mastering quickly. Increase challenge."
+        difficulty_adj = "harder"
     else:
-        difficulty = "similar difficulty to previous tasks."
+        difficulty_adj = "same"
 
-    prev_task_titles = ', '.join([t.get('instruction', '')[:50]
-                                 for t in previous_tasks]) if previous_tasks else 'none'
+    # ── Task type and difficulty rotation ──
+    type_rotation = ['free_code', 'bug_fix', 'free_code', 'fill_blank', 'free_code']
+    diff_rotation = ['easy',      'medium',  'medium',    'hard',       'expert']
+    idx = min(task_number - 1, len(type_rotation) - 1)
+    task_type = type_rotation[idx]
+    difficulty = diff_rotation[idx]
 
-    prompt = f"""You are an expert educational content designer creating Python coding tasks for students.
+    # ── Topic tracking — pick next uncovered topic ──
+    covered_topics = [t.get('topic_covered', '')
+                      for t in previous_tasks if t.get('topic_covered')]
+    non_testable_topics = ['comments']
+    remaining_topics = [
+        t for t in lesson_topics if t not in covered_topics and t not in non_testable_topics]
+    topic = remaining_topics[0] if remaining_topics else (
+        lesson_topics[0] if lesson_topics else 'general')
+    topics_str = ', '.join(lesson_topics) if lesson_topics else lesson_title
+    prev_tasks = ', '.join([t.get('instruction', '')[:40]
+                           for t in previous_tasks]) if previous_tasks else 'none'
+    covered_topics_str = ', '.join(
+        covered_topics) if covered_topics else 'none'
 
-Student Profile:
-- Age group: {age_group}
-- Level: {level}
-- Already knows: {prior_knowledge}
-- Performance: {passed_count} passed, {failed_count} failed, {avg_attempts:.1f} avg attempts
-- Previous tasks: {prev_task_titles}
-- Difficulty adjustment: {difficulty}
+    # ── Type rules ──
+    if task_type == 'fill_blank':
+        type_rule = "Write one line with _____ as the blank. code_template has the line, correct_answer has only the missing word."
+    elif task_type == 'bug_fix':
+        type_rule = """Task type: BUG FIX
+    Write 2-4 lines of Python code testing: {topic}
+    Introduce ONE real bug that causes WRONG OUTPUT or RUNTIME ERROR.
+    Bug must require understanding of {topic} to fix — not a typo or comment issue.
+    The correct_answer MUST fix ONLY the bug — keep all other logic identical.
+    NEVER simplify or remove lines in the correct_answer — only fix the specific bug.
+    code_template = buggy code, correct_answer = fixed code.
+    Instruction = 'This code has a bug — find and fix it.'"""
+    else:
+        type_rule = "Student writes from scratch. code_template and correct_answer are empty."
 
-Teaching Philosophy:
-You follow the Socratic method — students discover answers themselves. Your tasks:
-- Describe OUTCOMES not METHODS ("display your name" not "use print()")
-- Never reveal syntax, function names, or code in instructions or hints
-- Hints guide thinking through questions, never reveal answers
-- Validation checks concept understanding, not exact implementation
+    prompt = f"""Generate a Python task. Return ONLY JSON.
 
-Generate ONE task for "{lesson_title}" that builds progressively on previous tasks.
+Lesson: {lesson_title} | Topics: {topics_str}
+Task #{task_number} | Target topic: {topic} | Type: {task_type} | Difficulty: {difficulty} ({difficulty_adj})
+Age: {age_group} | Level: {level}
+Already covered topics: {covered_topics_str}
+Previous tasks: {prev_tasks}
 
-Return ONLY valid JSON:
+Type rule: {type_rule}
+
+Rules:
+- Test ONLY this topic: {topic}
+- Skip topics already covered: {covered_topics_str}
+- No repeated tasks
+- STRICT: Never mention function names, keywords, or syntax in instruction or hint — not even in backticks
+- Student knows ONLY: {topics_str} — nothing else exists for them
+- If solution needs anything outside {topics_str}, generate a different task
+
+JSON:
 {{
   "order": {task_number},
-  "instruction": "outcome-focused description in plain English, no Python terms",
-  "hint": "a question that guides thinking without revealing the answer",
-  "expected_output": "exact output if deterministic, empty if varies per student",
-  "check_regex": "regex checking concept was applied, not exact implementation"
+  "task_type": "{task_type}",
+  "difficulty": "{difficulty}",
+  "topic_covered": "{topic}",
+  "instruction": "...",
+  "hint": "...",
+  "expected_output": "...",
+  "check_regex": "...",
+  "correct_answer": "...",
+  "code_template": "..."
 }}"""
 
     try:
@@ -331,7 +375,7 @@ Return ONLY valid JSON:
             max_tokens=1000,
             temperature=__Temperature__,
             messages=[
-                {"role": "system", "content": "You return only raw valid JSON. No markdown. No explanation."},
+                {"role": "system", "content": "Return only raw valid JSON. No markdown."},
                 {"role": "user",   "content": prompt}
             ]
         )
@@ -339,22 +383,69 @@ Return ONLY valid JSON:
     except Exception as e:
         print(f"generate_next_task error: {e}")
         return None
+    
+
+def validate_generated_task(task_data, lesson_topics):
+    """Validate AI-generated task before showing to student."""
+    task_type = task_data.get('task_type', 'free_code')
+    code_template = task_data.get('code_template', '')
+    correct_answer = task_data.get('correct_answer', '').strip()
+    instruction = task_data.get('instruction', '')
+
+    if not instruction:
+        return False, "Missing instruction"
+
+    if task_type == 'fill_blank':
+        if '_____' not in code_template:
+            return False, "No blank in template"
+        if not correct_answer:
+            return False, "Missing correct answer"
+
+        # Find what replaces _____ by comparing template position
+        # Split both template and correct_answer at the same structure
+        blank_pos = code_template.find('_____')
+        before_blank = code_template[:blank_pos]
+        after_blank = code_template[blank_pos + 5:]
+
+        # Extract the answer: everything in correct_answer between before and after
+        correct_clean = correct_answer.strip()
+        if before_blank.strip() and correct_clean.startswith(before_blank.strip()):
+            correct_clean = correct_clean[len(before_blank.strip()):].strip()
+        if after_blank.strip() and correct_clean.endswith(after_blank.strip()):
+            correct_clean = correct_clean[:-len(after_blank.strip())].strip()
+
+        # Take first meaningful token
+        tokens = re.split(r'[\s=]+', correct_clean)
+        token = next((t for t in tokens if t), correct_clean)
+        task_data['correct_answer'] = token
+
+    elif task_type == 'bug_fix':
+        if not code_template:
+            return False, "Missing buggy code"
+        if not correct_answer:
+            return False, "Missing correct answer"
+        if code_template.strip() == correct_answer.strip():
+            return False, "Buggy code identical to correct answer"
+
+    return True, "OK"
 
 
-def should_complete_application(passed_count, failed_count, avg_attempts):
+def should_complete_application(passed_count, failed_count, avg_attempts, total_topics=8):
     """Decide if student has mastered the application node."""
-    # Must pass at least 3 tasks
-    if passed_count < 3:
+    # Must cover at least 75% of lesson topics
+    min_tasks = max(4, round(total_topics * 0.75))
+
+    if passed_count < min_tasks:
         return False
-    # Must have good performance — less than 2 avg attempts
-    if avg_attempts > 2.5:
-        return False
-    # Fast learner — 3 passes with 1 attempt each
-    if passed_count >= 3 and avg_attempts <= 1.5:
+
+    # Struggling student — allow completion after covering min topics with more attempts
+    if avg_attempts > 3.0:
+        return passed_count >= min_tasks
+
+    # Normal learner — covered min topics with reasonable attempts
+    if passed_count >= min_tasks and avg_attempts <= 2.5:
         return True
-    # Normal learner — 4 passes
-    if passed_count >= 4:
-        return True
+
     return False
 
 
@@ -398,21 +489,24 @@ def generate_next_test_question(lesson_title, question_number, weak_areas=None, 
 
     prompt = f"""Create Python test question #{question_number} of 5 for lesson "{lesson_title}".
 
+This is a FINAL TEST — questions must be HARDER than practice tasks.
 Test ONLY this topic: {current_topic}
-Concepts actually taught in this lesson: {taught_str}
-Previous questions covered: {prev_q_titles} — do NOT repeat.
+All lesson topics: {taught_str}
+Previous questions: {prev_q_titles} — do NOT repeat.
 {weak_context}
 
 Student: age_group={age_group}, level={level}, difficulty={difficulty}
-Style: {style}
 
-Rules:
-- ONLY test concepts from this list: {taught_str}
-- Do NOT test any concept not in the taught list
-- Student must WRITE Python code — no theory, no explanations
-- Do NOT specify exact variable names or values — test the concept, not memorization
-- Questions must test concept understanding, not exact implementation
-- This is question {question_number} of 5
+CRITICAL RULES:
+- Questions must COMBINE multiple concepts from: {taught_str}
+- Do NOT ask simple single-concept tasks like "print hello world"
+- Ask questions that require THINKING — edge cases, combining concepts, problem solving
+- DO NOT repeat the same idea in many ways. Always give a completely different scenario.
+- Previous questions tested: {prev_q_titles} — your question must test something ENTIRELY DIFFERENT
+- Student ONLY knows: {taught_str} — NOTHING ELSE EXISTS FOR THEM
+- If your question requires a concept outside {taught_str}, generate a completely different question
+- The solution must be achievable using ONLY: {taught_str}
+- This is question {question_number} of 5 — each question must test different concept combinations
 
 Return ONLY valid JSON:
 {{
@@ -422,7 +516,7 @@ Return ONLY valid JSON:
   "check_regex": "simple regex validating correct concept was used",
   "points": 20
 }}"""
-
+    
     try:
         response = client.chat.completions.create(
             model=__Model__,
@@ -554,15 +648,20 @@ Your Teaching Philosophy:
 2. TASK EVALUATION — When evaluating code output:
    - Focus on CONCEPT mastery, not exact implementation
    - If the student demonstrated understanding of the concept, mark as COMPLETE
-   - Never add requirements that were not in the original task
-   - Never change success criteria mid-task
+   - ABSOLUTE RULE: If the output satisfies the task requirement, it is COMPLETE — do not ask for more
+   - NEVER add requirements that were not explicitly stated in the original task
+   - NEVER ask for descriptive output unless the task specifically said "descriptive"
+   - NEVER change success criteria mid-task
 
 3. WHEN TASK IS COMPLETE — Celebrate briefly (1 sentence), then assign a new challenge that builds on the previous one progressively.
 
 4. WHEN TASK IS INCOMPLETE — Ask ONE specific question that guides the student toward the solution. Never repeat the same hint twice. After 3 failed attempts, simplify the task.
 
-5. STRICT RULES:
-   - NEVER write code, or syntax examples
+5. STRICT RULES — THESE ARE ABSOLUTE, NO EXCEPTIONS:
+   - NEVER write any code, not even a single character of Python syntax
+   - NEVER show function names, operators, brackets, or any code-like text
+   - NEVER use backticks or code blocks of any kind
+   - If you are tempted to write code — ask a guiding question instead
    - NEVER contradict yourself between messages
    - NEVER loop back to a completed task
    - Keep responses under 4 sentences

@@ -9,8 +9,11 @@
 <div class="app-layout">
 
   <!-- TOP: Progress bar -->
-  <div class="app-progress-bar">
-    <div class="app-progress-fill" id="progressFill" style="width: 0%"></div>
+  <div class="app-progress-wrap">
+    <span class="app-progress-label" id="progressLabel">0% Complete</span>
+    <div class="app-progress-bar">
+      <div class="app-progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
   </div>
 
   <!-- MAIN: 3 columns -->
@@ -25,26 +28,7 @@
           <p class="app-steps-sub">Build it step by step</p>
         </div>
       </div>
-
-      <div class="app-steps-list" id="stepsList">
-        {% for task in tasks %}
-        <div class="app-step" data-step="{{ forloop.counter }}" data-status="{% if forloop.first %}active{% else %}locked{% endif %}">
-          <div class="app-step-indicator">
-            <div class="app-step-dot {% if forloop.first %}active{% else %}locked{% endif %}">
-              {% if forloop.first %}<span>1</span>{% else %}<i class="fas fa-lock"></i>{% endif %}
-            </div>
-            {% if not forloop.last %}<div class="app-step-line"></div>{% endif %}
-          </div>
-          <div class="app-step-content">
-            <span class="app-step-label">Step {{ forloop.counter }}</span>
-            <p class="app-step-task">{{ task.instruction }}</p>
-            <div class="app-step-xp hidden" id="xp-{{ forloop.counter }}">+10 XP</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- Complete button -->
+      <div class="app-steps-list" id="stepsList"></div>
       <form method="POST" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
         <button type="submit" class="app-complete-btn hidden" id="completeBtn">
@@ -52,45 +36,126 @@
           <i class="fas fa-arrow-right"></i>
         </button>
       </form>
-
       <input type="hidden" id="sectionId" value="{{ section.id }}"/>
       <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
     </div>
 
-    <!-- MIDDLE: Code editor -->
+    <!-- MIDDLE: Task panel -->
     <div class="app-editor-panel">
-      <div class="app-editor-topbar">
-        <div class="app-dots">
-          <span class="dot red"></span>
-          <span class="dot yellow"></span>
-          <span class="dot green"></span>
-        </div>
-        <span class="app-filename">main.py</span>
-        <button class="app-reset-btn" id="resetBtn">
-          <i class="fas fa-rotate-left"></i> Reset
-        </button>
+
+      <!-- Task meta: type badge + difficulty -->
+      <div class="app-task-meta" id="taskMeta">
+        <span class="task-type-badge" id="taskTypeBadge">
+          <i class="fas fa-code"></i> Free Code
+        </span>
+        <span class="task-diff-badge" id="taskDiffBadge">
+          <i class="fas fa-signal"></i> Easy
+        </span>
       </div>
 
-      <div class="app-editor-wrap">
-        <textarea id="codeEditor"></textarea>
+      <!-- ── FREE CODE panel ── -->
+      <div id="panelFreeCode" class="task-panel">
+        <div class="app-editor-topbar">
+          <div class="app-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="app-filename">main.py</span>
+          <button class="app-reset-btn" id="resetBtn">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+        <div class="app-editor-wrap">
+          <textarea id="codeEditor"></textarea>
+        </div>
+        <div class="app-output-wrap">
+          <div class="app-output-topbar">
+            <span><i class="fas fa-terminal"></i> Output</span>
+            <span class="app-output-status" id="outputStatus"></span>
+          </div>
+          <div class="app-output-body" id="outputBody">
+            <span class="app-output-placeholder">Run your code to see output...</span>
+          </div>
+        </div>
+        <div class="app-run-bar">
+          <button class="app-run-btn" id="runBtn">
+            <i class="fas fa-play"></i> Run
+          </button>
+          <span class="app-step-hint" id="stepHint">Write your code above and click Run</span>
+        </div>
       </div>
 
-      <div class="app-output-wrap">
-        <div class="app-output-topbar">
-          <span><i class="fas fa-terminal"></i> Output</span>
-          <span class="app-output-status" id="outputStatus"></span>
+      <!-- ── FILL IN THE BLANK panel ── -->
+      <div id="panelFillBlank" class="task-panel hidden">
+        <div class="fill-header">
+          <div class="fill-header-icon"><i class="fas fa-pen-to-square"></i></div>
+          <div>
+            <h3 class="fill-title">Fill in the Blank</h3>
+            <p class="fill-sub">Complete the missing part of the code</p>
+          </div>
         </div>
-        <div class="app-output-body" id="outputBody">
-          <span class="app-output-placeholder">Run your code to see output...</span>
+        <div class="fill-code-wrap">
+          <div class="fill-code-block" id="fillBlankCode"></div>
+        </div>
+        <div class="fill-answer-wrap">
+          <label class="fill-label">
+            <i class="fas fa-keyboard"></i> Your Answer
+          </label>
+          <input type="text" id="fillBlankInput" class="fill-input" placeholder="Type the missing code..."/>
+          <p class="fill-hint" id="fillBlankHint"></p>
+        </div>
+        <div class="app-run-bar">
+          <button class="app-run-btn" id="fillSubmitBtn">
+            <i class="fas fa-check"></i> Submit Answer
+          </button>
+          <span class="fill-feedback" id="fillFeedback"></span>
         </div>
       </div>
 
-      <div class="app-run-bar">
-        <button class="app-run-btn" id="runBtn">
-          <i class="fas fa-play"></i> Run
-        </button>
-        <span class="app-step-hint" id="stepHint">Write your code above and click Run</span>
+      <!-- ── BUG FIX panel ── -->
+      <div id="panelBugFix" class="task-panel hidden">
+        <div class="bug-header">
+          <div class="bug-header-icon"><i class="fas fa-bug"></i></div>
+          <div>
+            <h3 class="bug-title">Bug Fix</h3>
+            <p class="bug-sub">Find and fix the error in the code below</p>
+          </div>
+        </div>
+        <div class="app-editor-topbar">
+          <div class="app-dots">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <span class="app-filename">
+            buggy.py
+            <span class="bug-indicator"><i class="fas fa-circle-exclamation"></i> 1 error</span>
+          </span>
+          <button class="app-reset-btn" id="bugResetBtn">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+        <div class="app-editor-wrap">
+          <textarea id="bugEditor"></textarea>
+        </div>
+        <div class="app-output-wrap">
+          <div class="app-output-topbar">
+            <span><i class="fas fa-terminal"></i> Output</span>
+            <span class="app-output-status" id="bugOutputStatus"></span>
+          </div>
+          <div class="app-output-body" id="bugOutputBody">
+            <span class="app-output-placeholder">Run your fixed code to test it...</span>
+          </div>
+        </div>
+        <div class="app-run-bar">
+          <button class="app-run-btn" id="bugRunBtn">
+            <i class="fas fa-play"></i> Run Fixed Code
+          </button>
+          <span class="app-step-hint" id="bugStepHint">Fix the bug above and click Run</span>
+        </div>
       </div>
+
     </div>
 
     <!-- RIGHT: EVA chat -->
@@ -106,10 +171,7 @@
         </div>
         <span class="app-eva-badge">AI</span>
       </div>
-
-      <div class="app-eva-messages" id="evaMessages">
-      </div>
-
+      <div class="app-eva-messages" id="evaMessages"></div>
       <div class="app-eva-typing hidden" id="evaTyping">
         <div class="app-eva-msg-avatar">
           <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
@@ -118,15 +180,11 @@
           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
         </div>
       </div>
-
     </div>
 
   </div>
 
-  <!-- XP Float animation container -->
   <div id="xpFloatContainer"></div>
-
-  <!-- Confetti canvas -->
   <canvas id="appConfetti"></canvas>
 
 </div>
@@ -134,13 +192,15 @@
 
 {% block scripts %}
 <script>
-  const SECTION_ID = {{ section.id }};
-  const TASKS = {{ tasks_json|safe }};
-  const TOTAL_TASKS = {{ total_tasks }};
-  const EVA_CONTEXT = {
-    level: {{ level }},
-    completedCount: {{ completed_sections_count|default:0 }},
-    weakAreas: [],
+  const SECTION_ID   = {{ section.id }};
+  const TASKS        = {{ tasks_json|safe }};
+  const TOTAL_TASKS  = {{ total_tasks }};
+  const ALREADY_COMPLETED = {{ already_completed|yesno:"true,false" }};
+  const PASSED_COUNT      = {{ passed_count }};
+  const EVA_CONTEXT  = {
+    level:            {{ level }},
+    completedCount:   {{ completed_sections_count|default:0 }},
+    weakAreas:        [],
     completedLessons: [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}]
   };
 </script>

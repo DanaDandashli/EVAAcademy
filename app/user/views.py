@@ -17,7 +17,7 @@ from django.core.cache import cache
 from functools import wraps
 from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
                  generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test,
-                 generate_competition_challenge, generate_solution)
+                 generate_competition_challenge, generate_solution, validate_generated_task)
 
 User = get_user_model()
 
@@ -634,107 +634,156 @@ def ApplicationView(request, section_id):
     )
     student_context = get_student_context(user)
 
-    # Get task attempts for this section
+    lesson_topics = next(
+        (l['topics'] for l in PYTHON_CURRICULUM_FOUNDATION if l['title'] == section.lesson.title), [])
+
     attempts = TaskAttempt.objects.filter(
         user=user, section=section).order_by('task_order')
     passed_count = attempts.filter(passed=True).count()
     failed_count = attempts.filter(passed=False).count()
     avg_attempts = attempts.aggregate(avg=models.Avg('attempts'))['avg'] or 1
 
-    # Check if already completed
     already_completed = UserProgress.objects.filter(
         user=user, section=section, completed=True
     ).exists()
 
-    # Get tasks for THIS student only
-    tasks = list(section.tasks.filter(user=user).order_by('order'))
+    # ── If already completed — return immediately, no task generation ──
+    if already_completed:
+        return render(request, 'nodes/application.html', {
+            'section':                  section,
+            'lesson':                   section.lesson,
+            'user':                     user,
+            'tasks_json':               json.dumps([]),
+            'total_tasks':              passed_count,
+            'passed_count':             passed_count,
+            'already_completed':        True,
+            'completed_lessons':        completed_lessons,
+            'level':                    student_context.get('level', 1),
+            'completed_sections_count': TaskAttempt.objects.filter(user=user, passed=True).count(),
+        })
 
-    # Generate first task if none exist for this student
-    if not tasks:
-        task_data = generate_next_task(
-            lesson_title=section.lesson.title,
-            task_number=1,
-            previous_tasks=[],
-            student_performance={
-                'passed_count': 0,
-                'failed_count': 0,
-                'avg_attempts': 1,
-            },
-            age_group=user.age_group,
-            completed_lessons=completed_lessons,
-            student_context=student_context,
-        )
+    # ── Current task order = passed + 1 ──
+    next_order = passed_count + 1
+    current_task = section.tasks.filter(user=user, order=next_order).first()
+
+    # ── Generate current task if it doesn't exist ──
+    if not current_task:
+        previous_tasks = list(section.tasks.filter(user=user).order_by('order').values(
+            'instruction', 'hint', 'starter_code', 'topic_covered'
+        ))
+        task_data = None
+        for _attempt in range(3):
+            candidate = generate_next_task(
+                lesson_title=section.lesson.title,
+                task_number=next_order,
+                previous_tasks=previous_tasks,
+                student_performance={
+                    'passed_count': passed_count,
+                    'failed_count': failed_count,
+                    'avg_attempts': avg_attempts,
+                },
+                age_group=user.age_group,
+                completed_lessons=completed_lessons,
+                student_context=student_context,
+                lesson_topics=lesson_topics,
+            )
+            if candidate:
+                valid, reason = validate_generated_task(
+                    candidate, lesson_topics)
+                if valid:
+                    task_data = candidate
+                    break
+                print(f"Task rejected (attempt {_attempt + 1}): {reason}")
+
         if task_data:
-            Task.objects.create(
+            current_task = Task.objects.create(
                 section=section,
                 user=user,
-                order=1,
+                order=next_order,
+                topic_covered=task_data.get('topic_covered', ''),
                 instruction=task_data.get('instruction', ''),
                 hint=task_data.get('hint', ''),
-                starter_code='# Write your solution here\n',
+                starter_code=task_data.get(
+                    'code_template', '') or '# Write your solution here\n',
                 expected_output=task_data.get('expected_output', ''),
                 check_regex=task_data.get('check_regex', ''),
+                task_type=task_data.get('task_type', 'free_code'),
+                difficulty=task_data.get('difficulty', 'easy'),
+                correct_answer=task_data.get('correct_answer', ''),
+                code_template=task_data.get('code_template', ''),
             )
-            tasks = list(section.tasks.filter(user=user).order_by('order'))
 
-    context = {
+    return render(request, 'nodes/application.html', {
         'section':                  section,
         'lesson':                   section.lesson,
         'user':                     user,
-        'tasks':                    tasks,
         'tasks_json':               json.dumps([{
-            'id':             t.id,
-            'order':          t.order,
-            'instruction':    t.instruction,
-            'hint':           t.hint,
-            'starter_code':   t.starter_code,
-            'expected_output': t.expected_output,
-            'check_regex':    t.check_regex,
-        } for t in tasks]),
-        'total_tasks':              len(tasks),
+            'id':              current_task.id,
+            'order':           current_task.order,
+            'instruction':     current_task.instruction,
+            'hint':            current_task.hint,
+            'starter_code':    current_task.starter_code,
+            'expected_output': current_task.expected_output,
+            'check_regex':     current_task.check_regex,
+            'task_type':       current_task.task_type,
+            'difficulty':      current_task.difficulty,
+            'correct_answer':  current_task.correct_answer,
+            'code_template':   current_task.code_template,
+            'topic_covered':   current_task.topic_covered,
+        }] if current_task else []),
+        'total_tasks':              max(round(len(lesson_topics) * 0.75), 4),
         'passed_count':             passed_count,
-        'already_completed':        already_completed,
+        'already_completed':        False,
         'completed_lessons':        completed_lessons,
         'level':                    student_context.get('level', 1),
         'completed_sections_count': TaskAttempt.objects.filter(user=user, passed=True).count(),
-    }
-    return render(request, 'nodes/application.html', context)
+    })
 
 
 @student_required
 @require_POST
 def GenerateNextTaskView(request, section_id):
-    section = get_object_or_404(Section, id=section_id, node_type='application')
-    user    = request.user
-    data    = json.loads(request.body)
+    section = get_object_or_404(
+        Section, id=section_id, node_type='application')
+    user = request.user
+    data = json.loads(request.body)
 
     passed_task_order = data.get('passed_task_order', 1)
-    student_code      = data.get('code', '')
+    student_code = data.get('code', '')
 
     # Save task attempt
-    attempt, _ = TaskAttempt.objects.get_or_create(
-        user       = user,
-        section    = section,
-        task_order = passed_task_order,
+    attempt, created = TaskAttempt.objects.get_or_create(
+        user=user,
+        section=section,
+        task_order=passed_task_order,
+        defaults={'attempts': 0}
     )
-    attempt.passed   = True
-    attempt.code     = student_code
-    attempt.attempts = attempt.attempts + 1
+    attempt.passed = True
+    attempt.code = student_code
+    if created:
+        attempt.attempts = 1
+    else:
+        attempt.attempts = attempt.attempts + 1
     attempt.save()
 
     # Get performance stats
-    attempts      = TaskAttempt.objects.filter(user=user, section=section)
-    passed_count  = attempts.filter(passed=True).count()
-    failed_count  = attempts.filter(passed=False).count()
-    avg_attempts  = attempts.aggregate(avg=db_models.Avg('attempts'))['avg'] or 1
+    attempts = TaskAttempt.objects.filter(user=user, section=section)
+    passed_count = attempts.filter(passed=True).count()
+    failed_count = attempts.filter(passed=False).count()
+    avg_attempts = attempts.aggregate(
+        avg=db_models.Avg('attempts'))['avg'] or 1
 
-    # Check if node should be completed
-    if should_complete_application(passed_count, failed_count, avg_attempts):
+    # Lesson topics — used for both completion check and task generation
+    lesson_topics = next(
+        (l['topics'] for l in PYTHON_CURRICULUM_FOUNDATION if l['title'] == section.lesson.title), [])
+
+    # Check if node should be completed — must cover 75% of lesson topics
+    if should_complete_application(passed_count, failed_count, avg_attempts, total_topics=len(lesson_topics)):
         return JsonResponse({'complete': True, 'passed_count': passed_count})
 
     # Get existing tasks
     existing_tasks = list(section.tasks.filter(user=user).order_by('order').values(
-        'instruction', 'hint', 'starter_code'
+        'instruction', 'hint', 'starter_code', 'topic_covered'
     ))
 
     completed_lessons = list(
@@ -745,47 +794,66 @@ def GenerateNextTaskView(request, section_id):
     )
     student_context = get_student_context(user)
 
-    # Generate next task
+    # Generate next task with validation — max 3 attempts
     next_order = section.tasks.filter(user=user).count() + 1
-    task_data  = generate_next_task(
-        lesson_title        = section.lesson.title,
-        task_number         = next_order,
-        previous_tasks      = existing_tasks,
-        student_performance = {
-            'passed_count': passed_count,
-            'failed_count': failed_count,
-            'avg_attempts': avg_attempts,
-        },
-        age_group           = user.age_group,
-        completed_lessons   = completed_lessons,
-        student_context     = student_context,
-    )
+    task_data = None
+    for _attempt in range(3):
+        candidate = generate_next_task(
+            lesson_title=section.lesson.title,
+            task_number=next_order,
+            previous_tasks=existing_tasks,
+            student_performance={
+                'passed_count': passed_count,
+                'failed_count': failed_count,
+                'avg_attempts': avg_attempts,
+            },
+            age_group=user.age_group,
+            completed_lessons=completed_lessons,
+            student_context=student_context,
+            lesson_topics=lesson_topics,
+        )
+        if candidate:
+            valid, reason = validate_generated_task(candidate, lesson_topics)
+            if valid:
+                task_data = candidate
+                break
+            print(f"Task rejected (attempt {_attempt + 1}): {reason}")
 
     if not task_data:
-        return JsonResponse({'error': 'Failed to generate task'}, status=500)
+        return JsonResponse({'error': 'Failed to generate valid task'}, status=500)
 
     # Save new task
     new_task = Task.objects.create(
-        section         = section,
-        user            = user,
-        order           = next_order,
-        instruction     = task_data.get('instruction', ''),
-        hint            = task_data.get('hint', ''),
-        starter_code    = '# Write your solution here\n',
-        expected_output = task_data.get('expected_output', ''),
-        check_regex     = task_data.get('check_regex', ''),
+        section=section,
+        user=user,
+        order=next_order,
+        topic_covered=task_data.get('topic_covered', ''),
+        instruction=task_data.get('instruction', ''),
+        hint=task_data.get('hint', ''),
+        starter_code=task_data.get(
+            'code_template', '') or '# Write your solution here\n',
+        expected_output=task_data.get('expected_output', ''),
+        check_regex=task_data.get('check_regex', ''),
+        task_type=task_data.get('task_type', 'free_code'),
+        difficulty=task_data.get('difficulty', 'easy'),
+        correct_answer=task_data.get('correct_answer', ''),
+        code_template=task_data.get('code_template', ''),
     )
 
     return JsonResponse({
         'complete': False,
         'task': {
-            'id':             new_task.id,
-            'order':          new_task.order,
-            'instruction':    new_task.instruction,
-            'hint':           new_task.hint,
-            'starter_code':   new_task.starter_code,
+            'id':              new_task.id,
+            'order':           new_task.order,
+            'instruction':     new_task.instruction,
+            'hint':            new_task.hint,
+            'starter_code':    new_task.starter_code,
             'expected_output': new_task.expected_output,
-            'check_regex':    new_task.check_regex,
+            'check_regex':     new_task.check_regex,
+            'task_type':       new_task.task_type,
+            'difficulty':      new_task.difficulty,
+            'correct_answer':  new_task.correct_answer,
+            'code_template':   new_task.code_template,
         }
     })
 
@@ -1131,6 +1199,8 @@ def AdvisorChatView(request):
     is_greeting = data.get('is_greeting', False)
     mode = data.get('mode', 'chat')
     output = data.get('output', '')
+    task_type = data.get('task_type', 'free_code')
+    correct_answer = data.get('correct_answer', '')
 
     if not user_message:
         return JsonResponse({'error': 'No message'}, status=400)
@@ -1141,6 +1211,9 @@ def AdvisorChatView(request):
             code=user_code,
             output=output,
             age_group=request.user.age_group,
+            task_type=task_type,
+            correct_answer=correct_answer,
+            fail_count=data.get('fail_count', 0),
         )
     elif mode == 'solution':
         reply = generate_solution(

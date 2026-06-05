@@ -162,6 +162,20 @@ class Slide(models.Model):
     
 
 class Task(models.Model):
+
+    TASK_TYPES = [
+        ('free_code',  'Free Code'),
+        ('fill_blank', 'Fill in the Blank'),
+        ('bug_fix',    'Bug Fix'),
+    ]
+
+    DIFFICULTY_LEVELS = [
+        ('easy',   'Easy'),
+        ('medium', 'Medium'),
+        ('hard',   'Hard'),
+        ('expert', 'Expert'),
+    ]
+
     section = models.ForeignKey(
         Section,
         on_delete=models.CASCADE,
@@ -175,18 +189,25 @@ class Task(models.Model):
         related_name='tasks'
     )
     order = models.IntegerField()
+    topic_covered = models.CharField(max_length=100, blank=True, default='')
     instruction = models.TextField()
     hint = models.TextField(blank=True, default='')
     starter_code = models.TextField(blank=True, default='')
     expected_output = models.TextField(blank=True, default='')
     check_regex = models.CharField(max_length=500, blank=True, default='')
+    task_type = models.CharField(
+        max_length=20, choices=TASK_TYPES, default='free_code')
+    difficulty = models.CharField(
+        max_length=10, choices=DIFFICULTY_LEVELS, default='easy')
+    correct_answer = models.TextField(blank=True, default='')
+    code_template = models.TextField(blank=True, default='')
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return f"{self.section.lesson.title} → Task {self.order}"
-
+        return f"{self.section.lesson.title} → Task {self.order} [{self.task_type}]"
+    
 
 class TestQuestion(models.Model):
     section = models.ForeignKey(

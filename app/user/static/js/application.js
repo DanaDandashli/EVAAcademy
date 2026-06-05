@@ -2,14 +2,13 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // ── State ──
+  let taskNumber = PASSED_COUNT + 1;
   let currentTask = TASKS[0] || null;
-  let taskNumber = 1;
   let failCount = 0;
-  let passCount = 0;
   const CSRF_TOKEN =
     document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
 
-  // ── Init CodeMirror ──
+  // ── CodeMirror editors ──
   const editor = CodeMirror.fromTextArea(
     document.getElementById("codeEditor"),
     {
@@ -24,63 +23,144 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   );
 
-  if (currentTask) {
-    editor.setValue(
-      currentTask.starter_code || "# Write your Python code here\n\n",
+  const bugEditor = CodeMirror.fromTextArea(
+    document.getElementById("bugEditor"),
+    {
+      mode: "python",
+      theme: "dracula",
+      lineNumbers: true,
+      indentUnit: 4,
+      tabSize: 4,
+      indentWithTabs: false,
+      lineWrapping: true,
+    },
+  );
+
+  setTimeout(() => {
+    editor.refresh();
+    bugEditor.refresh();
+  }, 100);
+
+  // ── Panel switching ──
+  function showPanel(taskType) {
+    ["panelFreeCode", "panelFillBlank", "panelBugFix"].forEach((id) =>
+      document.getElementById(id).classList.add("hidden"),
     );
+    if (taskType === "fill_blank") {
+      document.getElementById("panelFillBlank").classList.remove("hidden");
+    } else if (taskType === "bug_fix") {
+      document.getElementById("panelBugFix").classList.remove("hidden");
+      setTimeout(() => bugEditor.refresh(), 100);
+    } else {
+      document.getElementById("panelFreeCode").classList.remove("hidden");
+      setTimeout(() => editor.refresh(), 100);
+    }
   }
-  setTimeout(() => editor.refresh(), 100);
+
+  // ── Task meta badges ──
+  function updateTaskMeta(task) {
+    const typeMap = {
+      free_code: { label: "Free Code", icon: "fa-code", cls: "free" },
+      fill_blank: {
+        label: "Fill in the Blank",
+        icon: "fa-pen-to-square",
+        cls: "fill",
+      },
+      bug_fix: { label: "Bug Fix", icon: "fa-bug", cls: "bug" },
+    };
+    const diffMap = {
+      easy: { label: "Easy", cls: "easy" },
+      medium: { label: "Medium", cls: "medium" },
+      hard: { label: "Hard", cls: "hard" },
+      expert: { label: "Expert", cls: "expert" },
+    };
+    const type = typeMap[task.task_type] || typeMap.free_code;
+    const diff = diffMap[task.difficulty] || diffMap.easy;
+    const typeBadge = document.getElementById("taskTypeBadge");
+    const diffBadge = document.getElementById("taskDiffBadge");
+    typeBadge.innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
+    typeBadge.className = `task-type-badge ${type.cls}`;
+    diffBadge.innerHTML = `<i class="fas fa-signal"></i> ${diff.label}`;
+    diffBadge.className = `task-diff-badge ${diff.cls}`;
+  }
+
+  // ── Load task into UI ──
+  function loadTaskUI(task) {
+    if (!task) return;
+    updateTaskMeta(task);
+    showPanel(task.task_type);
+    if (task.task_type === "fill_blank") {
+      const code = task.code_template || task.starter_code || "";
+      const parts = code.split("_____");
+      const el = document.getElementById("fillBlankCode");
+      el.innerHTML = "";
+      parts.forEach((part, i) => {
+        const span = document.createElement("span");
+        span.className = "fill-code-text";
+        span.textContent = part;
+        el.appendChild(span);
+        if (i < parts.length - 1) {
+          const blank = document.createElement("span");
+          blank.className = "fill-blank-gap";
+          blank.textContent = "_____";
+          el.appendChild(blank);
+        }
+      });
+      document.getElementById("fillBlankInput").value = "";
+      document.getElementById("fillFeedback").textContent = "";
+      document.getElementById("fillBlankHint").textContent = "";
+    } else if (task.task_type === "bug_fix") {
+      bugEditor.setValue(
+        task.code_template || task.starter_code || "# Buggy code here\n",
+      );
+      document.getElementById("bugOutputBody").innerHTML =
+        '<span class="app-output-placeholder">Run your fixed code to test it...</span>';
+      document.getElementById("bugOutputStatus").textContent = "";
+    } else {
+      editor.setValue(task.starter_code || "# Write your solution here\n\n");
+      document.getElementById("outputBody").innerHTML =
+        '<span class="app-output-placeholder">Run your code to see output...</span>';
+      document.getElementById("outputStatus").textContent = "";
+    }
+  }
 
   // ── Skulpt execution ──
   function runCode(code) {
     return new Promise((resolve) => {
       let output = "";
-
-      function outf(text) {
-        output += text;
-      }
-
-      function builtinRead(x) {
-        if (
-          Sk.builtinFiles === undefined ||
-          Sk.builtinFiles["files"][x] === undefined
-        )
-          throw "File not found: " + x;
-        return Sk.builtinFiles["files"][x];
-      }
-
       Sk.configure({
-        output: outf,
-        read: builtinRead,
-        inputfun: function (prompt) {
-          return new Promise((resolve) => {
+        output: (text) => {
+          output += text;
+        },
+        read: (x) => {
+          if (Sk.builtinFiles?.["files"][x] === undefined)
+            throw "File not found: " + x;
+          return Sk.builtinFiles["files"][x];
+        },
+        inputfun: (prompt) =>
+          new Promise((res) => {
             const overlay = document.getElementById("skInputOverlay");
             const promptEl = document.getElementById("skInputPromptText");
             const field = document.getElementById("skInputField");
             const btn = document.getElementById("skInputSubmit");
-
             promptEl.textContent = prompt || "Enter input:";
             field.value = "";
             overlay.style.display = "flex";
             field.focus();
-
             function submit() {
               overlay.style.display = "none";
               btn.removeEventListener("click", submit);
               field.removeEventListener("keydown", onEnter);
-              resolve(field.value);
+              res(field.value);
             }
             function onEnter(e) {
               if (e.key === "Enter") submit();
             }
-
             btn.addEventListener("click", submit);
             field.addEventListener("keydown", onEnter);
-          });
-        },
+          }),
         inputfunTakesPrompt: true,
       });
-
       Sk.misceval
         .asyncToPromise(() =>
           Sk.importMainWithBody("<stdin>", false, code, true),
@@ -91,16 +171,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ── Display output ──
-  function showOutput(output, error) {
-    const body = document.getElementById("outputBody");
-    const status = document.getElementById("outputStatus");
+  function showOutput(bodyId, statusId, output, error) {
+    const body = document.getElementById(bodyId);
+    const status = document.getElementById(statusId);
     body.innerHTML = "";
-
     const cmdEl = document.createElement("div");
     cmdEl.className = "adv-out-line cmd";
     cmdEl.textContent = "$ python main.py";
     body.appendChild(cmdEl);
-
     if (output) {
       output.split("\n").forEach((line) => {
         if (!line) return;
@@ -110,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
         body.appendChild(el);
       });
     }
-
     if (error) {
       error.split("\n").forEach((line) => {
         if (!line) return;
@@ -127,12 +204,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ── Update left panel ──
+  // ── Steps panel ──
   function updateStepsPanel() {
     const list = document.getElementById("stepsList");
     if (!list) return;
     list.innerHTML = "";
-
+    const typeIcons = {
+      free_code: "fa-code",
+      fill_blank: "fa-pen-to-square",
+      bug_fix: "fa-bug",
+    };
     for (let i = 1; i < taskNumber; i++) {
       const div = document.createElement("div");
       div.className = "app-step";
@@ -141,11 +222,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="app-step-dot done"><i class="fas fa-check"></i></div>
         </div>
         <div class="app-step-content">
-          <span class="app-step-label" style="color:#10b981">Step ${i} — Complete</span>
+          <span class="app-step-label" style="color:#10b981">
+            Step ${i} — Complete
+          </span>
         </div>`;
       list.appendChild(div);
     }
-
     if (currentTask) {
       const div = document.createElement("div");
       div.className = "app-step";
@@ -154,27 +236,32 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="app-step-dot active"><span>${taskNumber}</span></div>
         </div>
         <div class="app-step-content">
-          <span class="app-step-label" style="color:var(--primary)">Step ${taskNumber} — Current</span>
+          <span class="app-step-label" style="color:var(--primary)">
+            <i class="fas ${typeIcons[currentTask.task_type] || "fa-code"} fa-xs"></i>
+            Step ${taskNumber} — Current
+          </span>
           <p class="app-step-task">${currentTask.instruction}</p>
-          ${failCount >= 2 ? '<p style="font-size:0.78rem;color:#f59e0b;margin-top:6px;">💡 ' + currentTask.hint + "</p>" : ""}
+          ${failCount >= 2 ? `<p class="app-step-hint-text">💡 ${currentTask.hint}</p>` : ""}
         </div>`;
       list.appendChild(div);
     }
-
-    const pct = ((taskNumber - 1) / Math.max(taskNumber, 3)) * 100;
+    const pct = Math.min(
+      Math.round(((taskNumber - 1) / TOTAL_TASKS) * 100),
+      99,
+    );
     const fill = document.getElementById("progressFill");
+    const label = document.getElementById("progressLabel");
     if (fill) fill.style.width = pct + "%";
+    if (label) label.textContent = pct + "% Complete";
   }
 
-  // ── EVA simple message ──
+  // ── EVA message ──
   async function addEvaAIMessage(userContext) {
     const messages = document.getElementById("evaMessages");
     const typing = document.getElementById("evaTyping");
     if (!messages || !typing) return;
-
     typing.classList.remove("hidden");
     messages.scrollTop = messages.scrollHeight;
-
     try {
       const response = await fetch("/advisor/chat/", {
         method: "POST",
@@ -184,16 +271,14 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify({
           message: userContext,
-          code: editor.getValue(),
+          code: "",
           lesson: document.title || "Python",
           eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
           is_greeting: false,
         }),
       });
-
       const data = await response.json();
       typing.classList.add("hidden");
-
       const div = document.createElement("div");
       div.className = "app-eva-msg";
       div.innerHTML = `
@@ -203,20 +288,15 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="app-eva-msg-bubble"><p>${data.reply || "Keep going!"}</p></div>`;
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
-    } catch (err) {
+    } catch {
       typing.classList.add("hidden");
     }
   }
 
-  // ── EVA validation ──
-  async function askEvaToValidate(instruction, code, output) {
-    const messages = document.getElementById("evaMessages");
+  // ── Validate with dedicated validator ──
+  async function validateCode(code, output) {
     const typing = document.getElementById("evaTyping");
-    if (!messages || !typing) return { passed: false };
-
-    typing.classList.remove("hidden");
-    messages.scrollTop = messages.scrollHeight;
-
+    if (typing) typing.classList.remove("hidden");
     try {
       const response = await fetch("/advisor/chat/", {
         method: "POST",
@@ -225,38 +305,42 @@ document.addEventListener("DOMContentLoaded", () => {
           "X-CSRFToken": CSRF_TOKEN,
         },
         body: JSON.stringify({
-          message: instruction,
-          code: code,
-          output: output,
+          message: currentTask.instruction,
+          code,
+          output,
           mode: "validate",
+          task_type: currentTask.task_type,
+          correct_answer: currentTask.correct_answer,
+          fail_count: failCount,
           lesson: document.title || "Python",
-          eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+          eva_context: {},
           is_greeting: false,
         }),
       });
-
       const data = await response.json();
       const reply = data.reply || "";
       const lines = reply.split("\n").filter((l) => l.trim());
-      const first = lines[0]?.trim().toUpperCase();
+      const verdict = lines[0]?.trim().toUpperCase();
       const feedback = lines.slice(1).join(" ").trim() || reply;
+      if (typing) typing.classList.add("hidden");
 
-      typing.classList.add("hidden");
-
-      const div = document.createElement("div");
-      div.className = "app-eva-msg";
-      div.innerHTML = `
-        <div class="app-eva-msg-avatar">
-          <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
-        </div>
-        <div class="app-eva-msg-bubble"><p>${feedback}</p></div>`;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-
-      return { passed: first === "PASS", reply: feedback };
-    } catch (err) {
-      typing.classList.add("hidden");
-      return { passed: false, reply: "Having trouble connecting. Try again!" };
+      // Show feedback in EVA
+      const messages = document.getElementById("evaMessages");
+      if (messages) {
+        const div = document.createElement("div");
+        div.className = "app-eva-msg";
+        div.innerHTML = `
+          <div class="app-eva-msg-avatar">
+            <img src="/static/images/eva-robot-avatar.jpeg" alt="EVA"/>
+          </div>
+          <div class="app-eva-msg-bubble"><p>${feedback}</p></div>`;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+      return verdict === "PASS";
+    } catch {
+      if (typing) typing.classList.add("hidden");
+      return false;
     }
   }
 
@@ -280,7 +364,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     const colors = [
       "#008080",
       "#00a0a0",
@@ -299,7 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tiltSpeed: 0.04 + Math.random() * 0.06,
       opacity: 1,
     }));
-
     let frame = 0;
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -326,8 +408,15 @@ document.addEventListener("DOMContentLoaded", () => {
     draw();
   }
 
-  // ── Load next task ──
-  async function loadNextTask() {
+  // ── On task pass ──
+  async function onTaskPassed(code) {
+    floatXP("+5 XP");
+    failCount = 0;
+    await loadNextTask(code);
+  }
+
+  // ── Load next task from server ──
+  async function loadNextTask(code) {
     try {
       const response = await fetch("/lesson/" + SECTION_ID + "/next-task/", {
         method: "POST",
@@ -335,106 +424,171 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "application/json",
           "X-CSRFToken": CSRF_TOKEN,
         },
-        body: JSON.stringify({
-          passed_task_order: taskNumber,
-          code: editor.getValue(),
-        }),
+        body: JSON.stringify({ passed_task_order: taskNumber - 1, code }),
       });
-
       const data = await response.json();
-
       if (data.complete) {
-        taskNumber++;       // ← mark last task as completed
-        currentTask = null; // ← no more active task
-        updateStepsPanel(); // ← renders last task as a tick
+        taskNumber++;
+        currentTask = null;
+        updateStepsPanel();
         launchConfetti();
         floatXP("+30 XP BONUS!");
         document.getElementById("progressFill").style.width = "100%";
+        document.getElementById("progressLabel").textContent = "100% Complete";
         document.getElementById("completeBtn").classList.remove("hidden");
         addEvaAIMessage(
-          "The student has completed all application tasks successfully. Congratulate them warmly in 2 sentences and tell them they are ready for the next challenge.",
+          "The student has completed all application tasks successfully. Congratulate them warmly in 2 sentences.",
         );
         return;
       }
-
-      currentTask = data.task;
       taskNumber++;
+      currentTask = data.task;
       failCount = 0;
-      passCount++;
-
-      editor.setValue(currentTask.starter_code || "# Write your code here\n\n");
+      loadTaskUI(currentTask);
       updateStepsPanel();
       addEvaAIMessage(
-        "The student just passed a task. Congratulate them in 1 sentence and encourage them to try the next challenge shown on the left panel. Do NOT write code or repeat the task.",
+        "The student just passed a task. Congratulate them in 1 sentence and encourage the next challenge. No code.",
       );
     } catch (err) {
       console.error("Error loading next task:", err);
     }
   }
 
-  // ── Run button ──
+  // ── FREE CODE: Run button ──
   document.getElementById("runBtn").addEventListener("click", async () => {
-    if (!currentTask) return;
-
+    if (!currentTask || currentTask.task_type !== "free_code") return;
     const runBtn = document.getElementById("runBtn");
     runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
     runBtn.disabled = true;
-
     const code = editor.getValue();
     const result = await runCode(code);
-
-    showOutput(result.output, result.error);
-
+    showOutput("outputBody", "outputStatus", result.output, result.error);
     runBtn.innerHTML = '<i class="fas fa-play"></i> Run';
     runBtn.disabled = false;
-
     if (result.error) {
       failCount++;
-      await askEvaToValidate(
-        currentTask.instruction,
-        code,
-        "ERROR: " + result.error,
+      addEvaAIMessage(
+        `The student got this error: "${result.error}". Guide them in 1 sentence. No code.`,
       );
       updateStepsPanel();
       return;
     }
-
-    const validation = await askEvaToValidate(
-      currentTask.instruction,
-      code,
-      result.output,
-    );
-
-    if (validation.passed) {
-      floatXP("+10 XP");
-      passCount++;
+    const passed = await validateCode(code, result.output);
+    if (passed) {
       failCount = 0;
-      updateStepsPanel();
-      await loadNextTask();
+      await onTaskPassed(code);
     } else {
       failCount++;
       updateStepsPanel();
     }
   });
 
-  // ── Reset ──
+  // ── FREE CODE: Reset button ──
   document.getElementById("resetBtn").addEventListener("click", () => {
-    if (currentTask) {
+    if (currentTask)
       editor.setValue(currentTask.starter_code || "# Write your code here\n\n");
-    }
     document.getElementById("outputBody").innerHTML =
       '<span class="app-output-placeholder">Run your code to see output...</span>';
     document.getElementById("outputStatus").textContent = "";
     addEvaAIMessage(
-      "The student reset their code. Encourage them to try again in 1 sentence.",
+      "The student reset their code. Encourage them in 1 sentence.",
     );
   });
 
+  // ── FILL BLANK: Submit button ──
+  document
+    .getElementById("fillSubmitBtn")
+    .addEventListener("click", async () => {
+      if (!currentTask || currentTask.task_type !== "fill_blank") return;
+      const input = document.getElementById("fillBlankInput");
+      const feedback = document.getElementById("fillFeedback");
+      const answer = input.value.trim();
+      if (!answer) return;
+      const correct = (currentTask.correct_answer || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "");
+      const studentAnswer = answer.trim().toLowerCase().replace(/\s+/g, "");
+      if (studentAnswer === correct) {
+        feedback.textContent = "Correct!";
+        feedback.className = "fill-feedback success";
+        floatXP("+5 XP");
+        failCount = 0;
+        await onTaskPassed(answer);
+      } else {
+        failCount++;
+        feedback.textContent = "Not quite — try again!";
+        feedback.className = "fill-feedback error";
+        if (failCount >= 2) {
+          document.getElementById("fillBlankHint").textContent =
+            "💡 " + currentTask.hint;
+        }
+        updateStepsPanel();
+        addEvaAIMessage(
+          `Student answered "${answer}" for a fill-in-the-blank about: ${currentTask.instruction}. Guide them with a question. No answer, no code.`,
+        );
+      }
+    });
+
+  // Allow Enter key on fill blank
+  document.getElementById("fillBlankInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("fillSubmitBtn").click();
+  });
+
+  // ── BUG FIX: Run button ──
+  document.getElementById("bugRunBtn").addEventListener("click", async () => {
+    if (!currentTask || currentTask.task_type !== "bug_fix") return;
+    const btn = document.getElementById("bugRunBtn");
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+    btn.disabled = true;
+    const code = bugEditor.getValue();
+    const result = await runCode(code);
+    showOutput("bugOutputBody", "bugOutputStatus", result.output, result.error);
+    btn.innerHTML = '<i class="fas fa-play"></i> Run Fixed Code';
+    btn.disabled = false;
+    if (result.error) {
+      failCount++;
+      addEvaAIMessage(
+        `The student got this error: "${result.error}". Guide them in 1 sentence. No code.`,
+      );
+      updateStepsPanel();
+      return;
+    }
+    const passed = await validateCode(code, result.output);
+    if (passed) {
+      failCount = 0;
+      await onTaskPassed(code);
+    } else {
+      failCount++;
+      updateStepsPanel();
+    }
+  });
+
+  // ── BUG FIX: Reset button ──
+  document.getElementById("bugResetBtn").addEventListener("click", () => {
+    if (currentTask)
+      bugEditor.setValue(
+        currentTask.code_template || currentTask.starter_code || "",
+      );
+    document.getElementById("bugOutputBody").innerHTML =
+      '<span class="app-output-placeholder">Run your fixed code to test it...</span>';
+    document.getElementById("bugOutputStatus").textContent = "";
+  });
+
   // ── Initialize ──
-  updateStepsPanel();
-  if (currentTask) {
+  if (ALREADY_COMPLETED) {
+    updateStepsPanel();
+    document.getElementById("progressFill").style.width = "100%";
+    document.getElementById("progressLabel").textContent = "100% Complete";
+    document.getElementById("completeBtn").classList.remove("hidden");
     addEvaAIMessage(
-      "Greet the student warmly in 1 sentence. Tell them EVA is here to help if they get stuck. Do NOT mention the task, do NOT write any code.",
+      "Greet the student warmly in 1 sentence. Tell them that they finished the tasks successfully.",
+    );
+  } else if (currentTask) {
+    loadTaskUI(currentTask);
+    updateStepsPanel();
+    addEvaAIMessage(
+      "Greet the student warmly in 1 sentence. Tell them EVA is here if they get stuck. No code, no task details.",
     );
   }
 });

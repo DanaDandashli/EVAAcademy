@@ -137,17 +137,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Validate with EVA (silent) ──
   async function validateWithEva(instruction, code, output) {
     try {
-      const response = await fetch('/advisor/chat/', {
-        method: 'POST',
+      const response = await fetch("/advisor/chat/", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': CSRF_TOKEN,
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
         },
         body: JSON.stringify({
-          message:     instruction,
-          code:        code,
-          output:      output,
-          mode:        'validate',
+          message: instruction,
+          code: code,
+          output: output,
+          mode: "validate",
+          fail_count: failCount,
           eva_context: {},
           is_greeting: false,
         }),
