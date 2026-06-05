@@ -2,8 +2,6 @@
 {% load static %}
 
 {% block links %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/dracula.min.css">
 <link rel="stylesheet" href="{% static 'css/test.css' %}">
 {% endblock %}
 
@@ -96,8 +94,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 <script>
   const SECTION_ID      = {{ section_id }};
   const QUESTIONS       = {{ questions_json|safe }};

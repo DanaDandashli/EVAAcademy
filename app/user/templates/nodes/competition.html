@@ -4,8 +4,6 @@
 {% block links %}
 <link rel="stylesheet" href="{% static 'css/dashboard-kids.css' %}">
 <link rel="stylesheet" href="{% static 'css/competition.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/theme/dracula.min.css">
 {% endblock %}
 
 {% block content %}
@@ -20,7 +18,7 @@
         <i class="fas fa-swords arena-swords-icon"></i>
         <div>
           <h2 class="arena-title">1v1 Compete Arena</h2>
-          <p class="arena-subtitle">{{ lesson.title }} · Same age group · Best coder wins</p>
+          <p class="arena-subtitle">{{ lesson.title }} · Same level · Best coder wins</p>
         </div>
       </div>
       <div class="arena-meta-pills">
@@ -73,7 +71,7 @@
 
       <div class="compete-match-fair">
         <i class="fas fa-shield-halved compete-match-icon"></i>
-        EVA matched you with a same-age coder. Fair play guaranteed.
+        EVA matched you with a same level coder. Fair play guaranteed.
       </div>
 
       <button class="compete-start-btn" id="competeStartBtn">
@@ -235,8 +233,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 <script>
   const SECTION_ID  = {{ section_id }};
   const CHALLENGE   = {{ challenge_json|safe }};
