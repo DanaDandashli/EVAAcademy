@@ -43,6 +43,16 @@
     {% block content %}{% endblock %}
   </div>
 
+  <!-- Custom Skulpt input prompt -->
+  <div id="skInputOverlay">
+    <div class="sk-input-card">
+      <p id="skInputPromptText"></p>
+      <input id="skInputField" type="text" placeholder="Type your input here..."/>
+      <button id="skInputSubmit">
+        <i class="fas fa-play"></i> Submit
+      </button>
+    </div>
+  </div>
 </div>
 
 <script src="{% static 'js/node.js' %}"></script>

@@ -428,6 +428,9 @@
   max-height:80vh;
   overflow-y:auto;
   position:relative;
+  font-size:0.88rem;
+  color:#374151;
+  line-height:1.7;
 }
 
 .close-solution-modal{
@@ -450,11 +453,7 @@
   align-items:center;
   gap:8px;
 }
-.solution-modal-content{
-font-size:0.88rem;
-color:#374151;
-line-height:1.7;
-}
+
 .solution-loading{
   color:#9ca3af;
   font-style:italic;

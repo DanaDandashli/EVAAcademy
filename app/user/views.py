@@ -230,14 +230,20 @@ def DashboardView(request):
 
     # ── Rank title ──
     level_titles = [
-        (range(1,  3),   'Beginner Coder'),
-        (range(3,  6),   'Intermediate Coder'),
-        (range(6,  9),   'Advanced Coder'),
-        (range(9,  12),  'Expert Coder'),
-        (range(12, 100), 'Master Coder'),
-        (range(100, 999), 'Python Developer'),
+        (range(1,  3),   'Python Rookie'),
+        (range(3,  5),   'Beginner Coder'),
+        (range(5,  7),   'Apprentice Developer'),
+        (range(7,  9),   'Intermediate Developer'),
+        (range(9,  11),  'Advanced Developer'),
+        (range(11, 13),  'Senior Developer'),
+        (range(13, 15),  'Expert Pythonista'),
+        (range(15, 17),  'Python Architect'),
+        (range(17, 100), 'Master Developer'),
+        (range(100, 999), 'Python Engineer'),
     ]
-    rank_title = 'Beginner Coder'
+
+    rank_title = 'Python Rookie'
+
     for r, title in level_titles:
         if level in r:
             rank_title = title

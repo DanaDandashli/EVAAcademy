@@ -49,7 +49,37 @@ document.addEventListener("DOMContentLoaded", () => {
         return Sk.builtinFiles["files"][x];
       }
 
-      Sk.configure({ output: outf, read: builtinRead });
+      Sk.configure({
+        output: outf,
+        read: builtinRead,
+        inputfun: function (prompt) {
+          return new Promise((resolve) => {
+            const overlay = document.getElementById("skInputOverlay");
+            const promptEl = document.getElementById("skInputPromptText");
+            const field = document.getElementById("skInputField");
+            const btn = document.getElementById("skInputSubmit");
+
+            promptEl.textContent = prompt || "Enter input:";
+            field.value = "";
+            overlay.style.display = "flex";
+            field.focus();
+
+            function submit() {
+              overlay.style.display = "none";
+              btn.removeEventListener("click", submit);
+              field.removeEventListener("keydown", onEnter);
+              resolve(field.value);
+            }
+            function onEnter(e) {
+              if (e.key === "Enter") submit();
+            }
+
+            btn.addEventListener("click", submit);
+            field.addEventListener("keydown", onEnter);
+          });
+        },
+        inputfunTakesPrompt: true,
+      });
 
       Sk.misceval
         .asyncToPromise(() =>
@@ -314,6 +344,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (data.complete) {
+        taskNumber++;       // ← mark last task as completed
+        currentTask = null; // ← no more active task
+        updateStepsPanel(); // ← renders last task as a tick
         launchConfetti();
         floatXP("+30 XP BONUS!");
         document.getElementById("progressFill").style.width = "100%";

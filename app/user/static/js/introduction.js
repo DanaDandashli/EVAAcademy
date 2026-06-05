@@ -38,7 +38,37 @@ document.addEventListener("DOMContentLoaded", () => {
       return Sk.builtinFiles["files"][x];
     }
 
-    Sk.configure({ output: outf, read: builtinRead });
+    Sk.configure({
+      output: outf,
+      read: builtinRead,
+      inputfun: function (prompt) {
+        return new Promise((resolve) => {
+          const overlay = document.getElementById("skInputOverlay");
+          const promptEl = document.getElementById("skInputPromptText");
+          const field = document.getElementById("skInputField");
+          const btn = document.getElementById("skInputSubmit");
+
+          promptEl.textContent = prompt || "Enter input:";
+          field.value = "";
+          overlay.style.display = "flex";
+          field.focus();
+
+          function submit() {
+            overlay.style.display = "none";
+            btn.removeEventListener("click", submit);
+            field.removeEventListener("keydown", onEnter);
+            resolve(field.value);
+          }
+          function onEnter(e) {
+            if (e.key === "Enter") submit();
+          }
+
+          btn.addEventListener("click", submit);
+          field.addEventListener("keydown", onEnter);
+        });
+      },
+      inputfunTakesPrompt: true,
+    });
 
     Sk.misceval
       .asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, code, true))
