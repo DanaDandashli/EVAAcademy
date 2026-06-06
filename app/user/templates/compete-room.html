@@ -13,7 +13,7 @@
   <!-- Top bar -->
   <div class="cr-topbar">
     <a href="{% url 'dashboard' %}" class="cr-back-btn">
-      <i class="fas fa-arrow-left"></i> Back to Dashboard
+      <i class="fas fa-arrow-left"></i> Back
     </a>
     <div class="cr-topbar-center">
       <i class="fas fa-swords" style="color:var(--purple)"></i>
@@ -33,8 +33,8 @@
     <div class="cr-phase" id="crPhaseMatchmaking">
       <div class="cr-matchmaking-card">
 
-        <h2 class="cr-match-title">Finding your opponent...</h2>
-        <p class="cr-match-sub">EVA is matching you with a player at your level</p>
+        <h2 class="cr-match-title">Ready to Battle?</h2>
+        <p class="cr-match-sub">EVA AI is your opponent — prove your skills and earn XP</p>
 
         <div class="cr-vs-wrap">
           <!-- YOU -->
@@ -56,7 +56,7 @@
           <!-- OPPONENT -->
           <div class="cr-player opp-player">
             <div class="cr-player-avatar opp-avatar-wrap">
-              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+              <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
             </div>
             <span class="cr-player-name" id="oppName">Searching...</span>
             <span class="cr-player-meta" id="oppMeta">Finding match...</span>
@@ -74,7 +74,7 @@
 
         <div class="cr-match-fair">
           <i class="fas fa-shield-halved"></i>
-          EVA matched you with a same-level coder. Fair play guaranteed.
+          EVA AI adapts to your level — every battle is a fair challenge.
         </div>
 
         <button class="cr-start-btn" id="crStartBtn">
@@ -174,8 +174,8 @@
               <i class="fas fa-play"></i> Run & Test
             </button>
             <div class="cr-tests-row">
-              <span>Tests passed</span>
-              <span id="crYouTests">0/5</span>
+              <span>Status</span>
+              <span id="crYouTests">Pending</span>
             </div>
             <div class="cr-tests-bar">
               <div class="cr-tests-fill you-fill" id="crYouTestsFill" style="width:0%"></div>
@@ -199,7 +199,7 @@
         <div class="cr-opp-panel">
           <div class="cr-coder-header opp-header">
             <div class="cr-coder-avatar">
-              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+              <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
             </div>
             <div class="cr-coder-info">
               <span class="cr-coder-name" id="oppNameBattle">Opponent</span>
@@ -211,8 +211,8 @@
           </div>
 
           <div class="cr-opp-tests-row">
-            <span>Tests passed</span>
-            <span id="crOppTests">0/5</span>
+            <span>Status</span>
+            <span id="crOppTests">Pending</span>
           </div>
           <div class="cr-tests-bar">
             <div class="cr-tests-fill opp-fill" id="crOppTestsFill" style="width:0%"></div>
@@ -249,7 +249,7 @@
               {% endif %}
             </div>
             <span class="cr-result-name">{{ user.username }} <span class="you-badge">YOU</span></span>
-            <span class="cr-result-tests" id="crYouResultTests">0/5</span>
+            <span class="cr-result-tests" id="crYouResultTests">Pending</span>
             <div class="cr-tests-bar" style="width:100%">
               <div class="cr-tests-fill you-fill" id="crYouResultFill" style="width:0%"></div>
             </div>
@@ -260,10 +260,10 @@
 
           <div class="cr-result-player opp-result">
             <div class="cr-result-avatar">
-              <img src="https://api.dicebear.com/8.x/bottts/svg?seed=opponent&backgroundColor=10b981" alt="Opponent"/>
+              <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
             </div>
             <span class="cr-result-name" id="crOppResultName">Opponent</span>
-            <span class="cr-result-tests" id="crOppResultTests">0/5</span>
+            <span class="cr-result-tests" id="crOppResultTests">Pending</span>
             <div class="cr-tests-bar" style="width:100%">
               <div class="cr-tests-fill opp-fill" id="crOppResultFill" style="width:0%"></div>
             </div>
@@ -275,9 +275,9 @@
           <button class="cr-play-again-btn" id="crPlayAgain">
             <i class="fas fa-rotate"></i> Play Again
           </button>
-          <a href="{% url 'dashboard' %}" class="cr-back-dash-btn">
-            <i class="fas fa-home"></i> Back to Dashboard
-          </a>
+          <button class="cr-back-dash-btn" id="crViewSolution">
+            <i class="fas fa-graduation-cap"></i> View EVA Solution
+          </button>
         </div>
 
       </div>
@@ -289,17 +289,25 @@
 
 <!-- Confetti -->
 <canvas id="crConfetti"></canvas>
+
+<div id="crSolutionModal" class="compete-solution-modal">
+  <div class="solution-modal-content">
+    <button onclick="const m=document.getElementById('crSolutionModal');m.classList.add('hidden');m.style.display='none';" class="close-solution-modal"><i class="fas fa-times"></i></button>
+    <h3 class="solution-modal-title"><i class="fas fa-graduation-cap" style="color:var(--purple,#6c63ff)"></i> EVA Solution Review</h3>
+    <div id="crSolutionContent" class="solution-loading"></div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <!-- Pass data to JS -->
 <script>
-  const COMPLETED_TOPICS = [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  const COMPLETED_TOPICS = [{% for t in completed_topics %}"{{ t }}"{% if not forloop.last %},{% endif %}{% endfor %}];
   const USER_LEVEL = {{ profile.level }};
   const COMPLETE_URL = "{% url 'dashboard' %}";
+  const CSRF_TOKEN = "{{ csrf_token }}";
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 <script src="{% static 'js/compete-room.js' %}"></script>
 {% endblock %}

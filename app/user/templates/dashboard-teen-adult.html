@@ -365,20 +365,6 @@
       <div class="lp-body">
         {% for lesson_data in lessons_data %}
         {% if not forloop.first %}<div class="lp-divider"></div>{% endif %}
-
-        {% for gate in level_gates %}
-          {% if gate.before_lesson == lesson_data.lesson.id %}
-          <div class="lp-level-gate {% if gate.unlocked %}unlocked{% else %}locked{% endif %}">
-            <div class="lp-level-gate-line"></div>
-            <div class="lp-level-gate-badge">
-              {% if gate.unlocked %}<i class="fa-solid fa-star fa-xs"></i> Level {{ gate.level }} Unlocked
-              {% else %}<i class="fa-solid fa-lock fa-xs"></i> Requires Level {{ gate.level }}{% endif %}
-            </div>
-            <div class="lp-level-gate-line"></div>
-          </div>
-          {% endif %}
-        {% endfor %}
-
         <div class="lp-section">
           <div class="lp-section-header">
             <div class="lp-section-num {% if lesson_data.is_completed %}completed{% elif lesson_data.is_locked %}locked-num{% else %}in-progress{% endif %}">
@@ -601,53 +587,53 @@
   <div class="page-panel" id="panel-compete">
     <div class="page-header">
       <h1><i class="fa-solid fa-shield-halved" style="color:var(--accent3);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> 1v1 Compete</h1>
-      <p>Challenge other coders to real-time battles</p>
+      <p>Battle EVA AI in real-time coding challenges</p>
     </div>
+
     <div class="compete-hero">
       <h2><i class="fa-solid fa-swords" style="-webkit-text-fill-color:initial;font-size:1.4rem;color:var(--accent3)"></i> Ready to Battle?</h2>
-      <p>Match with a coder of similar skill level and compete in live coding challenges</p>
-      <button class="compete-btn"><i class="fa-solid fa-play"></i> Find Match Now</button>
+      <p>Take on EVA AI in a live coding challenge — prove your skills and earn XP</p>
+      <a href="{% url 'compete_room' %}" class="compete-btn">
+        <i class="fa-solid fa-play"></i> Start Battle
+      </a>
     </div>
+
     <div class="compete-stats">
-      <div class="compete-stat"><div class="cv">38</div><div class="cl"><i class="fa-solid fa-swords fa-sm"></i> Total Matches</div></div>
-      <div class="compete-stat"><div class="cv" style="color:var(--green)">28</div><div class="cl"><i class="fa-solid fa-circle-check fa-sm"></i> Wins</div></div>
-      <div class="compete-stat"><div class="cv" style="color:var(--accent3)">10</div><div class="cl"><i class="fa-solid fa-circle-xmark fa-sm"></i> Losses</div></div>
-    </div>
-    <div class="recent-matches">
-      <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent)"></i> Recent Matches</h3>
-      <div class="match-row">
-        <div class="match-vs">
-          <div class="match-avatar" style="background:linear-gradient(135deg,#ff6b9d,#ff4444)">TB</div>
-          <div class="match-name">Tom Briscoe <span style="font-size:0.62rem;color:var(--text-muted)">Lv.36</span></div>
-        </div>
-        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
-        <div class="match-xp">+120 XP</div>
+      <div class="compete-stat">
+        <div class="cv">{{ profile.compete_battles }}</div>
+        <div class="cl"><i class="fa-solid fa-swords fa-sm"></i> Total Battles</div>
       </div>
-      <div class="match-row">
-        <div class="match-vs">
-          <div class="match-avatar" style="background:linear-gradient(135deg,#06d6a0,#0099cc)">YT</div>
-          <div class="match-name">Yuki Tanaka <span style="font-size:0.62rem;color:var(--text-muted)">Lv.35</span></div>
-        </div>
-        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
-        <div class="match-xp">+95 XP</div>
+      <div class="compete-stat">
+        <div class="cv" style="color:var(--green)">{{ profile.compete_wins }}</div>
+        <div class="cl"><i class="fa-solid fa-circle-check fa-sm"></i> Wins</div>
       </div>
-      <div class="match-row">
-        <div class="match-vs">
-          <div class="match-avatar" style="background:linear-gradient(135deg,#ffd166,#ff9900)">SC</div>
-          <div class="match-name">Sarah Chen <span style="font-size:0.62rem;color:var(--text-muted)">Lv.42</span></div>
-        </div>
-        <span class="match-result loss"><i class="fa-solid fa-xmark fa-xs"></i> Loss</span>
-        <div class="match-xp">+20 XP</div>
-      </div>
-      <div class="match-row">
-        <div class="match-vs">
-          <div class="match-avatar" style="background:linear-gradient(135deg,#a78bfa,#6c63ff)">DF</div>
-          <div class="match-name">Dana Flores <span style="font-size:0.62rem;color:var(--text-muted)">Lv.33</span></div>
-        </div>
-        <span class="match-result win"><i class="fa-solid fa-crown fa-xs"></i> Win</span>
-        <div class="match-xp">+85 XP</div>
+      <div class="compete-stat">
+        <div class="cv" style="color:var(--accent2)">{{ profile.elo_rating }}</div>
+        <div class="cl"><i class="fa-solid fa-chart-line fa-sm"></i> ELO Rating</div>
       </div>
     </div>
+
+    <div class="compete-info-card">
+      <div class="compete-info-row">
+        <span class="compete-info-label"><i class="fa-solid fa-robot" style="color:var(--accent2)"></i> Opponent</span>
+        <span class="compete-info-value">EVA AI — adapts to your level</span>
+      </div>
+      <div class="compete-info-row">
+        <span class="compete-info-label"><i class="fa-solid fa-star" style="color:var(--accent4)"></i> Your Level</span>
+        <span class="compete-info-value">{{ rank_title }} — Lv.{{ level }}</span>
+      </div>
+      <div class="compete-info-row">
+        <span class="compete-info-label"><i class="fa-solid fa-percent" style="color:var(--green)"></i> Win Rate</span>
+        <span class="compete-info-value">
+          {% if profile.compete_battles > 0 %}{{ compete_win_rate }}%{% else %}No battles yet{% endif %}
+        </span>
+      </div>
+      <div class="compete-info-row">
+        <span class="compete-info-label"><i class="fa-solid fa-bolt" style="color:var(--accent4)"></i> XP from Battles</span>
+        <span class="compete-info-value">{{ comp_xp }} XP</span>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══════════════ PANEL: EVA ADVISOR ═══════════════ -->
@@ -853,7 +839,7 @@
               <span class="cert-upcoming-name">{{ l.lesson.title }}</span>
               <span class="cert-upcoming-meta">
                 {% if l.is_locked %}
-                  <i class="fa-solid fa-lock fa-xs"></i> Requires Lv.{{ l.lesson.level_required }}
+                  <i class="fa-solid fa-lock fa-xs"></i> Complete previous lesson to unlock
                 {% elif l.completed_count > 0 %}
                   <i class="fa-solid fa-spinner fa-spin fa-xs"></i> {% widthratio l.completed_count l.total_count 100 %}% complete
                 {% else %}

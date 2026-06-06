@@ -200,6 +200,9 @@ def DashboardView(request):
     # Add competition wins XP (50 XP per win)
     xp_from_progress += profile.competition_wins * 50
 
+    # Add compete room wins XP
+    xp_from_progress += profile.compete_wins * NODE_XP['competition']
+
     # ── Unlimited level formula ──
     def get_level_threshold(level):
         """XP needed to reach this level."""
@@ -272,24 +275,27 @@ def DashboardView(request):
     completed_sections_count = 0
     current_lesson = None
     current_section = None
+    all_previous_completed = True
 
     for lesson in lessons:
         sections = lesson.sections.all()
         lesson_sections = []
         lesson_completed = len(sections) > 0
+        lesson_is_locked = not all_previous_completed
+
         for section in sections:
             is_completed = section.id in completed_section_ids
             if not is_completed:
                 lesson_completed = False
-                if current_section is None:
+                if current_section is None and not lesson_is_locked:
                     current_section = section
                     current_lesson = lesson
 
             lesson_sections.append({
-                'section':      section,
+                'section':    section,
                 'is_completed': is_completed,
-                'is_current':   current_section == section,
-                'is_locked': not is_completed and current_section != section,
+                'is_current': current_section == section,
+                'is_locked':  lesson_is_locked or (not is_completed and current_section != section),
             })
             total_sections += 1
             if is_completed:
@@ -301,26 +307,16 @@ def DashboardView(request):
             'is_completed':    lesson_completed,
             'completed_count': sum(1 for s in lesson_sections if s['is_completed']),
             'total_count':     len(lesson_sections),
-            'is_locked':       level < lesson.level_required,
+            'is_locked':       lesson_is_locked,
         })
+
+        # Update flag for next lesson
+        if not lesson_completed:
+            all_previous_completed = False
 
     overall_pct = round(
         (completed_sections_count / total_sections * 100) if total_sections else 0
     )
-
-    # ── Level gate data ──
-    level_gates = []
-    prev_level_required = None
-    for lesson_data in lessons_data:
-        lr = lesson_data['lesson'].level_required
-        if prev_level_required is not None and lr != prev_level_required:
-            level_gates.append({
-                'before_lesson': lesson_data['lesson'].id,
-                'level':         lr,
-                'unlocked':      level >= lr,
-                'xp_needed':     get_level_threshold(lr),
-            })
-        prev_level_required = lr
 
     # ── Leaderboard ──
     leaderboard = StudentProfile.objects.select_related('user').filter(
@@ -399,7 +395,7 @@ def DashboardView(request):
     completed_lessons = [
         l['lesson'].title
         for l in lessons_data
-        if l['completed_count'] > 0
+        if l['is_completed']
     ]
     completed_topics = ', '.join(completed_lessons) if completed_lessons else 'No topics yet'
     completed_quests_count = sum(1 for uq in user_quests if uq['is_complete'])
@@ -413,6 +409,10 @@ def DashboardView(request):
     app_count   = sum(1 for p in completed_progress if p.section.node_type == 'application')
     comp_count  = sum(1 for p in completed_progress if p.section.node_type == 'competition')
     test_count  = sum(1 for p in completed_progress if p.section.node_type == 'test')
+    comp_losses = profile.compete_battles - profile.compete_wins
+    comp_xp = profile.compete_wins * NODE_XP['competition']
+    compete_win_rate = round((profile.compete_wins / profile.compete_battles)
+                             * 100) if profile.compete_battles > 0 else 0
 
     # ── EVA Advisor context ──
     weak_areas = []
@@ -486,7 +486,6 @@ def DashboardView(request):
         'track_label': track_label,
 
         'lessons_data':    lessons_data,
-        'level_gates':     level_gates,
         'current_lesson':  current_lesson,
         'current_section': current_section,
         'current_lesson_num': next(
@@ -523,6 +522,9 @@ def DashboardView(request):
         'app_count':    app_count,
         'comp_count':   comp_count,
         'test_count':   test_count,
+        'comp_losses': comp_losses,
+        'comp_xp':     comp_xp,
+        'compete_win_rate': compete_win_rate,
 
         'eva_context': eva_context,
         'eva_history': eva_history,
@@ -1164,11 +1166,18 @@ def CompeteRoomView(request):
         ).distinct().values_list('title', flat=True)
     )
 
+    # Build actual topics list from completed lessons
+    completed_topics = []
+    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+        if curriculum_lesson['title'] in completed_lessons:
+            completed_topics.extend(curriculum_lesson['topics'])
+
     context = {
         'user':             request.user,
         'profile':          profile,
         'completed_lessons': completed_lessons,
-        'completed_topics': ', '.join(completed_lessons),
+        'completed_topics':  completed_topics,
+        'csrf_token': request.META.get("CSRF_COOKIE", ""),
     }
     return render(request, 'compete-room.html', context)
 
@@ -1180,9 +1189,13 @@ def CompeteResultView(request):
     won = data.get('won', False)
     profile = StudentProfile.objects.get(user=request.user)
 
+    profile.compete_battles += 1
     if won:
-        profile.competition_wins += 1
-        profile.save()
+        profile.compete_wins += 1
+        profile.elo_rating += 25
+    else:
+        profile.elo_rating = max(0, profile.elo_rating - 10)
+    profile.save()
 
     return JsonResponse({'status': 'ok'})
 

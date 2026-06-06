@@ -311,7 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
           mode: "validate",
           task_type: currentTask.task_type,
           correct_answer: currentTask.correct_answer,
-          fail_count: failCount,
           lesson: document.title || "Python",
           eva_context: {},
           is_greeting: false,

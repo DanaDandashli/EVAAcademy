@@ -88,7 +88,7 @@ nav.navbar { display: none !important; }
 
 .cr-match-title {
   font-size: 1.4rem; font-weight: 900;
-  color: #1f2937; font-family: 'Nunito', sans-serif;
+  color: #008080; font-family: 'Nunito', sans-serif;
   margin: 0; text-align: center;
 }
 
@@ -347,7 +347,8 @@ nav.navbar { display: none !important; }
 .cr-task-desc { font-size: 0.82rem; color: #4b5563; line-height: 1.6; margin: 0; }
 
 .cr-editor-topbar {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center;
+  margin-bottom: -10px;
   background: #16213e; padding: 8px 14px;
   border-radius: 10px 10px 0 0;
 }
@@ -372,6 +373,8 @@ nav.navbar { display: none !important; }
 .cr-editor-wrap {
   min-height: 280px;
   border-radius: 0 0 10px 10px;
+  margin-top: 0;
+  padding-top: 0;
   overflow: hidden;
 }
 
@@ -598,6 +601,58 @@ nav.navbar { display: none !important; }
 #crConfetti {
   position: fixed; inset: 0;
   pointer-events: none; z-index: 9998;
+}
+
+/* View EVA Solution Modal */
+.compete-solution-modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.solution-modal-content {
+  background:#fff;
+  border-radius:20px;
+  padding:32px;
+  max-width:600px;
+  width:90%;
+  max-height:80vh;
+  overflow-y:auto;
+  position:relative;
+  font-size:0.88rem;
+  color:#374151;
+  line-height:1.7;
+}
+
+.close-solution-modal{
+  position:absolute;
+  top:16px;
+  right:16px;
+  background:none;
+  border:none;
+  font-size:1.2rem;
+  cursor:pointer;
+  color:#6b7280;
+}
+
+.solution-modal-title{
+  font-family:'Nunito',sans-serif;
+  font-weight:900;
+  color:#1f2937;
+  margin:0 0 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.solution-loading{
+  color:#9ca3af;
+  font-style:italic;
 }
 
 /* ── Responsive ── */

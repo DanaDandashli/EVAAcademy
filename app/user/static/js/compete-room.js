@@ -14,70 +14,34 @@ document.addEventListener("DOMContentLoaded", () => {
     phases[name].classList.remove("hidden");
   }
 
-  // ── Fake opponents ──
-  const opponents = [
-    { name: "PyMaster99", level: Math.max(1, USER_LEVEL - 1) },
-    { name: "CodeWizard", level: USER_LEVEL },
-    { name: "LoopLegend", level: Math.max(1, USER_LEVEL + 1) },
-    { name: "ByteNinja", level: USER_LEVEL },
+  // ── EVA AI opponent ──
+  const evaNames = [
+    "EVA Challenger",
+    "EVA Pro",
+    "EVA Elite",
+    "EVA Master",
+    "EVA Champion",
   ];
-  const opp = opponents[Math.floor(Math.random() * opponents.length)];
+  const opp = {
+    name: evaNames[Math.floor(Math.random() * evaNames.length)],
+    level: USER_LEVEL,
+  };
 
   document.getElementById("oppName").textContent = opp.name;
-  document.getElementById("oppMeta").textContent = `Lv.${opp.level}`;
+  document.getElementById("oppMeta").textContent =
+    `Lv.${opp.level} · AI Opponent`;
   document.getElementById("oppNameBattle").textContent = opp.name;
   document.getElementById("oppMetaBattle").textContent = `Lv.${opp.level}`;
   document.getElementById("crOppResultName").textContent = opp.name;
 
-  // ── Tasks based on completed topics ──
-  const allTasks = [
-    {
-      title: "Variable Challenge",
-      desc: "Create 3 variables: name (string), age (integer), score (float). Print all three.",
-      checks: [
-        (c) => /\w+\s*=\s*["'][^"']+["']/.test(c),
-        (c) => /\w+\s*=\s*\d+/.test(c),
-        (c) => /print\s*\(/.test(c),
-        (c) => (c.match(/\w+\s*=/g) || []).length >= 3,
-        (c) => (c.match(/print\s*\(/g) || []).length >= 2,
-      ],
-      starter: "# Create your variables here\n\n",
-    },
-    {
-      title: "Control Flow Battle",
-      desc: "Write a program that checks if a number is positive, negative, or zero using if/elif/else.",
-      checks: [
-        (c) => /if\s+.+:/.test(c),
-        (c) => /elif\s+.+:/.test(c),
-        (c) => /else\s*:/.test(c),
-        (c) => /print\s*\(/.test(c),
-        (c) => c.split("\n").length >= 6,
-      ],
-      starter: "# Write your if/elif/else here\nnumber = 10\n\n",
-    },
-    {
-      title: "Loop Master",
-      desc: "Use a for loop to print numbers from 1 to 10. Then use a while loop to count down from 5 to 1.",
-      checks: [
-        (c) => /for\s+\w+\s+in\s+range/.test(c),
-        (c) => /while\s+.+:/.test(c),
-        (c) => /print\s*\(/.test(c),
-        (c) => (c.match(/print\s*\(/g) || []).length >= 2,
-        (c) => c.split("\n").length >= 8,
-      ],
-      starter: "# Write your loops here\n\n",
-    },
-  ];
+  // ── State ──
+  let task = null;
+  let battleTimer = null;
+  let totalSeconds = 300;
+  let userSolved = false;
+  let oppSolved = false;
 
-  // Pick a random task relevant to completed topics
-  const task =
-    allTasks[
-      Math.floor(
-        Math.random() * Math.min(allTasks.length, COMPLETED_TOPICS.length || 1),
-      )
-    ];
-
-  // ── Init CodeMirror ──
+  // ── CodeMirror ──
   const editor = CodeMirror.fromTextArea(
     document.getElementById("crCodeEditor"),
     {
@@ -91,13 +55,64 @@ document.addEventListener("DOMContentLoaded", () => {
       autofocus: true,
     },
   );
-  editor.setValue(task.starter);
+  editor.setValue("# EVA is preparing your challenge...\n");
   setTimeout(() => {
     editor.refresh();
     editor.focus();
   }, 500);
 
-  // ── Commentary helper ──
+  // ── Load EVA Challenge ──
+  async function loadEvaChallenge() {
+    editor.setValue("# EVA is preparing your challenge...\n");
+    try {
+      const res = await fetch("/advisor/chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          message: `Generate a HARD Python competition challenge based on these completed topics: ${COMPLETED_TOPICS.join(", ") || "Python basics"}.
+Return ONLY raw JSON, no markdown:
+{"title":"...","description":"...","instruction":"...","starter_code":"# Write your solution here\\n"}`,
+          code: "",
+          lesson: "Competition",
+          eva_context: {},
+          mode: "chat",
+        }),
+      });
+      const data = await res.json();
+      try {
+        const clean = data.reply.replace(/```json|```/g, "").trim();
+        task = JSON.parse(clean);
+      } catch {
+        task = {
+          title: "Python Challenge",
+          description: data.reply,
+          instruction: data.reply,
+          starter_code: "# Write your solution here\n\n",
+          check_keyword: "def",
+        };
+      }
+      editor.setValue(task.starter_code || "# Write your solution here\n\n");
+    } catch {
+      task = {
+        title: "Python Challenge",
+        description:
+          "Write a function that takes a list of numbers and returns a new list with only the even numbers, sorted in ascending order.",
+        instruction:
+          "Write a function that takes a list of numbers and returns a new list with only the even numbers, sorted in ascending order.",
+        starter_code:
+          "def solution(numbers):\n    # Write your solution here\n    pass\n",
+        check_keyword: "def",
+      };
+      editor.setValue(task.starter_code);
+    }
+  }
+
+  loadEvaChallenge();
+
+  // ── Commentary ──
   function addComment(text, isSystem = false) {
     const box = document.getElementById("crCommentary");
     const el = document.createElement("p");
@@ -127,10 +142,12 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(timer);
         setTimeout(() => {
           showPhase("battle");
-          document.getElementById("crTaskTitle").textContent = task.title;
-          document.getElementById("crTaskDesc").textContent = task.desc;
+          document.getElementById("crTaskTitle").textContent =
+            task?.title || "Python Challenge";
+          document.getElementById("crTaskDesc").textContent =
+            task?.instruction || task?.description || "";
           addComment(`${opp.name} has joined the battle!`, true);
-          addComment("Battle started! Both coders are typing...");
+          addComment("Battle started! Write your solution and hit Run & Test.");
           startBattleTimer();
           simulateOpponent();
           editor.refresh();
@@ -140,60 +157,58 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ── Battle timer ──
-  let battleInterval = null;
-  let totalSeconds = 300;
-  let userTests = 0;
-  let oppFinished = false;
-
   function startBattleTimer() {
     const fill = document.getElementById("crTimerFill");
     const val = document.getElementById("crTimerVal");
-    const timerEl = val;
+    const maxSecs = totalSeconds;
 
-    battleInterval = setInterval(() => {
+    battleTimer = setInterval(() => {
       totalSeconds--;
       const m = Math.floor(totalSeconds / 60);
       const s = totalSeconds % 60;
       val.textContent = `${m}:${s.toString().padStart(2, "0")}`;
-      fill.style.width = (totalSeconds / 300) * 100 + "%";
+      fill.style.width = (totalSeconds / maxSecs) * 100 + "%";
 
       if (totalSeconds <= 60) {
         fill.style.background = "linear-gradient(90deg,#ef4444,#f97316)";
-        timerEl.classList.add("urgent");
+        val.classList.add("urgent");
       }
 
       if (totalSeconds <= 0) {
-        clearInterval(battleInterval);
-        const oppTests = parseInt(
-          document.getElementById("crOppTests").textContent.split("/")[0],
-        );
-        const youWon = userTests >= oppTests;
-        endBattle(youWon, "timeout");
+        clearInterval(battleTimer);
+        // Time is up — whoever solved wins; if neither, opponent wins
+        if (userSolved) {
+          endBattle(true, "timeout");
+        } else if (oppSolved) {
+          endBattle(false, "timeout");
+        } else {
+          endBattle(false, "timeout");
+        }
       }
     }, 1000);
   }
 
-  // ── Simulate opponent ──
+  // ── Simulate EVA opponent ──
   function simulateOpponent() {
     const oppFill = document.getElementById("crOppTestsFill");
     const oppVal = document.getElementById("crOppTests");
     const oppCode = document.getElementById("crOppCode");
 
     const codeLines = [
-      "# Working on solution...",
-      "x = 10",
-      "if x > 0:",
-      '    print("positive")',
-      "elif x < 0:",
-      '    print("negative")',
-      "else:",
-      '    print("zero")',
+      "# Analyzing the problem...",
+      "# Planning my approach...",
+      "# Writing solution...",
+      "# Working on logic...",
+      "# Testing edge cases...",
+      "# Refining the code...",
+      "# Almost done...",
+      "# Running final check...",
     ];
 
     let lineIdx = 0;
-    let oppTests = 0;
     oppCode.innerHTML = "";
 
+    // EVA finishes between 80-160 seconds (hard enough to beat)
     const oppFinishTime = (80 + Math.random() * 80) * 1000;
     const intervalTime = oppFinishTime / codeLines.length;
 
@@ -205,32 +220,34 @@ document.addEventListener("DOMContentLoaded", () => {
         line.textContent = codeLines[lineIdx];
         oppCode.appendChild(line);
         lineIdx++;
-        oppTests = Math.min(5, Math.floor((lineIdx / codeLines.length) * 5));
-        oppFill.style.width = (oppTests / 5) * 100 + "%";
-        oppVal.textContent = `${oppTests}/5`;
+        oppFill.style.width = (lineIdx / codeLines.length) * 100 + "%";
+        oppVal.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Working...';
         if (lineIdx % 2 === 0) addComment(`${opp.name} is making progress...`);
       }
     }, intervalTime);
 
     setTimeout(() => {
       clearInterval(typeInterval);
-      oppFinished = true;
+      oppSolved = true;
       oppFill.style.width = "100%";
-      oppVal.textContent = "5/5";
+      oppVal.innerHTML = '<i class="fas fa-check"></i> Solved';
       document.getElementById("oppStatus").className = "cr-status-pill done";
       document.getElementById("oppStatus").innerHTML =
         '<i class="fas fa-check"></i> Done!';
-      addComment(`${opp.name} finished all tests!`, true);
+      addComment(`${opp.name} finished the challenge!`, true);
 
-      if (userTests < 5) {
-        clearInterval(battleInterval);
+      // If user hasn't solved yet, EVA wins
+      if (!userSolved) {
+        clearInterval(battleTimer);
         endBattle(false, "opponent");
       }
     }, oppFinishTime);
   }
 
   // ── Run & Test ──
-  document.getElementById("crRunBtn").addEventListener("click", () => {
+  document.getElementById("crRunBtn").addEventListener("click", async () => {
+    if (userSolved) return; // already solved, ignore
+
     const code = editor.getValue();
     const output = document.getElementById("crOutputBody");
     const status = document.getElementById("crOutputStatus");
@@ -241,50 +258,119 @@ document.addEventListener("DOMContentLoaded", () => {
     runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
     runBtn.disabled = true;
 
-    setTimeout(() => {
+    // ── Run with Skulpt ──
+    let outputText = "";
+    Sk.configure({
+      output: (text) => {
+        outputText += text;
+      },
+      read: (x) => {
+        if (Sk.builtinFiles?.["files"][x] === undefined)
+          throw "File not found: " + x;
+        return Sk.builtinFiles["files"][x];
+      },
+      inputfun: (prompt) =>
+        new Promise((resolve) => {
+          const overlay = document.getElementById("skInputOverlay");
+          const promptEl = document.getElementById("skInputPromptText");
+          const field = document.getElementById("skInputField");
+          const btn = document.getElementById("skInputSubmit");
+          promptEl.textContent = prompt || "Enter input:";
+          field.value = "";
+          overlay.style.display = "flex";
+          field.focus();
+          function submit() {
+            overlay.style.display = "none";
+            btn.removeEventListener("click", submit);
+            field.removeEventListener("keydown", onEnter);
+            resolve(field.value);
+          }
+          function onEnter(e) {
+            if (e.key === "Enter") submit();
+          }
+          btn.addEventListener("click", submit);
+          field.addEventListener("keydown", onEnter);
+        }),
+      inputfunTakesPrompt: true,
+    });
+
+    try {
+      await Sk.misceval.asyncToPromise(() =>
+        Sk.importMainWithBody("<stdin>", false, code, true),
+      );
+    } catch (e) {
+      output.innerHTML = `<span class="adv-out-line err">${e.toString()}</span>`;
+      status.textContent = "● Error in code";
+      status.className = "cr-output-status error";
+      addComment("There is an error in your code — fix it and try again!");
       runBtn.innerHTML = '<i class="fas fa-play"></i> Run & Test';
       runBtn.disabled = false;
+      return;
+    }
 
-      let passed = 0;
-      task.checks.forEach((check) => {
-        if (check(code)) passed++;
+    // ── Validate with EVA ──
+    try {
+      const valRes = await fetch("/advisor/chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({
+          message: task.instruction,
+          code: code,
+          output: outputText,
+          mode: "validate",
+          task_type: "free_code",
+        }),
       });
-      userTests = passed;
+      const valData = await valRes.json();
+      const passed = valData.reply?.startsWith("PASS");
 
-      const pct = (passed / 5) * 100;
-      youFill.style.width = pct + "%";
-      youVal.textContent = `${passed}/5`;
+      output.innerHTML = `<span class="adv-out-line ${passed ? "cmd" : "err"}">${outputText || "(no output)"}</span>`;
+      status.textContent = passed ? "● Solution accepted!" : "● Keep trying...";
+      status.className = passed
+        ? "cr-output-status success"
+        : "cr-output-status error";
 
-      output.innerHTML = `<span class="adv-out-line ${passed > 0 ? "cmd" : "err"}">
-        ${passed}/${task.checks.length} tests passed
-      </span>`;
+      if (passed) {
+        userSolved = true;
+        youFill.style.width = "100%";
+        youVal.innerHTML = '<i class="fas fa-check"></i> Solved';
 
-      if (passed > 0) {
-        status.textContent = `● ${passed}/5 passed`;
-        status.className = "cr-output-status success";
-        addComment(`You passed ${passed}/5 tests!`);
+        // Update your status pill
+        document.getElementById("youStatus").className = "cr-status-pill done";
+        document.getElementById("youStatus").innerHTML =
+          '<i class="fas fa-check"></i> Done!';
+
+        addComment("Great solution! EVA accepted it!", true);
+
+        if (!oppSolved) {
+          clearInterval(battleTimer);
+          endBattle(true, "win");
+        }
+        // If opponent already solved — endBattle was already called
       } else {
-        status.textContent = "● No tests passed yet";
-        status.className = "cr-output-status error";
+        youFill.style.width = "30%";
+        youVal.innerHTML = '<i class="fas fa-spinner fa-spin"></i> In Progress';
+        addComment(valData.reply?.split("\n")[1] || "Not quite — keep going!");
       }
+    } catch {
+      output.innerHTML = `<span class="adv-out-line err">Validation error — try again</span>`;
+    }
 
-      if (passed >= 5) {
-        if (oppFinished) return;
-        clearInterval(battleInterval);
-        endBattle(true, "win");
-      }
-    }, 700);
+    runBtn.innerHTML = '<i class="fas fa-play"></i> Run & Test';
+    runBtn.disabled = false;
   });
 
   // ── Reset ──
   document.getElementById("crResetBtn").addEventListener("click", () => {
-    editor.setValue(task.starter);
+    editor.setValue(task?.starter_code || "# Write your solution here\n\n");
     document.getElementById("crOutputBody").innerHTML =
       '<span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>';
     document.getElementById("crOutputStatus").textContent = "";
     document.getElementById("crYouTestsFill").style.width = "0%";
-    document.getElementById("crYouTests").textContent = "0/5";
-    userTests = 0;
+    document.getElementById("crYouTests").textContent = "Pending";
   });
 
   // ── End battle ──
@@ -297,74 +383,164 @@ document.addEventListener("DOMContentLoaded", () => {
     const youXP = document.getElementById("crYouXP");
     const oppXP = document.getElementById("crOppXP");
 
-    // Update result stats
-    document.getElementById("crYouResultTests").textContent = `${userTests}/5`;
-    document.getElementById("crYouResultFill").style.width =
-      (userTests / 5) * 100 + "%";
+    // ── Your result ──
+    document.getElementById("crYouResultTests").innerHTML = userSolved
+      ? '<i class="fas fa-check" style="color:#06d6a0"></i> Solved'
+      : '<i class="fas fa-xmark" style="color:#ef4444"></i> Not solved';
+    document.getElementById("crYouResultFill").style.width = userSolved
+      ? "100%"
+      : "0%";
 
-    const oppTests = parseInt(
-      document.getElementById("crOppTests").textContent.split("/")[0],
-    );
-    document.getElementById("crOppResultTests").textContent = `${oppTests}/5`;
-    document.getElementById("crOppResultFill").style.width =
-      (oppTests / 5) * 100 + "%";
+    // ── Opponent result ──
+    document.getElementById("crOppResultTests").innerHTML = oppSolved
+      ? '<i class="fas fa-check" style="color:#06d6a0"></i> Solved'
+      : '<i class="fas fa-xmark" style="color:#ef4444"></i> Not solved';
+    document.getElementById("crOppResultFill").style.width = oppSolved
+      ? "100%"
+      : "0%";
 
+    // ── Result message and XP ──
     if (youWon) {
       title.textContent = "You Win!";
-      sub.textContent = "Amazing coding — you beat your opponent!";
+      sub.textContent = "Excellent coding — you beat EVA AI!";
       youXP.textContent = "+50 XP";
-      oppXP.textContent = "+10 XP";
+      oppXP.textContent = "+0 XP";
+      title.style.color = "#008080";
+      banner.style.background =
+        "linear-gradient(135deg, rgba(6,214,160,0.08), rgba(6,214,160,0.04))";
       launchConfetti();
     } else if (reason === "opponent") {
       title.textContent = `${opp.name} finished first!`;
-      sub.textContent = "Keep practicing — you'll get them next time!";
-      youXP.textContent = "+10 XP";
+      sub.textContent = "Keep practicing — you'll get it next time!";
+      youXP.textContent = "+0 XP";
       oppXP.textContent = "+50 XP";
+      title.style.color = "#9e0909";
       banner.style.background =
         "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.03))";
     } else {
-      title.textContent = "Time's Up!";
-      sub.textContent =
-        userTests >= oppTests
-          ? "You passed more tests — you win!"
-          : "Better luck next time!";
-      youXP.textContent = userTests >= oppTests ? "+25 XP" : "+10 XP";
-      oppXP.textContent = userTests >= oppTests ? "+10 XP" : "+25 XP";
-      if (userTests >= oppTests) launchConfetti();
+      // timeout
+      if (userSolved && !oppSolved) {
+        title.textContent = "You Win!";
+        sub.textContent = "Time's up — you solved it before EVA!";
+        youXP.textContent = "+25 XP";
+        oppXP.textContent = "+0 XP";
+        title.style.color = "#008080";
+        banner.style.background =
+          "linear-gradient(135deg, rgba(6,214,160,0.08), rgba(6,214,160,0.04))";
+        launchConfetti();
+      } else {
+        title.textContent = "Time's Up!";
+        sub.textContent =
+          "Neither solved it in time — better luck next battle!";
+        youXP.textContent = "+0 XP";
+        oppXP.textContent = "+0 XP";
+        title.style.color = "#9e0909";
+        banner.style.background =
+          "linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.03))";
+      }
     }
 
-    const csrfToken =
-      document.querySelector("[name=csrfmiddlewaretoken]")?.value ||
-      document.cookie.match(/csrftoken=([^;]+)/)?.[1] ||
-      "";
-      
-    // Save result to database
+    // ── Save result to DB ──
     fetch("/compete/result/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": document.cookie.match(/csrftoken=([^;]+)/)?.[1] || "",
+        "X-CSRFToken": CSRF_TOKEN,
       },
       body: JSON.stringify({ won: youWon }),
     });
   }
 
+  // ── View EVA Solution ──
+  document
+    .getElementById("crViewSolution")
+    ?.addEventListener("click", async () => {
+      const btn = document.getElementById("crViewSolution");
+      btn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> EVA is preparing...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/advisor/chat/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": CSRF_TOKEN,
+          },
+          body: JSON.stringify({
+            message: task?.instruction || "Python challenge",
+            code: "",
+            lesson: "Competition",
+            eva_context: {},
+            mode: "solution",
+          }),
+        });
+        const data = await res.json();
+
+        const modal = document.getElementById("crSolutionModal");
+        const content = document.getElementById("crSolutionContent");
+        if (modal && content) {
+          content.innerHTML = data.reply
+            .replace(
+              /```python([\s\S]*?)```/g,
+              '<pre style="background:#0d0d0d;color:#ffffff;border-radius:8px;padding:12px;font-family:monospace;font-size:0.82rem;white-space:pre-wrap;overflow-x:auto;margin:8px 0;">$1</pre>',
+            )
+            .replace(
+              /```([\s\S]*?)```/g,
+              '<pre style="background:#0d0d0d;color:#ffffff;border-radius:8px;padding:12px;font-family:monospace;font-size:0.82rem;white-space:pre-wrap;margin:8px 0;">$1</pre>',
+            )
+            .replace(/\n/g, "<br>");
+          modal.style.display = "flex";
+        }
+      } catch {
+        addComment("Could not load EVA solution — try again.");
+      }
+
+      btn.innerHTML = '<i class="fas fa-graduation-cap"></i> View EVA Solution';
+      btn.disabled = false;
+    });
+
   // ── Play again ──
-  document.getElementById("crPlayAgain").addEventListener("click", () => {
+  document.getElementById("crPlayAgain").addEventListener("click", async () => {
+    // Reset state
     totalSeconds = 300;
-    userTests = 0;
-    oppFinished = false;
+    userSolved = false;
+    oppSolved = false;
+
+    // Reset UI
     document.getElementById("crYouTestsFill").style.width = "0%";
-    document.getElementById("crYouTests").textContent = "0/5";
+    document.getElementById("crYouTests").textContent = "Pending";
     document.getElementById("crOppTestsFill").style.width = "0%";
-    document.getElementById("crOppTests").textContent = "0/5";
+    document.getElementById("crOppTests").textContent = "Pending";
     document.getElementById("crTimerFill").style.width = "100%";
+    document.getElementById("crTimerFill").style.background = "";
     document.getElementById("crTimerVal").textContent = "5:00";
     document.getElementById("crTimerVal").classList.remove("urgent");
-    document.getElementById("crTimerFill").style.background = "";
+    document.getElementById("crOutputBody").innerHTML =
+      '<span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>';
+    document.getElementById("crOutputStatus").textContent = "";
+    document.getElementById("crCommentary").innerHTML =
+      '<p style="font-size:0.78rem;color:#9ca3af;text-align:center;">Battle starting...</p>';
     document.getElementById("crOppCode").innerHTML =
       '<span style="color:#6b7280;font-size:0.82rem;font-family:monospace;">Opponent is typing...</span>';
-    editor.setValue(task.starter);
+    document.getElementById("youStatus").className = "cr-status-pill coding";
+    document.getElementById("youStatus").innerHTML =
+      '<i class="fas fa-code"></i> Coding...';
+    document.getElementById("oppStatus").className = "cr-status-pill coding";
+    document.getElementById("oppStatus").innerHTML =
+      '<i class="fas fa-code"></i> Coding...';
+
+    // Pick new EVA name
+    const newName = evaNames[Math.floor(Math.random() * evaNames.length)];
+    opp.name = newName;
+    document.getElementById("oppName").textContent = opp.name;
+    document.getElementById("oppMeta").textContent =
+      `Lv.${opp.level} · AI Opponent`;
+    document.getElementById("oppNameBattle").textContent = opp.name;
+    document.getElementById("crOppResultName").textContent = opp.name;
+
+    // Load new challenge
+    await loadEvaChallenge();
     showPhase("matchmaking");
   });
 

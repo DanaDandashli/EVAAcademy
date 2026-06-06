@@ -240,9 +240,7 @@ FAIL if the bug is still present or the logic is wrong."""
 - If code uses input(), output will vary — do NOT compare exact output values
 - Placeholder values or generic strings = FAIL"""
 
-    retry_note = f"\nThis is attempt #{fail_count + 1} — evaluate ONLY the current code independently." if fail_count > 0 else ""
-
-    prompt = f"""You are a strict Python task validator.{retry_note}
+    prompt = f"""You are a strict Python task validator.
 
 Task: "{instruction}"
 Student code:
@@ -498,13 +496,15 @@ Previous questions: {prev_q_titles} — do NOT repeat.
 Student: age_group={age_group}, level={level}, difficulty={difficulty}
 
 CRITICAL RULES:
-- Questions must COMBINE multiple concepts from: {taught_str}
+- Use ONLY concepts from this exact list: {taught_str}
 - Do NOT ask simple single-concept tasks like "print hello world"
 - Ask questions that require THINKING — edge cases, combining concepts, problem solving
-- DO NOT repeat the same idea in many ways. Always give a completely different scenario.
+- STRICTLY FORBIDDEN to repeat similar scenarios — previous questions were: {prev_q_titles}
+- Each question must test a DIFFERENT concept and a DIFFERENT real-world scenario
 - Previous questions tested: {prev_q_titles} — your question must test something ENTIRELY DIFFERENT
+- If a question needs a concept outside {taught_str}, simplify it until it only uses {taught_str}
 - Student ONLY knows: {taught_str} — NOTHING ELSE EXISTS FOR THEM
-- If your question requires a concept outside {taught_str}, generate a completely different question
+- Each question must test a different concept from {taught_str}
 - The solution must be achievable using ONLY: {taught_str}
 - This is question {question_number} of 5 — each question must test different concept combinations
 

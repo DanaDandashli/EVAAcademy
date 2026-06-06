@@ -150,22 +150,6 @@
           <!-- Snake path map -->
           <div class="lp-path-map">
             {% for lesson in lessons_data %}
-              <!-- Level gate divider -->
-                {% for gate in level_gates %}
-                  {% if gate.before_lesson == lesson.lesson.id %}
-                    <div class="lp-level-gate {% if gate.unlocked %}unlocked{% else %}locked{% endif %}">
-                      <div class="lp-level-gate-line"></div>
-                      <div class="lp-level-gate-badge">
-                        {% if gate.unlocked %}
-                          <i class="fas fa-star"></i> Level {{ gate.level }} Unlocked!
-                        {% else %}
-                          <i class="fas fa-lock"></i> Level {{ gate.level }} — Need {{ gate.xp_needed }} XP
-                        {% endif %}
-                      </div>
-                      <div class="lp-level-gate-line"></div>
-                    </div>
-                  {% endif %}
-                {% endfor %}
               <div class="lp-lesson-card"> 
                 <!-- Lesson header -->
                 <div class="lp-lesson-header">
@@ -479,6 +463,10 @@
                   <span class="compete-stat-lbl">Wins</span>
                 </div>
                 <div class="compete-stat-item">
+                  <span class="compete-stat-val">{{ comp_xp }}</span>
+                  <span class="compete-stat-lbl">XP</span>
+                </div>
+                <div class="compete-stat-item">
                   <span class="compete-stat-val">{{ profile.elo_rating }}</span>
                   <span class="compete-stat-lbl">ELO</span>
                 </div>
@@ -516,15 +504,15 @@
             <div class="compete-how-steps">
               <div class="compete-how-step">
                 <div class="compete-how-num">1</div>
-                <p>EVA matches you with a player at your level</p>
+                <p>EVA AI is your opponent — it adapts to your level</p>
               </div>
               <div class="compete-how-step">
                 <div class="compete-how-num">2</div>
-                <p>Both players get the same challenge based on completed topics</p>
+                <p>EVA generates a hard challenge based on your completed topics</p>
               </div>
               <div class="compete-how-step">
                 <div class="compete-how-num">3</div>
-                <p>First to pass all tests wins — earn XP and climb the leaderboard</p>
+                <p>Solve it before EVA does — earn XP and boost your ELO rating</p>
               </div>
             </div>
           </div>

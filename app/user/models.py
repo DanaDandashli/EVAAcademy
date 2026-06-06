@@ -88,6 +88,8 @@ class StudentProfile(models.Model):
 
     learning_speed = models.FloatField(default=0.0)
     competition_wins = models.IntegerField(default=0)
+    compete_wins = models.IntegerField(default=0)
+    compete_battles = models.IntegerField(default=0)
     speed_runs = models.IntegerField(default=0)
 
     status = models.CharField(
