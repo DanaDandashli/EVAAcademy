@@ -312,39 +312,13 @@
           </div>
 
           <!-- Full list (rank 4+) -->
-          <ul class="lb-list lb-list-full reveal" style="margin-top:20px;">
-            {% for entry in leaderboard %}
-              {% if forloop.counter > 3 %}
-                <li class="lb-item {% if entry.user == user %}lb-you{% endif %}" data-rank="{{ forloop.counter }}">
-                  <span class="lb-rank-num {% if entry.user == user %}you-num{% endif %}">{{ forloop.counter }}</span>
-                  {% if entry.user.avatar %}
-                    <img src="{{ entry.user.avatar.image.url }}" class="lb-avatar" alt=""/>
-                  {% else %}
-                    <div class="lb-avatar-initial">{{ entry.user.username|first|upper }}</div>
-                  {% endif %}
-                  <div class="lb-info">
-                    <span class="lb-name">
-                      {% if entry.user == user %}YOU{% else %}{{ entry.user.username }}{% endif %}
-                      {% if entry.user == user %}<i class="fas fa-star lb-you-star"></i>{% endif %}
-                    </span>
-                    <span class="lb-xp">{{ entry.xp_total }} XP</span>
-                  </div>
-                  {% with max_xp=leaderboard.0.xp_total %}
-                    <div class="lb-xp-bar-wrap">
-                      <div class="lb-xp-bar-fill {% if entry.user == user %}you-bar{% endif %}"
-                          style="width:{% if max_xp > 0 %}{% widthratio entry.xp_total max_xp 100 %}{% else %}0{% endif %}%">
-                      </div>
-                    </div>
-                  {% endwith %}
-                  <span class="lb-level">Lv.{{ entry.level }}</span>
-                </li>
-              {% endif %}
-            {% endfor %}
-          </ul>
+          <ul class="lb-list lb-list-full reveal" id="lbFullRows" style="margin-top:20px;"></ul>
 
-          <button class="lb-see-all" style="margin-top:16px;">
-            See all {{ total_players }} players <i class="fas fa-arrow-right"></i>
-          </button>
+          <div id="lbLoadMoreWrap" style="text-align:center;padding:16px;display:none;">
+            <button id="lbLoadMoreBtn" class="lb-see-all" onclick="loadLeaderboard()">
+              <i class="fas fa-chevron-down fa-xs"></i> Load More
+            </button>
+          </div>
         </div>
       </div>
       <!-- end panel-leaderboard-mid -->

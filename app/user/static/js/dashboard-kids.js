@@ -172,6 +172,10 @@ function switchPanel(panelId, btn) {
       }
     }, 200);
   }
+  
+  if (panelId === "leaderboard-mid" && lbOffset === 0) {
+    loadLeaderboard();
+  }
 }
 
 /* ── Tab switcher (quests/badges) ── */
@@ -353,6 +357,47 @@ document.querySelectorAll(".lb-item").forEach((item) => {
     showToast("info", name + " - " + xp);
   });
 });
+
+// ── Leaderboard ──
+let lbOffset = 0;
+let lbLoading = false;
+
+function loadLeaderboard() {
+  if (lbLoading) return;
+  lbLoading = true;
+
+  const btn = document.getElementById("lbLoadMoreBtn");
+  if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin fa-xs"></i> Loading...';
+
+  fetch(`/leaderboard/?offset=${lbOffset}`)
+    .then(r => r.json())
+    .then(data => {
+      const container = document.getElementById("lbFullRows");
+
+      data.rows.forEach(row => {
+        if (row.rank <= 3) return; // skip top 3, already in podium
+        const li = document.createElement("li");
+        li.className = "lb-item" + (row.is_you ? " lb-you" : "");
+        li.innerHTML = `
+          <span class="lb-rank-num ${row.is_you ? 'you-num' : ''}">${row.rank}</span>
+          <div class="lb-avatar-initial">${row.username.slice(0,1).toUpperCase()}</div>
+          <div class="lb-info">
+            <span class="lb-name">${row.is_you ? 'YOU' : row.username}${row.is_you ? ' <i class="fas fa-star lb-you-star"></i>' : ''}</span>
+            <span class="lb-xp">${row.xp} XP</span>
+          </div>
+          <span class="lb-level">Lv.${row.level}</span>`;
+        container.appendChild(li);
+      });
+
+      lbOffset += data.rows.length;
+      lbLoading = false;
+
+      const wrap = document.getElementById("lbLoadMoreWrap");
+      if (wrap) wrap.style.display = data.has_more ? "block" : "none";
+      if (btn) btn.innerHTML = '<i class="fas fa-chevron-down fa-xs"></i> Load More';
+    })
+    .catch(() => { lbLoading = false; });
+}
 
 /* ── Badge clicks ── */
 document.querySelectorAll(".badge-item.earned").forEach((item) => {

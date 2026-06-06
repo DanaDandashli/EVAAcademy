@@ -1,5 +1,10 @@
 "use strict";
 
+// Prevent browser from scrolling to top on refresh
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+
 // ── Navigation ──
 let currentPanel = "home";
 let chartsInit = false;
@@ -7,6 +12,24 @@ let chartsInit = false;
 // ── Advisor vars ──
 let advEditor = null;
 let evaGreeted = false;
+
+function savePanel(panel) {
+  try {
+    localStorage.setItem("eva_panel_" + CURRENT_USER, panel);
+  } catch (e) {}
+}
+function getSavedPanel() {
+  try {
+    return localStorage.getItem("eva_panel_" + CURRENT_USER);
+  } catch (e) {
+    return null;
+  }
+}
+function clearPanel() {
+  try {
+    localStorage.removeItem("eva_panel_" + CURRENT_USER);
+  } catch (e) {}
+}
 
 function navigateTo(panel, navEl) {
   if (panel === currentPanel) {
@@ -25,6 +48,7 @@ function navigateTo(panel, navEl) {
 
   setTimeout(() => {
     currentPanel = panel;
+    savePanel(panel);
     const next = document.getElementById("panel-" + panel);
     if (next) next.classList.add("active");
 
@@ -599,6 +623,51 @@ window.addEventListener("DOMContentLoaded", () => {
     initCharts();
     chartsInit = true;
   }, 300);
+
+  // ── Restore last visited panel instantly (no flash) ──
+  const savedPanel = getSavedPanel();
+  if (savedPanel && document.getElementById("panel-" + savedPanel) && savedPanel !== "home") {
+    const homePanel = document.getElementById("panel-home");
+    const savedPanelEl = document.getElementById("panel-" + savedPanel);
+    if (homePanel) homePanel.classList.remove("active");
+    if (savedPanelEl) savedPanelEl.classList.add("active");
+    currentPanel = savedPanel;
+    const savedNavEl = document.querySelector(
+      `.nav-item[onclick*="'${savedPanel}'"]`,
+    );
+    document
+      .querySelectorAll(".nav-item")
+      .forEach((i) => i.classList.remove("active"));
+    if (savedNavEl) savedNavEl.classList.add("active");
+    // Trigger panel-specific inits
+    if (savedPanel === "progress")
+      setTimeout(() => animateSkillBars(".prog-skill-fill", "data-pw"), 200);
+    if (savedPanel === "eva")
+      setTimeout(() => {
+        if (!advEditor) {
+          const advTextarea = document.getElementById("advCodeEditor");
+          if (advTextarea && typeof CodeMirror !== "undefined") {
+            advEditor = CodeMirror.fromTextArea(advTextarea, {
+              mode: "python",
+              theme: "dracula",
+              lineNumbers: true,
+              indentUnit: 4,
+              tabSize: 4,
+              indentWithTabs: false,
+              lineWrapping: true,
+            });
+          }
+        }
+        if (advEditor) advEditor.refresh();
+        if (!evaGreeted) {
+          evaGreeted = true;
+          sendAutoGreeting();
+        }
+      }, 200);
+    if (savedPanel === "leaderboard" && lbOffset === 0) loadLeaderboard();
+  } else if (savedPanel) {
+    clearPanel();
+  }
 
   // ── Progress panel tab switcher (Progress / Badges) ──
   document.querySelectorAll("[data-progress-tab]").forEach((btn) => {

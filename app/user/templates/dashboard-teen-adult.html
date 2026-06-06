@@ -228,7 +228,7 @@
             <h3><i class="fa-solid fa-ranking-star" style="color:var(--accent4)"></i> Global Ranks</h3>
           </div>
           <div class="lb-list">
-            {% for entry in leaderboard %}
+            {% for entry in leaderboard|slice:":3" %}
             <div class="lb-item {% if entry.user == user %}you{% endif %}">
               <div class="lb-rank" style="{% if forloop.counter == 1 %}color:#ffd166{% elif forloop.counter == 2 %}color:#c0c0c0{% elif forloop.counter == 3 %}color:#cd7f32{% endif %}">
                 {% if forloop.counter <= 3 %}<i class="fa-solid fa-medal"></i>{% else %}{{ forloop.counter }}{% endif %}
@@ -785,48 +785,97 @@
   <div class="page-panel" id="panel-certificates">
     <div class="page-header">
       <h1><i class="fa-solid fa-certificate" style="color:var(--accent4);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Certificates</h1>
-      <p>Your earned qualifications and ongoing certifications</p>
+      <p>{{ certs_earned }} earned &bull; {{ certs_remaining }} remaining</p>
     </div>
-    <div class="certs-grid">
-      <div class="cert-card earned">
-        <div class="cert-card-icon"><i class="fa-brands fa-python"></i></div>
-        <h3>Python Core</h3>
-        <div class="cert-sub">Fundamentals & Advanced Concepts</div>
-        <span class="cert-status"><i class="fa-solid fa-circle-check fa-xs"></i> Earned Jan 2025</span>
-      </div>
-      <div class="cert-card earned">
-        <div class="cert-card-icon"><i class="fa-solid fa-cube"></i></div>
-        <h3>OOP Mastery</h3>
-        <div class="cert-sub">Object-Oriented Design Patterns</div>
-        <span class="cert-status"><i class="fa-solid fa-circle-check fa-xs"></i> Earned Mar 2025</span>
-      </div>
-      <div class="cert-card progress">
-        <div class="cert-card-icon"><i class="fa-solid fa-server"></i></div>
-        <h3>FastAPI Expert</h3>
-        <div class="cert-sub">Modern API Development</div>
-        <div class="cert-prog-bar"><div class="cert-prog-fill" style="width:50%"></div></div>
-        <span class="cert-status"><i class="fa-solid fa-spinner fa-spin fa-xs"></i> 50% Complete</span>
-      </div>
-      <div class="cert-card locked-c">
-        <div class="cert-card-icon"><i class="fa-solid fa-lock"></i></div>
-        <h3>Data Structures</h3>
-        <div class="cert-sub">Arrays, Trees, Graphs & More</div>
-        <div class="cert-prog-bar"><div class="cert-prog-fill" style="width:67%;background:linear-gradient(90deg,rgba(108,99,255,0.5),rgba(167,139,250,0.5))"></div></div>
-        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> 67% — Locked</span>
-      </div>
-      <div class="cert-card locked-c">
-        <div class="cert-card-icon"><i class="fa-solid fa-brain"></i></div>
-        <h3>Machine Learning</h3>
-        <div class="cert-sub">ML Algorithms & Neural Networks</div>
-        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> Requires Lv.45</span>
-      </div>
-      <div class="cert-card locked-c">
-        <div class="cert-card-icon"><i class="fa-solid fa-cloud"></i></div>
-        <h3>Cloud & DevOps</h3>
-        <div class="cert-sub">AWS, Docker & CI/CD Pipelines</div>
-        <span class="cert-status"><i class="fa-solid fa-lock fa-xs"></i> Requires Lv.50</span>
+
+    {% if certs_earned > 0 %}
+    <div class="cert-doc-section">
+      <p class="cert-section-label"><i class="fa-solid fa-trophy" style="color:var(--accent4)"></i> Earned</p>
+      {% for l in lessons_data %}
+        {% if l.is_completed %}
+        <div class="cert-document">
+          <!-- Decorative corner ornaments -->
+          <span class="cert-corner tl"></span>
+          <span class="cert-corner tr"></span>
+          <span class="cert-corner bl"></span>
+          <span class="cert-corner br"></span>
+
+          <div class="cert-doc-left">
+            <div class="cert-doc-seal">
+              <i class="fa-brands fa-python"></i>
+            </div>
+          </div>
+
+          <div class="cert-doc-body">
+            <div class="cert-doc-issuer">EVA ACADEMY &mdash; PYTHON TRACK</div>
+            <div class="cert-doc-headline">Certificate of Completion</div>
+            <div class="cert-doc-certifies">This certifies that</div>
+            <div class="cert-doc-student">
+              {% if user.first_name or user.last_name %}
+                {{ user.first_name }} {{ user.last_name }}
+              {% else %}
+                {{ user.username }}
+              {% endif %}
+            </div>
+            <div class="cert-doc-desc">has successfully completed all nodes in</div>
+            <div class="cert-doc-lesson">{{ l.lesson.title }}</div>
+            <div class="cert-doc-divider"></div>
+            <div class="cert-doc-footer">
+              <span><i class="fa-solid fa-star fa-xs"></i> Level {{ level }} achieved</span>
+              <span><i class="fa-solid fa-layer-group fa-xs"></i> {{ l.total_count }} nodes mastered</span>
+              <span><i class="fa-solid fa-shield-check fa-xs"></i> Certificate #{{ forloop.counter|stringformat:"03d" }}</span>
+            </div>
+          </div>
+
+          <div class="cert-doc-right">
+            <div class="cert-doc-award"><i class="fa-solid fa-award"></i></div>
+            <div class="cert-doc-verified">VERIFIED</div>
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="cert-empty-state">
+      <i class="fa-solid fa-certificate fa-2x" style="color:var(--text-dim)"></i>
+      <p>No certificates yet — complete all nodes in a lesson to earn your first one.</p>
+    </div>
+    {% endif %}
+
+    <div class="cert-upcoming-section">
+      <p class="cert-section-label"><i class="fa-solid fa-hourglass-half" style="color:var(--text-muted)"></i> Upcoming</p>
+      <div class="cert-upcoming-list">
+        {% for l in lessons_data %}
+          {% if not l.is_completed %}
+          <div class="cert-upcoming-row">
+            <div class="cert-upcoming-num">{{ forloop.counter }}</div>
+            <div class="cert-upcoming-info">
+              <span class="cert-upcoming-name">{{ l.lesson.title }}</span>
+              <span class="cert-upcoming-meta">
+                {% if l.is_locked %}
+                  <i class="fa-solid fa-lock fa-xs"></i> Requires Lv.{{ l.lesson.level_required }}
+                {% elif l.completed_count > 0 %}
+                  <i class="fa-solid fa-spinner fa-spin fa-xs"></i> {% widthratio l.completed_count l.total_count 100 %}% complete
+                {% else %}
+                  <i class="fa-solid fa-circle fa-xs"></i> Not started
+                {% endif %}
+              </span>
+            </div>
+            <div class="cert-upcoming-status">
+              {% if l.is_locked %}
+                <span class="cert-pill locked">Locked</span>
+              {% elif l.completed_count > 0 %}
+                <span class="cert-pill inprogress">In Progress</span>
+              {% else %}
+                <span class="cert-pill notstarted">Pending</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
       </div>
     </div>
+
   </div>
 
   <!-- ═══════════════ PANEL: SETTINGS ═══════════════ -->
@@ -876,7 +925,7 @@
             <h3><i class="fa-solid fa-user-lock" style="color:var(--accent)"></i> Account Actions</h3>
             <div class="setting-row">
               <span class="s-title"><i class="fas fa-right-from-bracket"></i>Sign Out</span>
-              <a href="{% url 'logout' %}" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
+              <a href="{% url 'logout' %}" onclick="clearPanel()" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
             </div>
           </div>
         </div>
@@ -888,6 +937,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script>const CURRENT_USER = "{{ user.username|escapejs }}";</script>
 <script src="{% static 'js/dashboard-teen-adult.js' %}"></script>
 <script>
 const EVA_CONTEXT = {

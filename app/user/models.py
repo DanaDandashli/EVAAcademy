@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from eva_academy import settings
 
 NODE_XP = {
@@ -97,6 +99,12 @@ class StudentProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+@receiver(post_save, sender=User)
+def create_student_profile(sender, instance, created, **kwargs):
+    if created:
+        StudentProfile.objects.get_or_create(user=instance)
+
+        
 class Lesson(models.Model):
     title = models.CharField(max_length=100)  # "Lesson 1 — Python Basics"
     order = models.IntegerField()              # 1, 2, 3...

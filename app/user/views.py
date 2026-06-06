@@ -325,7 +325,7 @@ def DashboardView(request):
     # ── Leaderboard ──
     leaderboard = StudentProfile.objects.select_related('user').filter(
         user__age_group=user.age_group
-    ).order_by('-xp_total', 'created_at')[:10]
+    ).order_by('-xp_total', 'created_at')[:3]
 
     user_rank = StudentProfile.objects.filter(
         user__age_group=user.age_group
@@ -406,6 +406,7 @@ def DashboardView(request):
 
     # ── Certs (completed lessons = earned certs) ──
     certs_earned = sum(1 for l in lessons_data if l['is_completed'])
+    certs_remaining = len(lessons_data) - certs_earned
 
     # ── Per-node-type completion counts (for charts) ──
     intro_count = sum(1 for p in completed_progress if p.section.node_type == 'introduction')
@@ -517,6 +518,7 @@ def DashboardView(request):
         'completed_topics':  completed_topics,
         'completed_progress': completed_progress,
         'certs_earned': certs_earned,
+        'certs_remaining':  certs_remaining,
         'intro_count':  intro_count,
         'app_count':    app_count,
         'comp_count':   comp_count,
