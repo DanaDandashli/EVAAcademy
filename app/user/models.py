@@ -541,3 +541,39 @@ class TaskAttempt(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.section.title} - Task {self.task_order}"
+
+
+# Projects Model
+class Project(models.Model):
+
+    STATUS_CHOICES = [
+        ('draft',     'Draft'),
+        ('submitted', 'Submitted'),
+        ('reviewed',  'Reviewed'),
+        ('published', 'Published'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='projects'
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    topics_used = models.JSONField(default=list, blank=True)
+    code = models.TextField(blank=True, default='')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='draft'
+    )
+    eva_feedback = models.TextField(blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.title} [{self.status}]"

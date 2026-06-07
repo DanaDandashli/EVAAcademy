@@ -3,7 +3,8 @@ from .views import (
     IndexView, ChildrenView, TeenView, AdultView,
     LoginView, RegisterView, LogoutView, DashboardView,
     IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView,
-    AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView, LeaderboardAPIView
+    AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView, LeaderboardAPIView,
+    ChallengesView, SaveProjectView, ReviewProjectView, PublishProjectView, GenerateProjectView
 )
 
 urlpatterns = [
@@ -28,4 +29,11 @@ urlpatterns = [
     # AI Generation
     path('advisor/chat/', AdvisorChatView, name='advisor_chat'),
     path('leaderboard/', LeaderboardAPIView, name='leaderboard_api'),
+
+    # Challenge Panel
+    path('challenges/', ChallengesView, name='challenges'),
+    path('challenges/save/', SaveProjectView, name='save_project'),
+    path('challenges/review/', ReviewProjectView, name='review_project'),
+    path('challenges/publish/', PublishProjectView, name='publish_project'),
+    path('challenges/generate/', GenerateProjectView, name='generate_project'),
 ]

@@ -232,6 +232,14 @@ The correct fixed code is:
 
 PASS if the student's code achieves the same result as the correct fix — exact match not required.
 FAIL if the bug is still present or the logic is wrong."""
+    elif task_type == 'fill_blank':
+        task_context = f"""Task type: FILL IN THE BLANK
+Student's answer: "{code}"
+Correct answer: "{correct_answer}"
+
+PASS if the student's answer is semantically correct
+- Do NOT require exact string match — evaluate conceptual correctness
+FAIL only if the answer is clearly wrong or shows misunderstanding."""
     else:
         task_context = """CRITICAL RULES:
 - Check if the student used the CONCEPT required, not just achieved the output
@@ -300,7 +308,7 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
         difficulty_adj = "same"
 
     # ── Task type and difficulty rotation ──
-    type_rotation = ['free_code', 'bug_fix', 'free_code', 'fill_blank', 'free_code']
+    type_rotation = ['fill_blank', 'bug_fix', 'free_code', 'bug_fix', 'free_code']
     diff_rotation = ['easy',      'medium',  'medium',    'hard',       'expert']
     idx = min(task_number - 1, len(type_rotation) - 1)
     task_type = type_rotation[idx]
@@ -718,3 +726,103 @@ Be encouraging and educational."""
         return response.choices[0].message.content.strip()
     except Exception:
         return "Solution unavailable. Practice the challenge again!"
+
+
+def generate_project_idea(completed_topics, completed_lessons, weak_areas, age_group='teen', previous_projects=None):
+    """Generate a personalized mini project idea based on student's completed topics and weak areas."""
+    if previous_projects is None:
+        previous_projects = []
+    style = _get_style(age_group)
+    topics_str = ', '.join(
+        completed_topics) if completed_topics else 'Python basics'
+    lessons_str = ', '.join(
+        completed_lessons) if completed_lessons else 'introductory lessons'
+    weak_str = ', '.join(weak_areas[:3]) if weak_areas else 'none identified'
+
+    prompt = f"""A student has completed the following Python lessons: {lessons_str}.
+Their mastered topics include: {topics_str}.
+Their weak areas are: {weak_str}.
+
+Generate ONE personalized mini Python project idea that:
+- Uses ONLY the topics the student has already learned: {topics_str}
+- Targets their weak areas where possible: {weak_str}
+- Is a real, complete program — not a single function or isolated task
+- Takes 30-60 minutes to build
+- Has a clear, practical purpose the student will find meaningful
+- Is appropriate for this style: {style}
+
+STRICTLY FORBIDDEN to generate any of these previously seen projects: {', '.join(previous_projects) if previous_projects else 'none'}
+The new project must be completely different in concept and purpose.
+
+Return ONLY raw JSON, no markdown:
+{{
+  "title": "short project title (max 6 words)",
+  "description": "2-3 sentence description of what the student will build, what it does, and why it is useful. Do not mention syntax or implementation details."
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=__MaxTokens__,
+            temperature=0.8,
+            messages=[
+                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
+                {"role": "user",   "content": prompt}
+            ]
+        )
+        result = json.loads(_clean_json(response.choices[0].message.content))
+        return result
+    except Exception as e:
+        print(f"generate_project_idea error: {e}")
+        return {
+            'title':       'My Python Project',
+            'description': 'Build a Python program that solves a real problem using what you have learned so far.',
+        }
+
+
+def review_project(title, description, code, topics, age_group='teen'):
+    """EVA reviews the student's project code and gives qualitative feedback."""
+    style = _get_style(age_group)
+    topics_str = ', '.join(topics) if topics else 'Python basics'
+
+    prompt = f"""A student has completed a Python mini project and is requesting a code review.
+
+Project Title: {title}
+Project Description: {description}
+Topics used: {topics_str}
+
+Student's code:
+```python
+{code}
+```
+
+Review this code as a professional mentor. Evaluate:
+1. Does the code achieve the project's goal?
+2. Is the logic correct and complete?
+3. Code quality — naming, structure, readability
+4. One specific thing done well
+5. One specific improvement suggestion
+
+Style: {style}
+
+RULES:
+- Be encouraging but honest
+- Never rewrite the code for the student
+- Give specific, actionable feedback
+- If the code is empty or incomplete, tell the student kindly what is missing
+- End with a clear verdict: APPROVED (ready to publish) or NEEDS WORK (with specific guidance)"""
+
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=__MaxTokens__,
+            temperature=__Temperature__,
+            messages=[
+                {"role": "system", "content": "You are EVA, a professional Python mentor giving a code review. Be constructive, specific, and encouraging."},
+                {"role": "user",   "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"review_project error: {e}")
+        return "I could not review your project at this moment. Please try again."

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.db import models
 from django.db import models as db_models
 from .models import (NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, 
-                     ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt, TestQuestion, TestAttempt)
+                     ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt, TestQuestion, TestAttempt, Project)
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
@@ -17,9 +17,20 @@ from django.core.cache import cache
 from functools import wraps
 from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
                  generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test,
-                 generate_competition_challenge, generate_solution, validate_generated_task)
+                 generate_competition_challenge, generate_solution, validate_generated_task, review_project, generate_project_idea)
 
 User = get_user_model()
+
+
+def get_completed_topics(lesson_titles):
+    """Return a flat list of topics for the given lesson title(s)."""
+    if isinstance(lesson_titles, str):
+        lesson_titles = [lesson_titles]
+    topics = []
+    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
+        if curriculum_lesson['title'] in lesson_titles:
+            topics.extend(curriculum_lesson['topics'])
+    return topics
 
 
 def IndexView(request):
@@ -202,6 +213,13 @@ def DashboardView(request):
 
     # Add compete room wins XP
     xp_from_progress += profile.compete_wins * NODE_XP['competition']
+
+    # Add project XP (100 XP per published project) — teen/adult only
+    if user.age_group != 'child':
+        published_projects_count = Project.objects.filter(
+            user=user, status='published'
+        ).count()
+        xp_from_progress += published_projects_count * 100
 
     # ── Unlimited level formula ──
     def get_level_threshold(level):
@@ -553,11 +571,7 @@ def IntroductionView(request, section_id):
         student_context = get_student_context(user)
 
         # Get topics from curriculum
-        lesson_topics = []
-        for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
-            if curriculum_lesson['title'] == section.lesson.title:
-                lesson_topics = curriculum_lesson['topics']
-                break
+        lesson_topics = get_completed_topics(section.lesson.title)
 
         generated = generate_slides(
             lesson_title=section.lesson.title,
@@ -638,8 +652,7 @@ def ApplicationView(request, section_id):
     )
     student_context = get_student_context(user)
 
-    lesson_topics = next(
-        (l['topics'] for l in PYTHON_CURRICULUM_FOUNDATION if l['title'] == section.lesson.title), [])
+    lesson_topics = get_completed_topics(section.lesson.title)
 
     attempts = TaskAttempt.objects.filter(
         user=user, section=section).order_by('task_order')
@@ -778,8 +791,7 @@ def GenerateNextTaskView(request, section_id):
         avg=db_models.Avg('attempts'))['avg'] or 1
 
     # Lesson topics — used for both completion check and task generation
-    lesson_topics = next(
-        (l['topics'] for l in PYTHON_CURRICULUM_FOUNDATION if l['title'] == section.lesson.title), [])
+    lesson_topics = get_completed_topics(section.lesson.title)
 
     # Check if node should be completed — must cover 75% of lesson topics
     if should_complete_application(passed_count, failed_count, avg_attempts, total_topics=len(lesson_topics)):
@@ -870,11 +882,7 @@ def CompetitionView(request, section_id):
     profile = StudentProfile.objects.get(user=user)
 
     # Get lesson topics from curriculum
-    lesson_topics = []
-    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
-        if curriculum_lesson['title'] == section.lesson.title:
-            lesson_topics = curriculum_lesson['topics']
-            break
+    lesson_topics = get_completed_topics(section.lesson.title)
 
     # Get taught concepts from Introduction slides
     intro_section = Section.objects.filter(
@@ -969,11 +977,7 @@ def TestView(request, section_id):
     questions = list(section.questions.filter(user=user).order_by('order'))
 
     # Get lesson topics from curriculum
-    lesson_topics = []
-    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
-        if curriculum_lesson['title'] == section.lesson.title:
-            lesson_topics = curriculum_lesson['topics']
-            break
+    lesson_topics = get_completed_topics(section.lesson.title)
 
     # Get what was actually taught in Introduction slides
     intro_section = Section.objects.filter(
@@ -1093,11 +1097,7 @@ def GenerateNextTestQuestionView(request, section_id):
             weak_areas = [f"tasks {list(failed_attempts)}"]
 
     # Get lesson topics from curriculum
-    lesson_topics = []
-    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
-        if curriculum_lesson['title'] == section.lesson.title:
-            lesson_topics = curriculum_lesson['topics']
-            break
+    lesson_topics = get_completed_topics(section.lesson.title)
 
     # Get what was actually taught in Introduction slides
     intro_section = Section.objects.filter(
@@ -1167,10 +1167,7 @@ def CompeteRoomView(request):
     )
 
     # Build actual topics list from completed lessons
-    completed_topics = []
-    for curriculum_lesson in PYTHON_CURRICULUM_FOUNDATION:
-        if curriculum_lesson['title'] in completed_lessons:
-            completed_topics.extend(curriculum_lesson['topics'])
+    completed_topics = get_completed_topics(completed_lessons)
 
     context = {
         'user':             request.user,
@@ -1228,7 +1225,7 @@ def AdvisorChatView(request):
             age_group=request.user.age_group,
             task_type=task_type,
             correct_answer=correct_answer,
-            fail_count=data.get('fail_count', 0),
+            fail_count=0,
         )
     elif mode == 'solution':
         reply = generate_solution(
@@ -1304,4 +1301,183 @@ def LeaderboardAPIView(request):
         'rows':     rows,
         'total':    total,
         'has_more': (offset + limit) < total,
+    })
+
+
+# ── Challenges Panel ──
+@student_required
+def ChallengesView(request):
+    user = request.user
+    profile, _ = StudentProfile.objects.get_or_create(user=user)
+
+    # Get active project
+    active_project = Project.objects.filter(user=user, is_active=True).first()
+
+    # Get completed lessons and weak areas for EVA context
+    completed_progress = UserProgress.objects.filter(
+        user=user, completed=True
+    ).select_related('section', 'section__lesson')
+
+    completed_lessons = list(
+        Lesson.objects.filter(
+            sections__userprogress__user=user,
+            sections__userprogress__completed=True
+        ).distinct().values_list('title', flat=True)
+    )
+
+    # Build actual topics from completed lessons
+    completed_topics = get_completed_topics(completed_lessons)
+
+    # Get published projects for portfolio
+    published_projects = Project.objects.filter(
+        user=user, status='published'
+    ).order_by('-updated_at')
+
+    context = {
+        'user':               user,
+        'profile':            profile,
+        'active_project':     active_project,
+        'published_projects': published_projects,
+        'completed_topics':   completed_topics,
+        'completed_lessons':  completed_lessons,
+        'csrf_token':         request.META.get('CSRF_COOKIE', ''),
+    }
+    return render(request, 'challenges.html', context)
+
+
+# ── Save Project Code ──
+@student_required
+def SaveProjectView(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    data = json.loads(request.body)
+    project_id = data.get('project_id')
+    code = data.get('code', '')
+
+    try:
+        project = Project.objects.get(
+            id=project_id, user=request.user, is_active=True)
+        project.code = code
+        project.save()
+        return JsonResponse({'success': True})
+    except Project.DoesNotExist:
+        return JsonResponse({'error': 'Project not found'}, status=404)
+
+
+# ── Request EVA Review ──
+@student_required
+def ReviewProjectView(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    data = json.loads(request.body)
+    project_id = data.get('project_id')
+    code = data.get('code', '')
+
+    try:
+        project = Project.objects.get(
+            id=project_id, user=request.user, is_active=True)
+        project.code = code
+        project.status = 'submitted'
+        project.save()
+
+        # EVA reviews the project
+        feedback = review_project(
+            title=project.title,
+            description=project.description,
+            code=code,
+            topics=project.topics_used,
+            age_group=request.user.age_group,
+        )
+
+        project.eva_feedback = feedback
+        project.status = 'reviewed'
+        project.save()
+
+        return JsonResponse({'success': True, 'feedback': feedback})
+    except Project.DoesNotExist:
+        return JsonResponse({'error': 'Project not found'}, status=404)
+
+
+# ── Publish Project ──
+@student_required
+def PublishProjectView(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    data = json.loads(request.body)
+    project_id = data.get('project_id')
+
+    try:
+        project = Project.objects.get(
+            id=project_id, user=request.user, status='reviewed')
+        project.status = 'published'
+        project.is_active = False
+        project.save()
+
+        return JsonResponse({'success': True})
+    except Project.DoesNotExist:
+        return JsonResponse({'error': 'Project not found'}, status=404)
+
+
+# ── Generate New Project ──
+@student_required
+def GenerateProjectView(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    data = json.loads(request.body)
+    completed_topics = data.get('completed_topics', [])
+    completed_lessons = data.get('completed_lessons', [])
+
+    # Build weak areas from DB
+    weak_areas = []
+    failed_tasks = TaskAttempt.objects.filter(
+        user=request.user, passed=False, attempts__gte=2
+    ).order_by('-attempts')[:5]
+
+    for attempt in failed_tasks:
+        task = Task.objects.filter(
+            section=attempt.section,
+            user=request.user,
+            order=attempt.task_order
+        ).first()
+        if task:
+            weak_areas.append(task.instruction[:80])
+
+    # Generate project idea via EVA
+    previous_projects = list(
+        Project.objects.filter(user=request.user)
+        .values_list('title', flat=True)
+    )
+
+    result = generate_project_idea(
+        completed_topics=completed_topics,
+        completed_lessons=completed_lessons,
+        weak_areas=weak_areas,
+        age_group=request.user.age_group,
+        previous_projects=previous_projects,
+    )
+
+    # Deactivate any existing active project
+    Project.objects.filter(
+        user=request.user, is_active=True).update(is_active=False)
+
+    # Save to DB
+    project = Project.objects.create(
+        user=request.user,
+        title=result['title'],
+        description=result['description'],
+        topics_used=completed_topics,
+        code='',
+        status='draft',
+        is_active=True,
+    )
+
+    return JsonResponse({
+        'success':     True,
+        'project_id':  project.id,
+        'title':       project.title,
+        'description': project.description,
     })

@@ -61,7 +61,7 @@
   <button class="nav-item" data-panel="leaderboard" onclick="navigateTo('leaderboard',this)">
     <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span> Leaderboard
   </button>
-  <button class="nav-item" data-panel="challenges" onclick="navigateTo('challenges',this)">
+  <button class="nav-item" data-panel="challenges" onclick="window.location.href='{% url 'challenges' %}'">
     <span class="nav-icon"><i class="fa-solid fa-swords"></i></span> Challenges
     <span class="nav-badge">3</span>
   </button>
@@ -474,64 +474,6 @@
       <div class="lb-col-xp"></div>
     </div>
   </template>
-
-  <!-- ═══════════════ PANEL: CHALLENGES ═══════════════ -->
-  <div class="page-panel" id="panel-challenges">
-    <div class="page-header">
-      <h1><i class="fa-solid fa-swords" style="color:var(--accent3);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Challenges</h1>
-      <p>Test your skills — 3 new challenges available today</p>
-    </div>
-    <div class="stats-grid" style="margin-bottom:22px">
-      <div class="stat-card green"><div class="stat-card-icon"><i class="fa-solid fa-circle-check"></i></div><div class="stat-card-label">Completed</div><div class="stat-card-value">247</div><div class="stat-card-sub">Total solved</div></div>
-      <div class="stat-card cyan"><div class="stat-card-icon"><i class="fa-solid fa-fire-flame-curved"></i></div><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73%</div><div class="stat-card-sub"><span class="up">↑ 5%</span> this month</div></div>
-      <div class="stat-card purple"><div class="stat-card-icon"><i class="fa-solid fa-bolt"></i></div><div class="stat-card-label">XP from Challenges</div><div class="stat-card-value">8,420</div><div class="stat-card-sub">74% of total XP</div></div>
-      <div class="stat-card gold"><div class="stat-card-icon"><i class="fa-solid fa-star"></i></div><div class="stat-card-label">Best Streak</div><div class="stat-card-value">21</div><div class="stat-card-sub">Consecutive days</div></div>
-    </div>
-    <div class="challenges-grid">
-      <div class="challenge-card hard">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-microchip-ai"></i></div><span class="ch-diff">Hard</span></div>
-        <div class="ch-title">Neural Network from Scratch</div>
-        <div class="ch-desc">Build a multi-layer perceptron without external libraries. Implement backpropagation manually.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +800 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~4h</span></div>
-        <button class="ch-start-btn"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-      <div class="challenge-card mid">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-diagram-project"></i></div><span class="ch-diff">Medium</span></div>
-        <div class="ch-title">Graph Pathfinding</div>
-        <div class="ch-desc">Implement Dijkstra's and A* algorithms. Solve shortest-path problems on weighted graphs.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +450 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~2h</span></div>
-        <button class="ch-start-btn" style="background:linear-gradient(135deg,#ffd166,#ff9900)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-      <div class="challenge-card easy">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-list-check"></i></div><span class="ch-diff">Easy</span></div>
-        <div class="ch-title">REST API Builder</div>
-        <div class="ch-desc">Create a fully functional REST API with CRUD operations, authentication, and rate limiting.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +200 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~1h</span></div>
-        <button class="ch-start-btn" style="background:linear-gradient(135deg,#06d6a0,#00d4ff)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-      <div class="challenge-card hard">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-lock"></i></div><span class="ch-diff">Hard</span></div>
-        <div class="ch-title">Cryptography Engine</div>
-        <div class="ch-desc">Implement RSA encryption from scratch. Handle key generation, encryption and decryption pipelines.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +700 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~3.5h</span></div>
-        <button class="ch-start-btn"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-      <div class="challenge-card mid">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-database"></i></div><span class="ch-diff">Medium</span></div>
-        <div class="ch-title">Database Optimizer</div>
-        <div class="ch-desc">Optimize slow SQL queries, design indexes and improve database performance by 10x.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +380 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~1.5h</span></div>
-        <button class="ch-start-btn" style="background:linear-gradient(135deg,#ffd166,#ff9900)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-      <div class="challenge-card easy">
-        <div class="ch-header"><div class="ch-icon"><i class="fa-solid fa-spider"></i></div><span class="ch-diff">Easy</span></div>
-        <div class="ch-title">Web Scraper Bot</div>
-        <div class="ch-desc">Build an intelligent web scraper using BeautifulSoup and Selenium with anti-detection logic.</div>
-        <div class="ch-footer"><span class="ch-xp"><i class="fa-solid fa-bolt fa-xs"></i> +180 XP</span><span class="ch-time"><i class="fa-regular fa-clock fa-xs"></i> ~45min</span></div>
-        <button class="ch-start-btn" style="background:linear-gradient(135deg,#06d6a0,#00d4ff)"><i class="fa-solid fa-play fa-xs"></i> Start Challenge</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ═══════════════ PANEL: PROGRESS ═══════════════ -->
   <div class="page-panel" id="panel-progress">

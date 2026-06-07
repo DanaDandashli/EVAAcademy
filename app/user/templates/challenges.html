@@ -1,0 +1,225 @@
+{% extends "base-dashboard.html" %}
+{% load static %}
+
+{% block links %}
+  <link rel="stylesheet" href="{% static 'css/challenges.css' %}"/>
+{% endblock %}
+
+{% block title %} Challenges — EVA Academy {% endblock %}
+
+{% block content %}
+<div class="ch-layout">
+
+  <!-- Top bar -->
+  <div class="ch-topbar">
+    <a href="{% url 'dashboard' %}" class="ch-back-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+    <div class="ch-topbar-center">
+      <i class="fas fa-folder-open" style="color:var(--purple)"></i>
+      <span>Mini Projects</span>
+    </div>
+    <div class="ch-topbar-right">
+      <span class="ch-topics-pill">
+        {% if completed_lessons %}
+          {% for lesson in completed_lessons %}{{ lesson }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% else %}
+          No lessons completed yet
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="ch-main">
+
+    <!-- PHASE 0: No active project — generate one -->
+    <div class="ch-phase {% if active_project %}hidden{% endif %}" id="chPhaseGenerate">
+      <div class="ch-generate-card">
+        <div class="ch-generate-icon">
+          <i class="fas fa-wand-magic-sparkles"></i>
+        </div>
+        <h2 class="ch-generate-title">Ready for a Challenge?</h2>
+        <p class="ch-generate-sub">EVA will create a personalized project based on your completed lessons and skill gaps. Build something real — and publish it to your portfolio.</p>
+        <div class="ch-generate-topics">
+          {% for lesson in completed_lessons %}
+            <span class="ch-topic-tag">{{ lesson }}</span>
+          {% empty %}
+            <span class="ch-topic-tag muted">Complete lessons to unlock projects</span>
+          {% endfor %}
+        </div>
+        <button class="ch-generate-btn" id="chGenerateBtn" {% if not completed_lessons %}disabled{% endif %}>
+          <i class="fas fa-sparkles"></i>
+          {% if completed_lessons %}Generate My Project{% else %}Complete a lesson first{% endif %}
+        </button>
+      </div>
+    </div>
+
+    <!-- PHASE 1: Active project — sandbox -->
+    <div class="ch-phase {% if not active_project %}hidden{% endif %}" id="chPhaseSandbox">
+      <div class="ch-sandbox-layout">
+
+        <!-- LEFT: Project info + Editor -->
+        <div class="ch-editor-panel">
+
+          <!-- Project card -->
+          <div class="ch-project-card">
+            <div class="ch-project-topbar">
+              <span class="ch-project-status-pill" id="chStatusPill">
+                <i class="fas fa-circle-dot"></i>
+                {% if active_project %}{{ active_project.status|capfirst }}{% else %}Draft{% endif %}
+              </span>
+              <button class="ch-regenerate-btn" id="chRegenerateBtn">
+                <i class="fas fa-rotate"></i> New Project
+              </button>
+            </div>
+            <h2 class="ch-project-title" id="chProjectTitle">
+              {% if active_project %}{{ active_project.title }}{% endif %}
+            </h2>
+            <p class="ch-project-desc" id="chProjectDesc">
+              {% if active_project %}{{ active_project.description }}{% endif %}
+            </p>
+          </div>
+
+          <!-- Editor -->
+          <div class="ch-editor-wrap-outer">
+            <div class="ch-editor-topbar">
+              <div class="ch-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+              </div>
+              <span class="ch-filename">project.py</span>
+              <button class="ch-run-btn" id="chRunBtn">
+                <i class="fas fa-play"></i> Run
+              </button>
+            </div>
+            <div class="ch-editor-wrap">
+              <textarea id="chCodeEditor">{% if active_project %}{{ active_project.code }}{% endif %}</textarea>
+            </div>
+          </div>
+
+          <!-- Output -->
+          <div class="ch-output">
+            <div class="ch-output-bar">
+              <span><i class="fas fa-terminal"></i> Output</span>
+              <span id="chOutputStatus" class="ch-output-status"></span>
+            </div>
+            <div class="ch-output-body" id="chOutputBody">
+              <span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: EVA mentor chat -->
+        <div class="ch-chat-panel">
+          <div class="ch-chat-header">
+            <div class="ch-eva-avatar">
+              <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+            </div>
+            <div class="ch-eva-info">
+              <h3 class="ch-eva-name">EVA — Project Mentor</h3>
+              <p class="ch-eva-sub">Guides without writing code for you</p>
+            </div>
+            <span class="ch-online-pill">
+              <span class="ch-online-dot"></span> Online
+            </span>
+          </div>
+
+          <div class="ch-rule-banner">
+            <i class="fas fa-lightbulb ch-rule-icon"></i>
+            <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you — the thinking is yours.</p>
+          </div>
+
+          <div class="ch-chat-messages" id="chChatMessages">
+            <div class="ch-msg eva typing-indicator" id="chEvaTyping" style="display:none">
+              <div class="ch-eva-avatar-sm">
+                <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
+              </div>
+              <div class="ch-msg-bubble typing-bubble">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ch-chat-actions" id="chChatActions">
+            <button class="ch-review-btn" id="chReviewBtn">
+              <i class="fas fa-magnifying-glass-chart"></i> Request EVA Review
+            </button>
+          </div>
+
+          <div class="ch-chat-input-wrap">
+            <input type="text" class="ch-chat-input" id="chChatInput"
+                   placeholder="Ask EVA for guidance..."/>
+            <button class="ch-chat-send" id="chChatSend">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Portfolio section -->
+    {% if published_projects %}
+    <div class="ch-portfolio-section">
+      <h3 class="ch-portfolio-title">
+        <i class="fas fa-briefcase" style="color:var(--accent4)"></i> My Portfolio
+      </h3>
+      <div class="ch-portfolio-grid">
+        {% for project in published_projects %}
+        <div class="ch-portfolio-card" style="cursor:pointer;" onclick="openPortfolioModal('{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.code|escapejs }}', '{{ project.eva_feedback|escapejs }}')">
+          <div class="ch-portfolio-icon"><i class="fab fa-python"></i></div>
+          <h4 class="ch-portfolio-name">{{ project.title }}</h4>
+          <p class="ch-portfolio-desc">{{ project.description }}</p>
+          <span class="ch-portfolio-badge"><i class="fas fa-circle-check fa-xs"></i> Published</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Portfolio project modal -->
+<div id="chPortfolioModal" class="ch-modal-overlay">
+  <div class="ch-modal-content">
+    <button class="ch-modal-close" onclick="document.getElementById('chPortfolioModal').style.display='none'">
+      <i class="fas fa-times"></i>
+    </button>
+    <h3 id="chModalTitle" class="ch-modal-title"></h3>
+    <p id="chModalDesc" class="ch-modal-desc"></p>
+
+    <div class="ch-modal-code-wrap">
+      <div class="ch-modal-code-bar">
+        <span>project.py</span>
+        <span class="ch-modal-published-tag">Published</span>
+      </div>
+      <pre id="chModalCode" class="ch-modal-code"></pre>
+    </div>
+
+    <div class="ch-modal-feedback-wrap">
+      <p class="ch-modal-feedback-label">
+        <i class="fas fa-graduation-cap"></i> EVA's Review
+      </p>
+      <div id="chModalFeedback" class="ch-modal-feedback-body"></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const PROJECT_ID        = {% if active_project %}{{ active_project.id }}{% else %}null{% endif %};
+  const COMPLETED_TOPICS  = [{% for t in completed_topics %}"{{ t }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  const COMPLETED_LESSONS = [{% for l in completed_lessons %}"{{ l }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  const CSRF_TOKEN        = "{{ csrf_token }}";
+  const DASHBOARD_URL = "{% url 'dashboard' %}";
+</script>
+<script src="{% static 'js/challenges.js' %}"></script>
+{% endblock %}

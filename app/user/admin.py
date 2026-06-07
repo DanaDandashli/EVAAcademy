@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (Avatar, User, StudentProfile, Lesson, Section, Slide, Task, TestQuestion,
-                     UserProgress, Quest, UserQuest, EVAConversation, TaskAttempt, TestAttempt)
+                     UserProgress, Quest, UserQuest, EVAConversation, TaskAttempt, TestAttempt, Project)
 
 
 @admin.register(User)
@@ -81,6 +81,15 @@ class TestAttemptAdmin(admin.ModelAdmin):
                     'passed', 'attempts', 'created_at']
     list_filter = ['passed']
     search_fields = ['user__username']
+
+
+@admin.register(Project)
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = ['user', 'title', 'status',
+                    'is_active', 'created_at', 'updated_at']
+    list_filter = ['status', 'is_active']
+    search_fields = ['user__username', 'title']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 admin.site.register(Slide)
