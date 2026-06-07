@@ -15,7 +15,7 @@ __MaxTokens__ = 2000
 PYTHON_CURRICULUM_FOUNDATION = [
     # ── Beginner ──
     {'order': 1,  'title': 'The Basics',                    'level_required': 1,  'category': 'beginner',
-        'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /)', 'string concatenation']},
+        'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /, //, %)', 'string concatenation', 'format()']},
     {'order': 2,  'title': 'Control Flow',                  'level_required': 1,  'category': 'beginner',
         'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values']},
     {'order': 3,  'title': 'Functions',                     'level_required': 2,  'category': 'beginner',
@@ -183,7 +183,7 @@ Depth: {depth}
 IMPORTANT: Only teach these specific topics: {topics_str}
 Do NOT include any other topics outside this list.
 
-Decide how many slides this topic needs (minimum 10, maximum 20) based on complexity.
+Decide how many slides this topic needs (minimum 10, maximum 25) based on complexity.
 
 Generate slides that teach "{lesson_title}" progressively from simple to complex.
 Build on what the student already knows.
@@ -308,7 +308,7 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
         difficulty_adj = "same"
 
     # ── Task type and difficulty rotation ──
-    type_rotation = ['fill_blank', 'bug_fix', 'free_code', 'bug_fix', 'free_code']
+    type_rotation = ['free_code', 'bug_fix', 'free_code', 'bug_fix', 'free_code']
     diff_rotation = ['easy',      'medium',  'medium',    'hard',       'expert']
     idx = min(task_number - 1, len(type_rotation) - 1)
     task_type = type_rotation[idx]

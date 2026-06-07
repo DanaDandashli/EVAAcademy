@@ -1,23 +1,23 @@
-import json, re, random
+import json
+import random
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.db import models
-from django.db import models as db_models
-from .models import (NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress, 
-                     ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt, TestQuestion, TestAttempt, Project)
-from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
-from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION, 
-                 generate_next_task, should_complete_application, validate_task, generate_next_test_question, should_complete_test,
-                 generate_competition_challenge, generate_solution, validate_generated_task, review_project, generate_project_idea)
+from .models import (NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress,
+                     ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt,
+                     TestQuestion, TestAttempt, Project)
+from .ai import (eva_chat, generate_slides, get_student_context, PYTHON_CURRICULUM_FOUNDATION,
+                 generate_next_task, should_complete_application, validate_task,
+                 generate_next_test_question, should_complete_test, generate_competition_challenge,
+                 generate_solution, validate_generated_task, review_project, generate_project_idea)
 
 User = get_user_model()
 
@@ -31,6 +31,38 @@ def get_completed_topics(lesson_titles):
         if curriculum_lesson['title'] in lesson_titles:
             topics.extend(curriculum_lesson['topics'])
     return topics
+
+
+def get_completed_lessons(user, exclude_lesson=None):
+    """Return list of completed lesson titles for a user."""
+    qs = Lesson.objects.filter(
+        sections__userprogress__user=user,
+        sections__userprogress__completed=True
+    ).distinct()
+    if exclude_lesson:
+        qs = qs.exclude(id=exclude_lesson.id)
+    return list(qs.values_list('title', flat=True))
+
+
+def get_taught_concepts(lesson):
+    """Return slide titles from the introduction section of a lesson."""
+    intro = Section.objects.filter(
+        lesson=lesson, node_type='introduction').first()
+    if intro:
+        return list(intro.slides.all().values_list('title', flat=True))
+    return []
+
+
+def get_weak_areas(user, lesson):
+    """Return weak areas for a user based on failed task attempts."""
+    app_section = Section.objects.filter(
+        lesson=lesson, node_type='application').first()
+    if not app_section:
+        return []
+    failed = TaskAttempt.objects.filter(
+        user=user, section=app_section, passed=False
+    ).values_list('task_order', flat=True)
+    return [f"tasks {list(failed)}"] if failed else []
 
 
 def IndexView(request):
@@ -74,7 +106,7 @@ def LoginView(request):
             return render(request, 'login.html', {'username': username})
 
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             cache.delete(cache_key)
             login(request, user)
@@ -82,7 +114,8 @@ def LoginView(request):
         else:
             cache.set(cache_key, attempts + 1, timeout=900)
             remaining = 4 - attempts
-            messages.error(request, f'Invalid username or password. {remaining} attempts remaining.')
+            messages.error(
+                request, f'Invalid username or password. {remaining} attempts remaining.')
             return render(request, 'login.html', {'username': username})
 
     return render(request, 'login.html')
@@ -122,9 +155,6 @@ def RegisterView(request):
             return render(request, 'register.html', ctx)
 
         if age_group == 'child':
-            # if not avatar_id:
-            #     messages.error(request, 'Please choose your character.')
-            #     return render(request, 'register.html', ctx)
             if len(pin) < 4:
                 messages.error(request, 'Please enter a 4-digit secret code.')
                 return render(request, 'register.html', ctx)
@@ -148,7 +178,7 @@ def RegisterView(request):
             except ValidationError as e:
                 messages.error(request, ' '.join(e.messages))
                 return render(request, 'register.html', ctx)
-            
+
         avatar = None
         if age_group == 'child' and avatar_id:
             try:
@@ -190,102 +220,73 @@ def student_required(view_func):
     return wrapper
 
 
-@student_required
-def DashboardView(request):
-    user = request.user
-    profile, _ = StudentProfile.objects.get_or_create(user=user)
+# ════════════════════════════════════════════════
+# Dashboard helper functions
+# ════════════════════════════════════════════════
 
-    # ── Completed sections ──
-    completed_progress = UserProgress.objects.filter(
-        user=user, completed=True
-    ).select_related('section', 'section__lesson').order_by('-completed_at')
+def _get_level_threshold(level):
+    """XP needed to reach this level."""
+    if level <= 1:
+        return 0
+    return int(100 * (level ** 1.8))
 
-    completed_section_ids = set(p.section_id for p in completed_progress)
 
-    # ── Sync XP from real progress using NODE_XP ──
-    xp_from_progress = sum(
-        NODE_XP.get(p.section.node_type, 0)
-        for p in completed_progress
-    )
+def _get_level(xp):
+    level = 1
+    while _get_level_threshold(level + 1) <= xp:
+        level += 1
+    return level
 
-    # Add competition wins XP (50 XP per win)
-    xp_from_progress += profile.competition_wins * 50
 
-    # Add compete room wins XP
-    xp_from_progress += profile.compete_wins * NODE_XP['competition']
-
-    # Add project XP (100 XP per published project) — teen/adult only
+def _calculate_xp_and_level(user, profile, completed_progress):
+    """Calculate XP from all sources, sync profile, return level stats."""
+    xp = sum(NODE_XP.get(p.section.node_type, 0) for p in completed_progress)
+    xp += profile.competition_wins * 50
+    xp += profile.compete_wins * NODE_XP['competition']
     if user.age_group != 'child':
-        published_projects_count = Project.objects.filter(
-            user=user, status='published'
-        ).count()
-        xp_from_progress += published_projects_count * 100
+        xp += Project.objects.filter(user=user,
+                                     status='published').count() * 100
 
-    # ── Unlimited level formula ──
-    def get_level_threshold(level):
-        """XP needed to reach this level."""
-        if level <= 1:
-            return 0
-        return int(100 * (level ** 1.8))
-
-    def get_level(xp):
-        level = 1
-        while get_level_threshold(level + 1) <= xp:
-            level += 1
-        return level
-
-    new_level = get_level(xp_from_progress)
-
-    if profile.xp_total != xp_from_progress or profile.level != new_level:
-        profile.xp_total = xp_from_progress
+    new_level = _get_level(xp)
+    if profile.xp_total != xp or profile.level != new_level:
+        profile.xp_total = xp
         profile.level = new_level
         profile.save()
 
     xp_cur = profile.xp_total
     level = profile.level
-    xp_next = get_level_threshold(level + 1)
-    xp_prev = get_level_threshold(level)
+    xp_next = _get_level_threshold(level + 1)
+    xp_prev = _get_level_threshold(level)
     xp_range = xp_next - xp_prev
     xp_pct = min(round(((xp_cur - xp_prev) / xp_range) * 100),
                  100) if xp_range else 0
+    return level, xp_cur, xp_next, xp_pct
 
-    # ── Rank title ──
+
+def _get_rank_title(level):
+    """Return rank title string for a given level."""
     level_titles = [
-        (range(1,  3),   'Python Rookie'),
-        (range(3,  5),   'Beginner Coder'),
-        (range(5,  7),   'Apprentice Developer'),
-        (range(7,  9),   'Intermediate Developer'),
-        (range(9,  11),  'Advanced Developer'),
-        (range(11, 13),  'Senior Developer'),
-        (range(13, 15),  'Expert Pythonista'),
-        (range(15, 17),  'Python Architect'),
-        (range(17, 100), 'Master Developer'),
+        (range(1,   3),   'Python Rookie'),
+        (range(3,   5),   'Beginner Coder'),
+        (range(5,   7),   'Apprentice Developer'),
+        (range(7,   9),   'Intermediate Developer'),
+        (range(9,  11),   'Advanced Developer'),
+        (range(11, 13),   'Senior Developer'),
+        (range(13, 15),   'Expert Pythonista'),
+        (range(15, 17),   'Python Architect'),
+        (range(17, 100),  'Master Developer'),
         (range(100, 999), 'Python Engineer'),
     ]
-
-    rank_title = 'Python Rookie'
-
     for r, title in level_titles:
         if level in r:
-            rank_title = title
-            break
+            return title
+    return 'Python Rookie'
 
-    # ── Avatar ──
-    avatar_url = ''
-    if user.avatar and user.avatar.image:
-        avatar_url = request.build_absolute_uri(user.avatar.image.url)
 
-    # ── Track ──
-    track_labels = {
-        'child': 'Child Track',
-        'teen':  'Teen Track',
-        'adult': 'Adult Track'
-    }
-    track_label = track_labels.get(user.age_group, 'Learning Track')
-
-    # ── Learning path ──
+def _build_lessons_data(completed_section_ids):
+    """Build the full learning path data structure."""
     lessons = Lesson.objects.filter(
-        age_group='child'  # all users share the same lessons
+        age_group='child'
     ).prefetch_related('sections').order_by('order')
 
     lessons_data = []
@@ -310,10 +311,10 @@ def DashboardView(request):
                     current_lesson = lesson
 
             lesson_sections.append({
-                'section':    section,
+                'section':      section,
                 'is_completed': is_completed,
-                'is_current': current_section == section,
-                'is_locked':  lesson_is_locked or (not is_completed and current_section != section),
+                'is_current':   current_section == section,
+                'is_locked':    lesson_is_locked or (not is_completed and current_section != section),
             })
             total_sections += 1
             if is_completed:
@@ -328,15 +329,17 @@ def DashboardView(request):
             'is_locked':       lesson_is_locked,
         })
 
-        # Update flag for next lesson
         if not lesson_completed:
             all_previous_completed = False
 
     overall_pct = round(
         (completed_sections_count / total_sections * 100) if total_sections else 0
     )
+    return lessons_data, total_sections, completed_sections_count, current_lesson, current_section, overall_pct
 
-    # ── Leaderboard ──
+
+def _build_leaderboard(user, profile):
+    """Return mini leaderboard, user rank, and total players."""
     leaderboard = StudentProfile.objects.select_related('user').filter(
         user__age_group=user.age_group
     ).order_by('-xp_total', 'created_at')[:3]
@@ -352,7 +355,11 @@ def DashboardView(request):
         user__age_group=user.age_group
     ).count()
 
-    # ── Daily goal ──
+    return leaderboard, user_rank, total_players
+
+
+def _calculate_daily_goal(completed_progress):
+    """Return today's XP, daily goal, and completion percentage."""
     today = timezone.now().date()
     xp_today = sum(
         NODE_XP.get(p.section.node_type, 0)
@@ -362,20 +369,23 @@ def DashboardView(request):
     daily_goal = 50
     xp_today = min(xp_today, daily_goal)
     daily_goal_pct = round((xp_today / daily_goal) * 100) if daily_goal else 0
+    return xp_today, daily_goal, daily_goal_pct
 
-    # ── Achievements ──
-    earned_achievements = []
-    unearned_achievements = []
 
+def _build_achievements(completed_progress, profile):
+    """Split achievements into earned and unearned."""
+    earned = []
+    unearned = []
     for achievement in ALL_ACHIEVEMENTS:
         if achievement.is_earned(completed_progress, profile):
-            earned_achievements.append(achievement)
+            earned.append(achievement)
         else:
-            unearned_achievements.append(achievement)
+            unearned.append(achievement)
+    return earned, unearned, len(earned)
 
-    total_badges = len(earned_achievements)
 
-    # ── Quests ──
+def _build_quests(user, lessons_data, completed_progress):
+    """Evaluate and update quest progress, return user_quests list."""
     quests = Quest.objects.filter(age_group=user.age_group, is_active=True)
     user_quests = []
 
@@ -385,17 +395,16 @@ def DashboardView(request):
                 section__node_type=quest.node_type
             ).count()
         else:
-            # Lesson master — count completed full lessons
             progress = sum(1 for l in lessons_data if l['is_completed'])
 
-        progress    = min(progress, quest.target_count)
+        progress = min(progress, quest.target_count)
         is_complete = progress >= quest.target_count
-        pct         = round((progress / quest.target_count) * 100) if quest.target_count else 0
+        pct = round((progress / quest.target_count) *
+                    100) if quest.target_count else 0
 
-        # Create or update UserQuest
         uq, _ = UserQuest.objects.get_or_create(user=user, quest=quest)
         if is_complete and not uq.completed:
-            uq.completed    = True
+            uq.completed = True
             uq.completed_at = timezone.now()
             uq.save()
         uq.progress = progress
@@ -409,85 +418,128 @@ def DashboardView(request):
             'is_complete': is_complete,
         })
 
-    # ── Completed topics ──
-    completed_lessons = [
-        l['lesson'].title
-        for l in lessons_data
-        if l['is_completed']
-    ]
-    completed_topics = ', '.join(completed_lessons) if completed_lessons else 'No topics yet'
     completed_quests_count = sum(1 for uq in user_quests if uq['is_complete'])
+    return user_quests, completed_quests_count
 
-    # ── Certs (completed lessons = earned certs) ──
+
+def _build_eva_context(user, lessons_data, level, completed_sections_count, completed_lessons):
+    """Build EVA advisor context from weak areas."""
+    weak_areas = []
+
+    for lesson in lessons_data:
+        if lesson['is_locked'] or lesson['completed_count'] == 0:
+            continue
+
+        lesson_obj = lesson['lesson']
+        app_section = Section.objects.filter(
+            lesson=lesson_obj, node_type='application').first()
+
+        if app_section:
+            failed_tasks = TaskAttempt.objects.filter(
+                user=user, section=app_section, passed=False, attempts__gte=2
+            ).order_by('-attempts')
+            for attempt in failed_tasks[:2]:
+                task = Task.objects.filter(
+                    section=app_section, user=user, order=attempt.task_order
+                ).first()
+                if task:
+                    weak_areas.append({
+                        'lesson':    lesson_obj.title,
+                        'node_type': 'application',
+                        'concept':   task.instruction[:80],
+                        'attempts':  attempt.attempts,
+                    })
+
+        test_section = Section.objects.filter(
+            lesson=lesson_obj, node_type='test').first()
+        if test_section:
+            failed_questions = TestAttempt.objects.filter(
+                user=user, section=test_section, passed=False, attempts__gte=2
+            ).order_by('-attempts')
+            for attempt in failed_questions[:2]:
+                question = TestQuestion.objects.filter(
+                    section=test_section, user=user, order=attempt.question_order
+                ).first()
+                if question:
+                    weak_areas.append({
+                        'lesson':    lesson_obj.title,
+                        'node_type': 'test',
+                        'concept':   question.instruction[:80],
+                        'attempts':  attempt.attempts,
+                    })
+
+    return {
+        'level':             level,
+        'completed_count':   completed_sections_count,
+        'weak_areas':        weak_areas[:5],
+        'completed_lessons': completed_lessons,
+    }
+
+
+# ════════════════════════════════════════════════
+# Dashboard View
+# ════════════════════════════════════════════════
+
+@student_required
+def DashboardView(request):
+    user = request.user
+    profile, _ = StudentProfile.objects.get_or_create(user=user)
+    completed_progress = UserProgress.objects.filter(
+        user=user, completed=True
+    ).select_related('section', 'section__lesson').order_by('-completed_at')
+    completed_section_ids = set(p.section_id for p in completed_progress)
+
+    # ── Core calculations ──
+    level, xp_cur, xp_next, xp_pct = _calculate_xp_and_level(
+        user, profile, completed_progress)
+    rank_title = _get_rank_title(level)
+
+    # ── Learning path ──
+    lessons_data, total_sections, completed_sections_count, current_lesson, current_section, overall_pct = \
+        _build_lessons_data(completed_section_ids)
+
+    # ── Supporting data ──
+    leaderboard, user_rank, total_players = _build_leaderboard(user, profile)
+    xp_today, daily_goal, daily_goal_pct = _calculate_daily_goal(
+        completed_progress)
+    earned_achievements, unearned_achievements, total_badges = _build_achievements(
+        completed_progress, profile)
+    user_quests, completed_quests_count = _build_quests(
+        user, lessons_data, completed_progress)
+
+    # ── Derived data ──
+    completed_lessons = [
+        l['lesson'].title for l in lessons_data if l['is_completed']]
+    completed_topics = ', '.join(
+        completed_lessons) if completed_lessons else 'No topics yet'
     certs_earned = sum(1 for l in lessons_data if l['is_completed'])
     certs_remaining = len(lessons_data) - certs_earned
-
-    # ── Per-node-type completion counts (for charts) ──
-    intro_count = sum(1 for p in completed_progress if p.section.node_type == 'introduction')
-    app_count   = sum(1 for p in completed_progress if p.section.node_type == 'application')
-    comp_count  = sum(1 for p in completed_progress if p.section.node_type == 'competition')
-    test_count  = sum(1 for p in completed_progress if p.section.node_type == 'test')
+    intro_count = sum(
+        1 for p in completed_progress if p.section.node_type == 'introduction')
+    app_count = sum(
+        1 for p in completed_progress if p.section.node_type == 'application')
+    comp_count = sum(
+        1 for p in completed_progress if p.section.node_type == 'competition')
+    test_count = sum(
+        1 for p in completed_progress if p.section.node_type == 'test')
     comp_losses = profile.compete_battles - profile.compete_wins
     comp_xp = profile.compete_wins * NODE_XP['competition']
     compete_win_rate = round((profile.compete_wins / profile.compete_battles)
                              * 100) if profile.compete_battles > 0 else 0
 
-    # ── EVA Advisor context ──
-    weak_areas = []
-    for lesson in lessons_data:
-        if lesson['is_locked']:
-            continue  # skip locked lessons
-        if lesson['completed_count'] == 0:
-            continue  # skip lessons user hasn't started
+    # ── EVA context ──
+    eva_context = _build_eva_context(
+        user, lessons_data, level, completed_sections_count, completed_lessons)
+    eva_history = list(reversed(
+        list(EVAConversation.objects.filter(user=user).order_by(
+            '-created_at')[:10].values('role', 'content'))
+    ))
 
-        lesson_obj = lesson['lesson']
-
-        # Get application section
-        app_section = Section.objects.filter(lesson=lesson_obj, node_type='application').first()
-
-        if app_section:
-            # Get failed task attempts for this section - failed at least 2 times
-            failed_tasks = TaskAttempt.objects.filter(user = user, section = app_section, passed = False, attempts__gte = 2).order_by('-attempts')
-
-            for attempt in failed_tasks[:2]:
-                # Get the task instruction
-                task = Task.objects.filter(section = app_section, user = user, order = attempt.task_order).first()
-                if task:
-                    weak_areas.append({
-                        'lesson': lesson_obj.title,
-                        'node_type': 'application',
-                        'concept': task.instruction[:80],
-                        'attempts': attempt.attempts,
-                    })
-
-        # Get test section    
-        test_section = Section.objects.filter(lesson=lesson_obj, node_type='test').first()
-
-        if test_section:
-            failed_questions = TestAttempt.objects.filter(user=user, section=test_section, passed=False, attempts__gte=2).order_by('-attempts')  
-
-            for attempt in failed_questions[:2]:
-                question = TestQuestion.objects.filter(section=test_section, user=user, order=attempt.question_order).first()
-                if question:
-                    weak_areas.append({
-                        'lesson': lesson_obj.title,
-                        'node_type': 'test',
-                        'concept': question.instruction[:80],
-                        'attempts': attempt.attempts,
-                    })
-
-    eva_context = {
-        'level':             level,
-        'completed_count':   completed_sections_count,
-        'weak_areas':        weak_areas[:5],  # top 5 weak areas
-        'completed_lessons': completed_lessons,
-    }
-
-    # ── EVA conversation history ──
-    eva_history = EVAConversation.objects.filter(
-        user=user
-    ).order_by('-created_at')[:10]
-    eva_history = list(reversed(eva_history))
+    # ── Avatar & Track ──
+    avatar_url = request.build_absolute_uri(
+        user.avatar.image.url) if user.avatar and user.avatar.image else ''
+    track_label = {'child': 'Child Track', 'teen': 'Teen Track',
+                   'adult': 'Adult Track'}.get(user.age_group, 'Learning Track')
 
     context = {
         'user':       user,
@@ -495,11 +547,11 @@ def DashboardView(request):
         'avatar_url': avatar_url,
         'rank_title': rank_title,
 
-        'xp_cur':    xp_cur,
-        'xp_next':   xp_next,
-        'xp_pct':    xp_pct,
-        'xp_remain': 100 - xp_pct,
-        'level':     level,
+        'xp_cur':     xp_cur,
+        'xp_next':    xp_next,
+        'xp_pct':     xp_pct,
+        'xp_remain':  100 - xp_pct,
+        'level':      level,
         'level_next': level + 1,
         'track_label': track_label,
 
@@ -526,23 +578,23 @@ def DashboardView(request):
         'user_quests':    user_quests,
         'completed_quests_count': completed_quests_count,
 
-        'total_completed': len(completed_section_ids),
+        'total_completed':       len(completed_section_ids),
         'earned_achievements':   earned_achievements,
         'unearned_achievements': unearned_achievements,
         'total_badges':          total_badges,
 
-        'completed_lessons': completed_lessons,
-        'completed_topics':  completed_topics,
+        'completed_lessons':  completed_lessons,
+        'completed_topics':   completed_topics,
         'completed_progress': completed_progress,
-        'certs_earned': certs_earned,
-        'certs_remaining':  certs_remaining,
-        'intro_count':  intro_count,
-        'app_count':    app_count,
-        'comp_count':   comp_count,
-        'test_count':   test_count,
-        'comp_losses': comp_losses,
-        'comp_xp':     comp_xp,
-        'compete_win_rate': compete_win_rate,
+        'certs_earned':       certs_earned,
+        'certs_remaining':    certs_remaining,
+        'intro_count':        intro_count,
+        'app_count':          app_count,
+        'comp_count':         comp_count,
+        'test_count':         test_count,
+        'comp_losses':        comp_losses,
+        'comp_xp':            comp_xp,
+        'compete_win_rate':   compete_win_rate,
 
         'eva_context': eva_context,
         'eva_history': eva_history,
@@ -556,21 +608,16 @@ def DashboardView(request):
 
 @student_required
 def IntroductionView(request, section_id):
-    section = get_object_or_404(Section, id=section_id, node_type='introduction')
+    section = get_object_or_404(
+        Section, id=section_id, node_type='introduction')
     slides = list(section.slides.all().order_by('order'))
 
     # ── Generate slides if none exist ──
     if not slides:
         user = request.user
-        completed_lessons = list(
-            Lesson.objects.filter(
-                sections__userprogress__user=user,
-                sections__userprogress__completed=True
-            ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-        )
+        completed_lessons = get_completed_lessons(
+            user, exclude_lesson=section.lesson)
         student_context = get_student_context(user)
-
-        # Get topics from curriculum
         lesson_topics = get_completed_topics(section.lesson.title)
 
         generated = generate_slides(
@@ -598,7 +645,7 @@ def IntroductionView(request, section_id):
             )
 
         slides = list(section.slides.all().order_by('order'))
-    
+
     context = {
         'section':      section,
         'lesson':       section.lesson,
@@ -643,15 +690,9 @@ def ApplicationView(request, section_id):
     section = get_object_or_404(
         Section, id=section_id, node_type='application')
     user = request.user
-
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-    )
+    completed_lessons = get_completed_lessons(
+        user, exclude_lesson=section.lesson)
     student_context = get_student_context(user)
-
     lesson_topics = get_completed_topics(section.lesson.title)
 
     attempts = TaskAttempt.objects.filter(
@@ -788,7 +829,7 @@ def GenerateNextTaskView(request, section_id):
     passed_count = attempts.filter(passed=True).count()
     failed_count = attempts.filter(passed=False).count()
     avg_attempts = attempts.aggregate(
-        avg=db_models.Avg('attempts'))['avg'] or 1
+        avg=models.Avg('attempts'))['avg'] or 1
 
     # Lesson topics — used for both completion check and task generation
     lesson_topics = get_completed_topics(section.lesson.title)
@@ -802,15 +843,9 @@ def GenerateNextTaskView(request, section_id):
         'instruction', 'hint', 'starter_code', 'topic_covered'
     ))
 
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-    )
+    completed_lessons = get_completed_lessons(
+        user, exclude_lesson=section.lesson)
     student_context = get_student_context(user)
-
-    # Generate next task with validation — max 3 attempts
     next_order = section.tasks.filter(user=user).count() + 1
     task_data = None
     for _attempt in range(3):
@@ -883,21 +918,9 @@ def CompetitionView(request, section_id):
 
     # Get lesson topics from curriculum
     lesson_topics = get_completed_topics(section.lesson.title)
-
-    # Get taught concepts from Introduction slides
-    intro_section = Section.objects.filter(
-        lesson=section.lesson, node_type='introduction').first()
-    taught_concepts = []
-    if intro_section:
-        taught_concepts = list(
-            intro_section.slides.all().values_list('title', flat=True))
-
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-    )
+    taught_concepts = get_taught_concepts(section.lesson)
+    completed_lessons = get_completed_lessons(
+        user, exclude_lesson=section.lesson)
     student_context = get_student_context(user)
 
     # Generate challenge
@@ -941,27 +964,12 @@ def CompetitionView(request, section_id):
 def TestView(request, section_id):
     section = get_object_or_404(Section, id=section_id, node_type='test')
     user = request.user
-
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-    )
+    completed_lessons = get_completed_lessons(
+        user, exclude_lesson=section.lesson)
     student_context = get_student_context(user)
-
-    # Get weak areas from application node attempts
-    app_section = Section.objects.filter(
-        lesson=section.lesson, node_type='application'
-    ).first()
-
-    weak_areas = []
-    if app_section:
-        failed_attempts = TaskAttempt.objects.filter(
-            user=user, section=app_section, passed=False
-        ).values_list('task_order', flat=True)
-        if failed_attempts:
-            weak_areas = [f"tasks {list(failed_attempts)}"]
+    weak_areas = get_weak_areas(user, section.lesson)
+    lesson_topics = get_completed_topics(section.lesson.title)
+    taught_concepts = get_taught_concepts(section.lesson)
 
     # Get test attempts
     attempts = TestAttempt.objects.filter(user=user, section=section)
@@ -975,17 +983,6 @@ def TestView(request, section_id):
 
     # Get questions for this student
     questions = list(section.questions.filter(user=user).order_by('order'))
-
-    # Get lesson topics from curriculum
-    lesson_topics = get_completed_topics(section.lesson.title)
-
-    # Get what was actually taught in Introduction slides
-    intro_section = Section.objects.filter(
-        lesson=section.lesson, node_type='introduction').first()
-    taught_concepts = []
-    if intro_section:
-        taught_concepts = list(
-            intro_section.slides.all().values_list('title', flat=True))
 
     # Generate first question if none exist
     if not questions:
@@ -1065,7 +1062,7 @@ def GenerateNextTestQuestionView(request, section_id):
     passed_count = attempts.filter(passed=True).count()
     total_score = passed_count * 20
     avg_attempts = attempts.aggregate(
-        avg=db_models.Avg('attempts'))['avg'] or 1
+        avg=models.Avg('attempts'))['avg'] or 1
 
     # Complete when all 5 passed
     if passed_count >= MAX_QUESTIONS:
@@ -1076,36 +1073,12 @@ def GenerateNextTestQuestionView(request, section_id):
         'instruction', 'starter_code'
     ))
 
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).exclude(id=section.lesson.id).distinct().values_list('title', flat=True)
-    )
+    completed_lessons = get_completed_lessons(
+        user, exclude_lesson=section.lesson)
     student_context = get_student_context(user)
-
-    # Get weak areas
-    app_section = Section.objects.filter(
-        lesson=section.lesson, node_type='application'
-    ).first()
-    weak_areas = []
-    if app_section:
-        failed_attempts = TaskAttempt.objects.filter(
-            user=user, section=app_section, passed=False
-        ).values_list('task_order', flat=True)
-        if failed_attempts:
-            weak_areas = [f"tasks {list(failed_attempts)}"]
-
-    # Get lesson topics from curriculum
+    weak_areas = get_weak_areas(user, section.lesson)
     lesson_topics = get_completed_topics(section.lesson.title)
-
-    # Get what was actually taught in Introduction slides
-    intro_section = Section.objects.filter(
-        lesson=section.lesson, node_type='introduction').first()
-    taught_concepts = []
-    if intro_section:
-        taught_concepts = list(
-            intro_section.slides.all().values_list('title', flat=True))
+    taught_concepts = get_taught_concepts(section.lesson)
 
     # Generate next question
     next_order = section.questions.filter(user=user).count() + 1
@@ -1154,27 +1127,15 @@ def GenerateNextTestQuestionView(request, section_id):
 @student_required
 def CompeteRoomView(request):
     profile = StudentProfile.objects.get(user=request.user)
-
-    completed_progress = UserProgress.objects.filter(
-        user=request.user, completed=True
-    ).select_related('section')
-
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=request.user,
-            sections__userprogress__completed=True
-        ).distinct().values_list('title', flat=True)
-    )
-
-    # Build actual topics list from completed lessons
+    completed_lessons = get_completed_lessons(request.user)
     completed_topics = get_completed_topics(completed_lessons)
 
     context = {
-        'user':             request.user,
-        'profile':          profile,
+        'user':              request.user,
+        'profile':           profile,
         'completed_lessons': completed_lessons,
         'completed_topics':  completed_topics,
-        'csrf_token': request.META.get("CSRF_COOKIE", ""),
+        'csrf_token':        request.META.get("CSRF_COOKIE", ""),
     }
     return render(request, 'compete-room.html', context)
 
@@ -1202,7 +1163,7 @@ def CompeteResultView(request):
 def AdvisorChatView(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+
     data = json.loads(request.body)
     user_message = data.get('message', '').strip()
     user_code = data.get('code', '')
@@ -1313,19 +1274,8 @@ def ChallengesView(request):
     # Get active project
     active_project = Project.objects.filter(user=user, is_active=True).first()
 
-    # Get completed lessons and weak areas for EVA context
-    completed_progress = UserProgress.objects.filter(
-        user=user, completed=True
-    ).select_related('section', 'section__lesson')
-
-    completed_lessons = list(
-        Lesson.objects.filter(
-            sections__userprogress__user=user,
-            sections__userprogress__completed=True
-        ).distinct().values_list('title', flat=True)
-    )
-
-    # Build actual topics from completed lessons
+    # Get completed lessons and topics
+    completed_lessons = get_completed_lessons(user)
     completed_topics = get_completed_topics(completed_lessons)
 
     # Get published projects for portfolio
