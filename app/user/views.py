@@ -476,6 +476,25 @@ def _build_eva_context(user, lessons_data, level, completed_sections_count, comp
     }
 
 
+def _check_section_access(user, section):
+    """Return True if the student is allowed to access this section. Handle user URL access."""
+    try:
+        completed_section_ids = set(
+            UserProgress.objects.filter(
+                user=user, completed=True
+            ).values_list('section_id', flat=True)
+        )
+        lessons_data, _, _, _, _, _ = _build_lessons_data(
+            completed_section_ids)
+        for lesson_data in lessons_data:
+            for s in lesson_data['sections']:
+                if s['section'] and s['section'].id == section.id:
+                    return not s['is_locked']
+        return False
+    except Exception:
+        return False
+
+
 # ════════════════════════════════════════════════
 # Dashboard View
 # ════════════════════════════════════════════════
@@ -608,8 +627,10 @@ def DashboardView(request):
 
 @student_required
 def IntroductionView(request, section_id):
-    section = get_object_or_404(
-        Section, id=section_id, node_type='introduction')
+    section = Section.objects.filter(
+        id=section_id, node_type='introduction').first()
+    if not _check_section_access(request.user, section):
+        return redirect('dashboard')
     slides = list(section.slides.all().order_by('order'))
 
     # ── Generate slides if none exist ──
@@ -660,8 +681,9 @@ def IntroductionView(request, section_id):
 @student_required
 @require_POST
 def CompleteSectionView(request, section_id):
-    section = get_object_or_404(Section, id=section_id)
-
+    section = Section.objects.filter(id=section_id).first()
+    if not _check_section_access(request.user, section):
+        return redirect('dashboard')
     UserProgress.objects.update_or_create(
         user=request.user,
         section=section,
@@ -687,8 +709,10 @@ def CompleteSectionView(request, section_id):
 
 @student_required
 def ApplicationView(request, section_id):
-    section = get_object_or_404(
-        Section, id=section_id, node_type='application')
+    section = Section.objects.filter(
+        id=section_id, node_type='application').first()
+    if not _check_section_access(request.user, section):
+        return redirect('dashboard')
     user = request.user
     completed_lessons = get_completed_lessons(
         user, exclude_lesson=section.lesson)
@@ -801,8 +825,10 @@ def ApplicationView(request, section_id):
 @student_required
 @require_POST
 def GenerateNextTaskView(request, section_id):
-    section = get_object_or_404(
-        Section, id=section_id, node_type='application')
+    section = Section.objects.filter(
+        id=section_id, node_type='application').first()
+    if not _check_section_access(request.user, section):
+        return JsonResponse({'error': 'Access denied'}, status=403)
     user = request.user
     data = json.loads(request.body)
 
@@ -911,8 +937,10 @@ def GenerateNextTaskView(request, section_id):
 
 @student_required
 def CompetitionView(request, section_id):
-    section = get_object_or_404(
-        Section, id=section_id, node_type='competition')
+    section = Section.objects.filter(
+        id=section_id, node_type='competition').first()
+    if not _check_section_access(request.user, section):
+        return redirect('dashboard')
     user = request.user
     profile = StudentProfile.objects.get(user=user)
 
@@ -962,7 +990,10 @@ def CompetitionView(request, section_id):
 
 @student_required
 def TestView(request, section_id):
-    section = get_object_or_404(Section, id=section_id, node_type='test')
+    section = Section.objects.filter(
+        id=section_id, node_type='test').first()
+    if not _check_section_access(request.user, section):
+        return redirect('dashboard')
     user = request.user
     completed_lessons = get_completed_lessons(
         user, exclude_lesson=section.lesson)
@@ -1037,7 +1068,10 @@ def TestView(request, section_id):
 @student_required
 @require_POST
 def GenerateNextTestQuestionView(request, section_id):
-    section = get_object_or_404(Section, id=section_id, node_type='test')
+    section = Section.objects.filter(
+        id=section_id, node_type='test').first()
+    if not _check_section_access(request.user, section):
+        return JsonResponse({'error': 'Access denied'}, status=403)
     user = request.user
     data = json.loads(request.body)
 
