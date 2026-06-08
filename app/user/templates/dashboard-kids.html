@@ -114,6 +114,9 @@
             EVA Advisor
             <span class="advisor-ai-badge">AI</span>
         </button>
+        <button class="sidebar-nav-item" data-panel="certificates" onclick="switchPanel('certificates', this)">
+          <i class="fas fa-certificate"></i><span>Certificates</span>
+        </button>
         <button class="sidebar-nav-item" data-panel="settings" onclick="switchPanel('settings', this)">
           <i class="fas fa-gear"></i>
           Settings
@@ -687,6 +690,112 @@
       </div>
       <!-- end panel-advisor -->
   
+      <!-- ═══ PANEL: CERTIFICATES ═══ -->
+      <div class="mid-panel" id="panel-certificates">
+
+        <!-- Header -->
+        <div class="dk-cert-header">
+          <div class="dk-cert-header-icon"><i class="fas fa-trophy"></i></div>
+          <h2 class="dk-cert-title">My Awards!</h2>
+          <p class="dk-cert-subtitle">
+            {{ certs_earned }} earned &bull; {{ certs_remaining }} to go!
+          </p>
+        </div>
+
+        <!-- Earned certificates -->
+        {% if certs_earned > 0 %}
+        <div class="dk-cert-earned-section">
+          <div class="dk-cert-section-label">
+            <i class="fas fa-star" style="color:var(--yellow)"></i>
+            <span class="dk-cert-label-title">My Certificates</span>
+          </div>
+          <div class="dk-cert-grid">
+            {% for l in lessons_data %}
+              {% if l.is_completed %}
+              <div class="dk-cert-card">
+                <!-- Stars decoration -->
+                <div class="dk-cert-stars">
+                  <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <!-- Seal -->
+                <div class="dk-cert-seal">
+                  <i class="fab fa-python"></i>
+                </div>
+                <!-- Content -->
+                <div class="dk-cert-issuer">EVA ACADEMY</div>
+                <div class="dk-cert-headline"><i class="fas fa-party-horn"></i> I Did It!</div>
+                <div class="dk-cert-student">
+                  {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                </div>
+                <div class="dk-cert-desc">completed all lessons in</div>
+                <div class="dk-cert-lesson">{{ l.lesson.title }}</div>
+                <div class="dk-cert-divider"></div>
+                <div class="dk-cert-footer">
+                  <span><i class="fas fa-bullseye"></i> {{ l.total_count }} nodes</span>
+                  <span><i class="fas fa-scroll"></i> #{{ forloop.counter|stringformat:"02d" }}</span>
+                </div>
+                <!-- Ribbon -->
+                <div class="dk-cert-ribbon">
+                  <i class="fas fa-check"></i> Completed!
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="dk-cert-empty">
+          <div class="dk-cert-empty-icon"><i class="fas fa-certificate"></i></div>
+          <h3>No awards yet!</h3>
+          <p>Complete all nodes in a lesson to earn your first certificate.</p>
+        </div>
+        {% endif %}
+
+        <!-- Upcoming certificates -->
+        <div class="dk-cert-upcoming-section">
+          <div class="dk-cert-section-label">
+            <i class="fas fa-lock" style="color:#6b7280"></i> 
+            <span class="dk-cert-label-title">Coming Up Next</span>
+          </div>
+          <div class="dk-cert-upcoming-list">
+            {% for l in lessons_data %}
+              {% if not l.is_completed %}
+              <div class="dk-cert-upcoming-row">
+                <div class="dk-cert-upcoming-icon">
+                  {% if l.is_locked %}<i class="fas fa-lock"></i>
+                  {% elif l.completed_count > 0 %}<i class="fas fa-bolt" style="color:var(--yellow)"></i>
+                  {% else %}<i class="fas fa-play-circle" style="color:var(--primary)"></i>{% endif %}
+                </div>
+                <div class="dk-cert-upcoming-info">
+                  <span class="dk-cert-upcoming-name">{{ l.lesson.title }}</span>
+                  <span class="dk-cert-upcoming-meta">
+                    {% if l.is_locked %}
+                      Finish the previous lesson first!
+                    {% elif l.completed_count > 0 %}
+                      {% widthratio l.completed_count l.total_count 100 %}% done — keep going!
+                    {% else %}
+                      Ready to start!
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="dk-cert-upcoming-badge">
+                  {% if l.is_locked %}
+                    <span class="dk-cert-badge locked">Locked</span>
+                  {% elif l.completed_count > 0 %}
+                    <span class="dk-cert-badge progress">Almost!</span>
+                  {% else %}
+                    <span class="dk-cert-badge pending">Start!</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+      <!-- end panel-certificates -->
+
       <!-- ── SETTINGS PANEL ── -->
       <div class="mid-panel" id="panel-settings">
         <div class="settings-card reveal">

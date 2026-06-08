@@ -1486,6 +1486,16 @@ body {
   .compete-stats{grid-template-columns:1fr}
   .xp-badge{display:none}
   .page-header h1{font-size:1.25rem}
+  .cert-document {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 20px;
+  }
+  .cert-doc-left { margin-right: 0; margin-bottom: 16px; }
+  .cert-doc-right { margin-left: 0; margin-top: 16px; }
+  .cert-doc-footer { flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .cert-upcoming-row { flex-wrap: wrap; gap: 8px; }
+  .cert-upcoming-status { width: 100%; text-align: right; }
 }
 @media(max-width:480px){
   .stats-grid{grid-template-columns:1fr}
@@ -1493,6 +1503,10 @@ body {
   .main{padding:10px}
   .stat-card-value{font-size:1.3rem}
   .milestone-grid{grid-template-columns:repeat(2,1fr)}
+  .cert-doc-seal { width: 52px; height: 52px; font-size: 1.4rem; }
+  .cert-doc-student { font-size: 1.1rem; }
+  .cert-doc-headline { font-size: 1.3rem; }
+  .cert-upcoming-num { width: 28px; height: 28px; font-size: 0.75rem; }
 }
 
 ::-webkit-scrollbar{width:5px;height:5px}

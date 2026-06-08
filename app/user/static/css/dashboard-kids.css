@@ -4117,6 +4117,278 @@ h3,
 .compete-chat-send:hover { background:#006666; transform:scale(1.08); }
 .compete-chat-send i { font-size:13px; }
 
+/* ═══════════════════════════════
+   KIDS CERTIFICATES PANEL
+═══════════════════════════════ */
+
+/* Header */
+.dk-cert-header {
+  text-align: center;
+  padding: 24px 16px 8px;
+}
+
+.dk-cert-header-icon {
+  font-size: 2.5rem;
+  color: var(--yellow);
+  margin-bottom: 8px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.dk-cert-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--primary);
+  font-family: 'Nunito', sans-serif;
+  margin: 0 0 4px;
+}
+
+.dk-cert-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Section labels */
+.dk-cert-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #374151;
+  font-family: 'Nunito', sans-serif;
+  margin: 20px 0 12px;
+  padding: 0 4px;
+}
+
+.dk-cert-label-icon { font-size: 1.1rem; }
+.dk-cert-label-title{ color: #008080}
+
+/* Certificate grid */
+.dk-cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Certificate card */
+.dk-cert-card {
+  position: relative;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 3px solid #fbbf24;
+  border-radius: 20px;
+  padding: 24px 20px 20px;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(251,191,36,0.2);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.dk-cert-card:hover {
+  transform: translateY(-6px) rotate(1deg);
+  box-shadow: 0 12px 32px rgba(251,191,36,0.3);
+}
+
+/* Shimmer effect */
+.dk-cert-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.4) 50%,
+    rgba(255,255,255,0) 100%);
+  background-size: 200% 200%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% -200%; }
+  100% { background-position: 200% 200%; }
+}
+
+.dk-cert-stars {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  letter-spacing: 4px;
+}
+
+.dk-cert-stars i {
+  color: var(--yellow);
+  font-size: 0.9rem;
+  margin: 0 2px;
+}
+
+.dk-cert-seal {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #00a0a0);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 1.4rem; color: #fff;
+  box-shadow: 0 4px 12px rgba(0,128,128,0.3);
+}
+
+.dk-cert-issuer {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #92400e;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.dk-cert-headline {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #92400e;
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 8px;
+}
+
+.dk-cert-student {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--primary);
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 2px;
+}
+
+.dk-cert-desc {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.dk-cert-lesson {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #92400e;
+  font-family: 'Nunito', sans-serif;
+  margin-bottom: 10px;
+}
+
+.dk-cert-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+  margin: 8px 0;
+}
+
+.dk-cert-footer {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.7rem;
+  color: #92400e;
+  font-weight: 700;
+}
+
+/* Ribbon */
+.dk-cert-ribbon {
+  position: absolute;
+  top: 14px; right: -28px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 36px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 8px rgba(0,128,128,0.3);
+}
+
+/* Empty state */
+.dk-cert-empty {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 20px;
+  border: 2px dashed rgba(0,128,128,0.2);
+  margin: 8px 0 20px;
+}
+
+.dk-cert-empty-icon {
+  font-size: 2.5rem;
+  color: rgba(0,128,128,0.3);
+  margin-bottom: 12px;
+}
+
+.dk-cert-empty h3 {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #374151;
+  font-family: 'Nunito', sans-serif;
+  margin: 0 0 6px;
+}
+
+.dk-cert-empty p {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Upcoming list */
+.dk-cert-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dk-cert-upcoming-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(0,128,128,0.1);
+  transition: all 0.2s;
+}
+
+.dk-cert-upcoming-row:hover {
+  border-color: rgba(0,128,128,0.25);
+  transform: translateX(4px);
+}
+
+.dk-cert-upcoming-icon { font-size: 1.4rem; flex-shrink: 0; color: var(--primary); opacity: 0.5;}
+
+.dk-cert-upcoming-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dk-cert-upcoming-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary);
+  font-family: 'Nunito', sans-serif;
+}
+
+.dk-cert-upcoming-meta {
+  font-size: 0.72rem;
+  color: #008080;
+  opacity: 0.7;
+}
+
+/* Badges */
+.dk-cert-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+  font-family: 'Nunito', sans-serif;
+}
+
+.dk-cert-badge.locked   { background: #f3f4f6; color: #9ca3af; }
+.dk-cert-badge.progress { background: rgba(251,191,36,0.15); color: #d97706; }
+.dk-cert-badge.pending  { background: rgba(0,128,128,0.1); color: var(--primary); }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .advisor-layout { grid-template-columns: 1fr; }
@@ -4124,4 +4396,7 @@ h3,
 }
 @media (max-width: 640px) {
   .arena-header-bar { flex-direction:column; align-items:flex-start; }
+  .dk-cert-grid { grid-template-columns: 1fr; }
+  .dk-cert-card { padding: 20px 16px 16px; }
+  .dk-cert-title { font-size: 1.3rem; }
 }
