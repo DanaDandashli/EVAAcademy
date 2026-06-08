@@ -241,7 +241,7 @@ def _get_level(xp):
 def _calculate_xp_and_level(user, profile, completed_progress):
     """Calculate XP from all sources, sync profile, return level stats."""
     xp = sum(NODE_XP.get(p.section.node_type, 0) for p in completed_progress)
-    xp += profile.competition_wins * 50
+    
     xp += profile.compete_wins * NODE_XP['competition']
     if user.age_group != 'child':
         xp += Project.objects.filter(user=user,
@@ -694,6 +694,13 @@ def CompleteSectionView(request, section_id):
         }
     )
 
+    if section.node_type == 'competition':
+        won = request.POST.get('won', 'false') == 'true'
+        if won:
+            profile = StudentProfile.objects.get(user=request.user)
+            profile.competition_wins += 1
+            profile.save()
+
     # Find next section in same lesson
     next_section = Section.objects.filter(
         lesson=section.lesson,
@@ -813,7 +820,7 @@ def ApplicationView(request, section_id):
             'code_template':   current_task.code_template,
             'topic_covered':   current_task.topic_covered,
         }] if current_task else []),
-        'total_tasks':              max(round(len(lesson_topics) * 0.75), 4),
+        'total_tasks':              6,
         'passed_count':             passed_count,
         'already_completed':        False,
         'completed_lessons':        completed_lessons,

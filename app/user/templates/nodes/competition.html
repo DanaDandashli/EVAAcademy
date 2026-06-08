@@ -177,12 +177,14 @@
         <button id="viewSolutionBtn" class="app-complete-btn" style="display:none;">
           <i class="fas fa-graduation-cap"></i> View EVA Solution
         </button>
-        <form method="POST" action="{% url 'complete_section' section.id %}">
-          {% csrf_token %}
-          <button type="submit" class="app-complete-btn">
-            <i class="fas fa-arrow-right"></i> Continue
-          </button>
-        </form>
+        <button id="completeBtn" class="app-complete-btn" style="display:none;"
+          onclick="completeSection()">
+          Continue <i class="fas fa-arrow-right"></i>
+        </button>
+        <button id="retryBtn" class="app-complete-btn" style="display:none;"
+          onclick="window.location.reload()">
+          <i class="fas fa-rotate-left"></i> Replay
+        </button>
       </div>
     </div>
 

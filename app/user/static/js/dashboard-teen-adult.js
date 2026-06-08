@@ -452,18 +452,14 @@ advRunBtn?.addEventListener("click", async () => {
 
   let outputText = "";
 
-  function outf(text) {
-    outputText += text;
-    const el = document.createElement("div");
-    el.className = "adv-out-line cmd";
-    el.textContent = text;
-    advOutputBody.appendChild(el);
-    advOutputBody.scrollTop = advOutputBody.scrollHeight;
-  }
-
   Sk.configure({
     output: (text) => {
       outputText += text;
+      const el = document.createElement("div");
+      el.className = "adv-out-line cmd";
+      el.textContent = text;
+      advOutputBody.appendChild(el);
+      advOutputBody.scrollTop = advOutputBody.scrollHeight;
     },
     read: (x) => {
       if (Sk.builtinFiles?.["files"][x] === undefined)

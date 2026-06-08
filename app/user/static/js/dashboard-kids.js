@@ -536,22 +536,21 @@ advRunBtn?.addEventListener("click", async () => {
 
   let outputText = "";
 
-  function outf(text) {
-    outputText += text;
-    const el = document.createElement("div");
-    el.className = "adv-out-line cmd";
-    el.textContent = text;
-    advOutputBody.appendChild(el);
-    advOutputBody.scrollTop = advOutputBody.scrollHeight;
-  }
-
   Sk.configure({
-      output: (text) => { outputText += text; },
-      read: (x) => {
-        if (Sk.builtinFiles?.["files"][x] === undefined) throw "File not found: " + x;
-        return Sk.builtinFiles["files"][x];
-      },
-      inputfun: (prompt) => new Promise((resolve) => {
+    output: (text) => {
+      outputText += text;
+      const el = document.createElement("div");
+      el.className = "adv-out-line cmd";
+      el.textContent = text;
+      advOutputBody.appendChild(el);
+      advOutputBody.scrollTop = advOutputBody.scrollHeight;
+    },
+    read: (x) => {
+      if (Sk.builtinFiles?.["files"][x] === undefined)
+        throw "File not found: " + x;
+      return Sk.builtinFiles["files"][x];
+    },
+    inputfun: (prompt) => new Promise((resolve) => {
         const overlay  = document.getElementById("skInputOverlay");
         const promptEl = document.getElementById("skInputPromptText");
         const field    = document.getElementById("skInputField");
@@ -570,8 +569,8 @@ advRunBtn?.addEventListener("click", async () => {
         btn.addEventListener("click", submit);
         field.addEventListener("keydown", onEnter);
       }),
-      inputfunTakesPrompt: true,
-    });
+    inputfunTakesPrompt: true,
+  });
 
   try {
     await Sk.misceval.asyncToPromise(() =>

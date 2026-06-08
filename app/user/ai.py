@@ -132,21 +132,62 @@ def _get_depth(learning_speed):
         return "Use a balanced approach with clear examples."
 
 
+def _get_age_constraints(age_group):
+    """Return task complexity constraints based on age group."""
+    if age_group == 'child':
+        return {
+            'max_lines':    4,
+            'complexity':   'simple — single concept, real-world objects kids understand',
+            'forbidden':    'complex math, business logic, technical jargon, financial calculations',
+            'output_style': 'fun and relatable — use simple numbers and concrete real-world objects',
+        }
+    elif age_group == 'teen':
+        return {
+            'max_lines':    8,
+            'complexity':   'moderate — can combine 2 concepts, real-world practical scenarios',
+            'forbidden':    'overly corporate or academic scenarios',
+            'output_style': 'engaging and practical',
+        }
+    else:
+        return {
+            'max_lines':    12,
+            'complexity':   'professional — real-world business or technical scenarios with precise requirements',
+            'forbidden':    'childish or oversimplified scenarios',
+            'output_style': 'professional and precise',
+        }
+
+
 def _clean_json(content):
     content = content.strip()
-    # Remove markdown code blocks
     content = re.sub(r'^```(?:json|python|javascript)?\s*\n?', '', content)
     content = re.sub(r'\n?```\s*$', '', content)
     content = content.strip()
     return content
 
 
+def _call_ai(prompt, system='Return only raw valid JSON. No markdown.', max_tokens=None, temperature=None):
+    """Centralized AI API call helper."""
+    try:
+        response = client.chat.completions.create(
+            model=__Model__,
+            max_tokens=max_tokens or __MaxTokens__,
+            temperature=temperature if temperature is not None else __Temperature__,
+            messages=[
+                {'role': 'system', 'content': system},
+                {'role': 'user',   'content': prompt},
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f'AI call error: {e}')
+        return None
+
+
 def _fix_code(code):
-    """Replace escaped double quotes with single quotes for Skulpt compatibility."""
-    # Unescape double quotes first
+    """Fix code for Skulpt compatibility."""
     code = code.replace('\\"', '"')
-    # Replace double-quoted strings with single-quoted strings
-    code = re.sub(r'"([^"]*)"', lambda m: "'" + m.group(1) + "'", code)
+    # Only convert double-quoted strings that don't contain apostrophes
+    code = re.sub(r'"([^"\']*)"', lambda m: "'" + m.group(1) + "'", code)
     return code
 
 
@@ -160,6 +201,7 @@ def generate_slides(lesson_title, age_group='child', completed_lessons=None, stu
         lesson_topics = []
 
     style = _get_style(age_group)
+    constraints = _get_age_constraints(age_group)
     prior_knowledge = ', '.join(
         completed_lessons) if completed_lessons else 'none'
     weak_areas = student_context.get('weak_areas', [])
@@ -180,16 +222,25 @@ Student Profile:
 Style: {style}
 Depth: {depth}
 
+Age constraints:
+- Max lines of code per slide: {constraints['max_lines']}
+- Complexity: {constraints['complexity']}
+- Forbidden scenarios: {constraints['forbidden']}
+
 IMPORTANT: Only teach these specific topics: {topics_str}
 Do NOT include any other topics outside this list.
 
 Decide how many slides this topic needs (minimum 10, maximum 25) based on complexity.
 
 Generate slides that teach "{lesson_title}" progressively from simple to complex.
-Build on what the student already knows.
-Each explanation MUST include the exact Python syntax being taught
 Each slide must teach ONE concept from the topics list only.
-Code examples must be short (max 6 lines) and runnable.
+
+STRICT CODE RULES:
+- Every code example must be fully self-contained and runnable
+- Every variable used MUST be defined in the same code block
+- NEVER reference a variable that isn't declared in the same snippet
+- NEVER use apostrophes inside single-quoted strings — use double quotes for strings containing apostrophes
+- Max {constraints['max_lines']} lines per code example
 
 Return ONLY valid JSON, no markdown, no explanation:
 [
@@ -202,22 +253,18 @@ Return ONLY valid JSON, no markdown, no explanation:
 ]"""
 
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system",
-                    "content": "You are a JSON generator. Return ONLY a valid JSON array. No markdown. No code blocks. No backticks. No explanation. Start your response with [ and end with ]."},
-                {"role": "user",   "content": prompt}
-            ]
+        raw = _call_ai(
+            prompt,
+            system='You are a JSON generator. Return ONLY a valid JSON array. No markdown. No code blocks. No backticks. No explanation. Start your response with [ and end with ].'
         )
-        result = json.loads(_clean_json(response.choices[0].message.content))
+        if not raw:
+            return []
+        result = json.loads(_clean_json(raw))
         for slide in result:
             slide['code'] = _fix_code(slide.get('code', ''))
         return result
     except Exception as e:
-        print(f"generate_slides error: {e}")
+        print(f'generate_slides error: {e}')
         return []
 
 
@@ -230,8 +277,9 @@ def validate_task(instruction, code, output, age_group='child', task_type='free_
 The correct fixed code is:
 {correct_answer}
 
-PASS if the student's code achieves the same result as the correct fix — exact match not required.
-FAIL if the bug is still present or the logic is wrong."""
+PASS if the student's code produces the correct output and the bug is fixed — exact match not required.
+FAIL only if the original bug is still present in the code.
+IGNORE the task description wording — judge ONLY whether the bug is fixed."""
     elif task_type == 'fill_blank':
         task_context = f"""Task type: FILL IN THE BLANK
 Student's answer: "{code}"
@@ -267,19 +315,14 @@ FAIL
 [1 guiding question that helps student understand what concept they missed, no code]"""
 
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "You are a strict but fair task validator. First line must be exactly PASS or FAIL."},
-                {"role": "user",   "content": prompt}
-            ]
+        raw = _call_ai(
+            prompt,
+            system='You are a strict but fair task validator. First line must be exactly PASS or FAIL.'
         )
-        return response.choices[0].message.content.strip()
+        return raw or 'FAIL\nI am having trouble validating. Try again!'
     except Exception:
-        return "FAIL\nI am having trouble validating. Try again!"
-    
+        return 'FAIL\nI am having trouble validating. Try again!'
+
 
 def generate_next_task(lesson_title, task_number, previous_tasks=None, student_performance=None, age_group='child', completed_lessons=None, student_context=None, lesson_topics=None):
     """Generate ONE task based on student performance so far."""
@@ -298,6 +341,7 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
     passed_count = student_performance.get('passed_count', 0)
     failed_count = student_performance.get('failed_count', 0)
     avg_attempts = student_performance.get('avg_attempts', 1)
+    constraints = _get_age_constraints(age_group)
 
     # ── Difficulty adjustment ──
     if failed_count > passed_count:
@@ -308,13 +352,13 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
         difficulty_adj = "same"
 
     # ── Task type and difficulty rotation ──
-    type_rotation = ['free_code', 'bug_fix', 'free_code', 'bug_fix', 'free_code']
-    diff_rotation = ['easy',      'medium',  'medium',    'hard',       'expert']
+    type_rotation = ['bug_fix', 'free_code', 'free_code', 'bug_fix', 'free_code', 'free_code']
+    diff_rotation = ['easy', 'easy', 'medium', 'medium', 'hard', 'expert']
     idx = min(task_number - 1, len(type_rotation) - 1)
     task_type = type_rotation[idx]
     difficulty = diff_rotation[idx]
 
-    # ── Topic tracking — pick next uncovered topic ──
+    # ── Topic tracking ──
     covered_topics = [t.get('topic_covered', '')
                       for t in previous_tasks if t.get('topic_covered')]
     non_testable_topics = ['comments']
@@ -330,7 +374,7 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
 
     # ── Type rules ──
     if task_type == 'fill_blank':
-        type_rule = "Write one line with _____ as the blank. code_template has the line, correct_answer has only the missing word."
+        type_rule = "Write one line with _____ replacing a COMPLETE word or value — never split a word. code_template has the full line with _____. correct_answer must be ONLY the exact missing word (e.g. if template is '_____('Hello')', correct_answer is 'print')."
     elif task_type == 'bug_fix':
         type_rule = """Task type: BUG FIX
     Write 2-4 lines of Python code testing: {topic}
@@ -348,16 +392,24 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
 Lesson: {lesson_title} | Topics: {topics_str}
 Task #{task_number} | Target topic: {topic} | Type: {task_type} | Difficulty: {difficulty} ({difficulty_adj})
 Age: {age_group} | Level: {level}
-Already covered topics: {covered_topics_str}
+Already covered: {covered_topics_str}
 Previous tasks: {prev_tasks}
+
+Age constraints:
+- Max lines of code: {constraints['max_lines']}
+- Complexity: {constraints['complexity']}
+- Forbidden scenarios: {constraints['forbidden']}
+- Output style: {constraints['output_style']}
 
 Type rule: {type_rule}
 
 Rules:
 - Test ONLY this topic: {topic}
-- Skip topics already covered: {covered_topics_str}
+- Skip already covered topics: {covered_topics_str}
 - No repeated tasks
-- STRICT: Never mention function names, keywords, or syntax in instruction or hint — not even in backticks
+- NEVER mention function names, keywords, or syntax in instruction or hint
+- NEVER mix user input with hardcoded values in the same task — choose one approach only
+- If the task uses user input, do NOT specify what value should be entered
 - Student knows ONLY: {topics_str} — nothing else exists for them
 - If solution needs anything outside {topics_str}, generate a different task
 
@@ -376,20 +428,14 @@ JSON:
 }}"""
 
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=1000,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "Return only raw valid JSON. No markdown."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        return json.loads(_clean_json(response.choices[0].message.content))
+        raw = _call_ai(prompt, max_tokens=__MaxTokens__)
+        if not raw:
+            return None
+        return json.loads(_clean_json(raw))
     except Exception as e:
-        print(f"generate_next_task error: {e}")
+        print(f'generate_next_task error: {e}')
         return None
-    
+
 
 def validate_generated_task(task_data, lesson_topics):
     """Validate AI-generated task before showing to student."""
@@ -407,24 +453,7 @@ def validate_generated_task(task_data, lesson_topics):
         if not correct_answer:
             return False, "Missing correct answer"
 
-        # Find what replaces _____ by comparing template position
-        # Split both template and correct_answer at the same structure
-        blank_pos = code_template.find('_____')
-        before_blank = code_template[:blank_pos]
-        after_blank = code_template[blank_pos + 5:]
-
-        # Extract the answer: everything in correct_answer between before and after
-        correct_clean = correct_answer.strip()
-        if before_blank.strip() and correct_clean.startswith(before_blank.strip()):
-            correct_clean = correct_clean[len(before_blank.strip()):].strip()
-        if after_blank.strip() and correct_clean.endswith(after_blank.strip()):
-            correct_clean = correct_clean[:-len(after_blank.strip())].strip()
-
-        # Take first meaningful token
-        tokens = re.split(r'[\s=]+', correct_clean)
-        token = next((t for t in tokens if t), correct_clean)
-        task_data['correct_answer'] = token
-
+    
     elif task_type == 'bug_fix':
         if not code_template:
             return False, "Missing buggy code"
@@ -432,14 +461,18 @@ def validate_generated_task(task_data, lesson_topics):
             return False, "Missing correct answer"
         if code_template.strip() == correct_answer.strip():
             return False, "Buggy code identical to correct answer"
-
+        # Reject if they differ only by punctuation/spaces — no real bug
+        template_clean = re.sub(r'[\s\'".,!]', '', code_template)
+        answer_clean = re.sub(r'[\s\'".,!]', '', correct_answer)
+        if template_clean == answer_clean:
+            return False, "Bug fix task has no meaningful difference between template and answer"
     return True, "OK"
 
 
 def should_complete_application(passed_count, failed_count, avg_attempts, total_topics=8):
     """Decide if student has mastered the application node."""
     # Must cover at least 75% of lesson topics
-    min_tasks = max(4, round(total_topics * 0.75))
+    min_tasks = 6
 
     if passed_count < min_tasks:
         return False
@@ -479,23 +512,22 @@ def generate_next_test_question(lesson_title, question_number, weak_areas=None, 
         difficulty = "moderate"
 
     style = _get_style(age_group)
+    constraints = _get_age_constraints(age_group)
     level = student_context.get('level', 1)
 
     # Assign one specific topic per question
-    if lesson_topics:
-        current_topic = lesson_topics[(
-            question_number - 1) % len(lesson_topics)]
-    else:
-        current_topic = lesson_title
+    current_topic = lesson_topics[(
+        question_number - 1) % len(lesson_topics)] if lesson_topics else lesson_title
 
     prev_q_titles = ', '.join([q.get('instruction', '')[
                               :50] for q in previous_questions]) if previous_questions else 'none'
     weak_context = f"Weak areas: {', '.join(weak_areas)}." if weak_areas else ''
-    taught_str = ', '.join(taught_concepts) if taught_concepts else ''
+    taught_str = ', '.join(
+        taught_concepts) if taught_concepts else ', '.join(lesson_topics)
 
     prompt = f"""Create Python test question #{question_number} of 5 for lesson "{lesson_title}".
 
-This is a FINAL TEST — questions must be HARDER than practice tasks.
+This is a FINAL TEST — questions must be harder than practice tasks.
 Test ONLY this topic: {current_topic}
 All lesson topics: {taught_str}
 Previous questions: {prev_q_titles} — do NOT repeat.
@@ -503,18 +535,16 @@ Previous questions: {prev_q_titles} — do NOT repeat.
 
 Student: age_group={age_group}, level={level}, difficulty={difficulty}
 
+Age constraints:
+- Max lines of code in solution: {constraints['max_lines']}
+- Complexity: {constraints['complexity']}
+- Forbidden scenarios: {constraints['forbidden']}
+
 CRITICAL RULES:
 - Use ONLY concepts from this exact list: {taught_str}
-- Do NOT ask simple single-concept tasks like "print hello world"
-- Ask questions that require THINKING — edge cases, combining concepts, problem solving
-- STRICTLY FORBIDDEN to repeat similar scenarios — previous questions were: {prev_q_titles}
-- Each question must test a DIFFERENT concept and a DIFFERENT real-world scenario
-- Previous questions tested: {prev_q_titles} — your question must test something ENTIRELY DIFFERENT
-- If a question needs a concept outside {taught_str}, simplify it until it only uses {taught_str}
-- Student ONLY knows: {taught_str} — NOTHING ELSE EXISTS FOR THEM
-- Each question must test a different concept from {taught_str}
+- STRICTLY FORBIDDEN to repeat similar scenarios — previous questions: {prev_q_titles}
+- Student ONLY knows: {taught_str} — nothing else exists for them
 - The solution must be achievable using ONLY: {taught_str}
-- This is question {question_number} of 5 — each question must test different concept combinations
 
 Return ONLY valid JSON:
 {{
@@ -524,22 +554,16 @@ Return ONLY valid JSON:
   "check_regex": "simple regex validating correct concept was used",
   "points": 20
 }}"""
-    
+
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        return json.loads(_clean_json(response.choices[0].message.content))
+        raw = _call_ai(prompt)
+        if not raw:
+            return None
+        return json.loads(_clean_json(raw))
     except Exception as e:
-        print(f"generate_next_test_question error: {e}")
+        print(f'generate_next_test_question error: {e}')
         return None
-    
+
 
 def should_complete_test(passed_count, total_questions, total_score, max_score):
     """Decide if student has passed the test."""
@@ -552,11 +576,15 @@ def should_complete_test(passed_count, total_questions, total_score, max_score):
 
 def generate_competition_challenge(lesson_title, age_group='child', completed_lessons=None, student_context=None, lesson_topics=None):
     """Generate a competition challenge based on completed lessons."""
-    if completed_lessons is None: completed_lessons = []
-    if student_context   is None: student_context   = {}
-    if lesson_topics     is None: lesson_topics     = []
+    if completed_lessons is None:
+        completed_lessons = []
+    if student_context is None:
+        student_context = {}
+    if lesson_topics is None:
+        lesson_topics = []
 
     style = _get_style(age_group)
+    constraints = _get_age_constraints(age_group)
     level = student_context.get('level', 1)
     topics_str = ', '.join(lesson_topics) if lesson_topics else lesson_title
 
@@ -566,12 +594,18 @@ Topics to test: {topics_str}
 Student level: {level}
 Style: {style}
 
+Age constraints:
+- Max lines of code in solution: {constraints['max_lines']}
+- Complexity: {constraints['complexity']}
+- Forbidden scenarios: {constraints['forbidden']}
+
 The challenge must:
-- Be solvable in 3-8 lines of Python
-- Test practical coding skills
+- Require combining MULTIPLE concepts from: {topics_str}
+- NOT be a simple print, variable assignment, or single-operation task
+- Require real problem-solving — the student must think, not just recall syntax
+- Be significantly harder than application tasks
+- Be solvable within the age constraint above
 - Have a clear expected output
-- Be exciting and competitive
-- Be harder than application tasks but not impossible
 
 Return ONLY valid JSON:
 {{
@@ -584,20 +618,14 @@ Return ONLY valid JSON:
 }}"""
 
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        return json.loads(_clean_json(response.choices[0].message.content))
+        raw = _call_ai(prompt)
+        if not raw:
+            return None
+        return json.loads(_clean_json(raw))
     except Exception as e:
-        print(f"generate_competition_challenge error: {e}")
+        print(f'generate_competition_challenge error: {e}')
         return None
-    
+
 
 def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child', eva_context={}, history=[]):
     """EVA Advisor chat — returns AI response."""
@@ -634,7 +662,6 @@ def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child
         progress_summary += f"Student's specific weak areas: {'; '.join(areas)}. IMPORTANT: Immediately assign ONE targeted practice challenge that addresses the first weak area. Do not just mention the weak area — give a specific coding task related to it."
     else:
         progress_summary += " IMPORTANT: Check the conversation history carefully and never repeat a challenge already assigned. Always progress to something new."
-    
 
     system_prompt = f"""You are EVA, {persona}.
 
@@ -677,12 +704,8 @@ Your Teaching Philosophy:
 
     # Build messages with history
     messages = [{'role': 'system', 'content': system_prompt}]
-
-    # Add conversation history
-    for msg in history: 
+    for msg in history:
         messages.append({'role': msg['role'], 'content': msg['content']})
-
-    # Add current message
     messages.append({'role': 'user', 'content': user_message})
 
     try:
@@ -693,15 +716,13 @@ Your Teaching Philosophy:
             messages=messages
         )
         return response.choices[0].message.content.strip()
-
     except Exception:
-        return "I am having trouble thinking right now. Try again in a moment!"
+        return 'I am having trouble thinking right now. Try again in a moment!'
 
 
 def generate_solution(instruction, age_group='child'):
     """Generate a solution with explanation for a challenge."""
     style = _get_style(age_group)
-
     prompt = f"""A student just finished a Python challenge. Show them the correct solution.
 
 Challenge: "{instruction}"
@@ -713,19 +734,9 @@ Provide:
 Style: {style}
 Be encouraging and educational."""
 
-    try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "You are an educational Python tutor. Always provide the solution when asked after a challenge is completed."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception:
-        return "Solution unavailable. Practice the challenge again!"
+    raw = _call_ai(
+        prompt, system='You are an educational Python tutor. Always provide the solution when asked after a challenge is completed.')
+    return raw or 'Solution unavailable. Practice the challenge again!'
 
 
 def generate_project_idea(completed_topics, completed_lessons, weak_areas, age_group='teen', previous_projects=None):
@@ -733,6 +744,7 @@ def generate_project_idea(completed_topics, completed_lessons, weak_areas, age_g
     if previous_projects is None:
         previous_projects = []
     style = _get_style(age_group)
+    constraints = _get_age_constraints(age_group)
     topics_str = ', '.join(
         completed_topics) if completed_topics else 'Python basics'
     lessons_str = ', '.join(
@@ -750,6 +762,8 @@ Generate ONE personalized mini Python project idea that:
 - Takes 30-60 minutes to build
 - Has a clear, practical purpose the student will find meaningful
 - Is appropriate for this style: {style}
+- Complexity: {constraints['complexity']}
+- Forbidden scenarios: {constraints['forbidden']}
 
 STRICTLY FORBIDDEN to generate any of these previously seen projects: {', '.join(previous_projects) if previous_projects else 'none'}
 The new project must be completely different in concept and purpose.
@@ -761,19 +775,12 @@ Return ONLY raw JSON, no markdown:
 }}"""
 
     try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=0.8,
-            messages=[
-                {"role": "system", "content": "Return only raw valid JSON. No markdown. No explanation."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        result = json.loads(_clean_json(response.choices[0].message.content))
-        return result
+        raw = _call_ai(prompt, temperature=0.8)
+        if not raw:
+            raise ValueError('empty response')
+        return json.loads(_clean_json(raw))
     except Exception as e:
-        print(f"generate_project_idea error: {e}")
+        print(f'generate_project_idea error: {e}')
         return {
             'title':       'My Python Project',
             'description': 'Build a Python program that solves a real problem using what you have learned so far.',
@@ -812,17 +819,6 @@ RULES:
 - If the code is empty or incomplete, tell the student kindly what is missing
 - End with a clear verdict: APPROVED (ready to publish) or NEEDS WORK (with specific guidance)"""
 
-    try:
-        response = client.chat.completions.create(
-            model=__Model__,
-            max_tokens=__MaxTokens__,
-            temperature=__Temperature__,
-            messages=[
-                {"role": "system", "content": "You are EVA, a professional Python mentor giving a code review. Be constructive, specific, and encouraging."},
-                {"role": "user",   "content": prompt}
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"review_project error: {e}")
-        return "I could not review your project at this moment. Please try again."
+    raw = _call_ai(
+        prompt, system='You are EVA, a professional Python mentor giving a code review. Be constructive, specific, and encouraging.')
+    return raw or 'I could not review your project at this moment. Please try again.'

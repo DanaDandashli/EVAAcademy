@@ -1,5 +1,23 @@
 "use strict";
 
+function completeSection() {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = `/lesson/${SECTION_ID}/complete/`;
+  const csrf = document.createElement("input");
+  csrf.type = "hidden";
+  csrf.name = "csrfmiddlewaretoken";
+  csrf.value = CSRF_TOKEN;
+  form.appendChild(csrf);
+  const won = document.createElement("input");
+  won.type = "hidden";
+  won.name = "won";
+  won.value = "true";
+  form.appendChild(won);
+  document.body.appendChild(form);
+  form.submit();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // ── Phases ──
   const phases = {
@@ -499,9 +517,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "linear-gradient(135deg, rgba(0,128,128,0.1), rgba(0,160,160,0.08))";
       banner.style.borderColor = "rgba(0,128,128,0.2)";
       launchConfetti();
+      document.getElementById("completeBtn").style.display = "inline-flex";
       addCommentary("You won the challenge! Excellent coding!", true);
     } else if (reason === "opponent") {
-      text.textContent = OPP_NAME + " finished first. Keep practicing! +10 XP";
+      text.textContent = OPP_NAME + " finished first. Keep practicing!";
       banner.style.background =
         "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))";
       banner.style.borderColor = "rgba(239,68,68,0.2)";
@@ -509,8 +528,9 @@ document.addEventListener("DOMContentLoaded", () => {
         OPP_NAME + " won this round. Click View Solution to learn!",
         true,
       );
+      document.getElementById("retryBtn").style.display = "inline-flex";
     } else {
-      text.textContent = "Time is up! Keep practicing. +10 XP";
+      text.textContent = "Time is up! Keep practicing.";
       banner.style.background =
         "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.04))";
       banner.style.borderColor = "rgba(239,68,68,0.2)";
@@ -518,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "Time ran out. Click View Solution to learn the approach!",
         true,
       );
+      document.getElementById("retryBtn").style.display = "inline-flex";
     }
   }
 
