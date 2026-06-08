@@ -738,6 +738,10 @@
                 <div class="dk-cert-ribbon">
                   <i class="fas fa-check"></i> Completed!
                 </div>
+                <a href="{% url 'certificate_pdf' l.lesson.id %}"
+                  class="dk-cert-download-btn">
+                  <i class="fas fa-download"></i> Download
+                </a>
               </div>
               {% endif %}
             {% endfor %}

@@ -4389,6 +4389,29 @@ h3,
 .dk-cert-badge.progress { background: rgba(251,191,36,0.15); color: #d97706; }
 .dk-cert-badge.pending  { background: rgba(0,128,128,0.1); color: var(--primary); }
 
+.dk-cert-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(0,128,128,0.08);
+  border: 1px solid rgba(0,128,128,0.2);
+  border-radius: 8px;
+  padding: 5px 12px;
+  text-decoration: none;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
+}
+.dk-cert-download-btn:hover {
+  background: rgba(0,128,128,0.15);
+  transform: translateY(-1px);
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .advisor-layout { grid-template-columns: 1fr; }

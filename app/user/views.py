@@ -1,6 +1,6 @@
 import json
 import random
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -11,6 +11,10 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from functools import wraps
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4, landscape
 from .models import (NODE_XP, Avatar, StudentProfile, Lesson, Section, Slide, UserProgress,
                      ALL_ACHIEVEMENTS, Quest, UserQuest, EVAConversation, Task, TaskAttempt,
                      TestQuestion, TestAttempt, Project)
@@ -1472,3 +1476,134 @@ def GenerateProjectView(request):
         'title':       project.title,
         'description': project.description,
     })
+
+
+# ── Certificate PDF Download ──
+@student_required
+def CertificatePDFView(request, lesson_id):
+    lesson = Lesson.objects.filter(id=lesson_id).first()
+    if not lesson:
+        return redirect('dashboard')
+
+    # Verify lesson is completed
+    completed_section_ids = set(
+        UserProgress.objects.filter(user=request.user, completed=True)
+        .values_list('section_id', flat=True)
+    )
+    sections = lesson.sections.all()
+    if not all(s.id in completed_section_ids for s in sections):
+        return redirect('dashboard')
+
+    # Get topics
+    topics = get_completed_topics(lesson.title)
+    student_name = request.user.get_full_name() or request.user.username
+    profile = StudentProfile.objects.get(user=request.user)
+
+    # Generate PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="EVA-Certificate-{lesson.title}.pdf"'
+
+    p = canvas.Canvas(response, pagesize=landscape(A4))
+    w, h = landscape(A4)
+
+    # Background
+    p.setFillColor(colors.HexColor('#ffffff'))
+    p.rect(0, 0, w, h, fill=1, stroke=0)
+
+    # Colorful top border
+    p.setFillColor(colors.HexColor('#008080'))
+    p.rect(0, h - 12, w, 12, fill=1, stroke=0)
+
+    # Colorful bottom border
+    p.rect(0, 0, w, 12, fill=1, stroke=0)
+
+    # Left accent bar
+    p.setFillColor(colors.HexColor('#fbbf24'))
+    p.rect(0, 0, 8, h, fill=1, stroke=0)
+
+    # Right accent bar
+    p.rect(w - 8, 0, 8, h, fill=1, stroke=0)
+
+    # Corner ornaments
+    p.setStrokeColor(colors.HexColor('#008080'))
+    p.setLineWidth(2)
+    for x, y, dx, dy in [(30, h-30, 20, 0), (30, h-30, 0, -20), (w-30, h-30, -20, 0), (w-30, h-30, 0, -20),
+                         (30, 30, 20, 0), (30, 30, 0, 20), (w-30, 30, -20, 0), (w-30, 30, 0, 20)]:
+        p.line(x, y, x+dx, y+dy)
+
+    # EVA Academy header
+    p.setFillColor(colors.HexColor('#008080'))
+    p.setFont('Helvetica-Bold', 11)
+    p.drawCentredString(w/2, h - 45, 'EVA ACADEMY — PYTHON TRACK')
+
+    # Certificate title
+    p.setFillColor(colors.HexColor('#1f2937'))
+    p.setFont('Helvetica-Bold', 36)
+    p.drawCentredString(w/2, h - 100, 'Certificate of Completion')
+
+    # Divider line
+    p.setStrokeColor(colors.HexColor('#fbbf24'))
+    p.setLineWidth(1.5)
+    p.line(w/2 - 200, h - 115, w/2 + 200, h - 115)
+
+    # Certifies text
+    p.setFillColor(colors.HexColor('#6b7280'))
+    p.setFont('Helvetica', 13)
+    p.drawCentredString(w/2, h - 145, 'This certifies that')
+
+    # Student name
+    p.setFillColor(colors.HexColor('#008080'))
+    p.setFont('Helvetica-Bold', 28)
+    p.drawCentredString(w/2, h - 185, student_name)
+
+    # Description
+    p.setFillColor(colors.HexColor('#6b7280'))
+    p.setFont('Helvetica', 13)
+    p.drawCentredString(
+        w/2, h - 215, 'has successfully completed all nodes in')
+
+    # Lesson title
+    p.setFillColor(colors.HexColor('#1f2937'))
+    p.setFont('Helvetica-Bold', 22)
+    p.drawCentredString(w/2, h - 250, lesson.title)
+
+    # Topics section
+    p.setFillColor(colors.HexColor('#008080'))
+    p.setFont('Helvetica-Bold', 12)
+    p.drawCentredString(w/2, h - 285, 'TOPICS MASTERED')
+
+    p.setFillColor(colors.HexColor('#374151'))
+    p.setFont('Helvetica', 10)
+    topics_str = '  •  '.join(topics[:12])  # max 12 topics
+    p.drawCentredString(w/2, h - 302, topics_str)
+
+    # VERIFIED & CERTIFIED
+    p.setFillColor(colors.HexColor('#008080'))
+    p.setFont('Helvetica-Bold', 8)
+    p.drawCentredString(
+        w/2, h - 415, 'V E R I F I E D   &   C E R T I F I E D')
+
+    # Flanking lines
+    p.setStrokeColor(colors.HexColor('#fbbf24'))
+    p.setLineWidth(1)
+    p.line(w/2 - 130, h - 411, w/2 - 95, h - 411)
+    p.line(w/2 + 95,  h - 411, w/2 + 130, h - 411)
+
+    # Footer divider
+    p.setStrokeColor(colors.HexColor('#e5e7eb'))
+    p.setLineWidth(1)
+    p.line(60, 75, w - 60, 75)
+
+    # Footer stats
+    p.setFillColor(colors.HexColor('#6b7280'))
+    p.setFont('Helvetica', 9)
+    from django.utils import timezone as tz
+    date_str = tz.now().strftime('%B %d, %Y')
+    p.drawString(70, 55, f'Issued: {date_str}')
+    p.drawCentredString(
+        w/2, 55, f'Level {profile.level} Achieved  •  {len(sections)} Nodes Mastered')
+    p.drawRightString(w - 70, 55, 'eva-academy.com')
+
+    p.showPage()
+    p.save()
+    return response

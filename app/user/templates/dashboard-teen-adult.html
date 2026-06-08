@@ -758,6 +758,11 @@
             <div class="cert-doc-award"><i class="fa-solid fa-award"></i></div>
             <div class="cert-doc-verified">VERIFIED</div>
           </div>
+          <a href="{% url 'certificate_pdf' l.lesson.id %}"
+            class="cert-download-btn"
+            title="Download Certificate">
+            <i class="fa-solid fa-download fa-xs"></i> Download PDF
+          </a>
         </div>
         {% endif %}
       {% endfor %}

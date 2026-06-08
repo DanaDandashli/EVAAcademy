@@ -1450,6 +1450,28 @@ body {
   color: var(--text-dim);
 }
 
+.cert-download-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(108,99,255,0.08);
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: 8px;
+  padding: 5px 10px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.cert-download-btn:hover {
+  background: rgba(108,99,255,0.15);
+  transform: translateY(-1px);
+}
+
 /* ── RESPONSIVE ── */
 @media(max-width:1200px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
