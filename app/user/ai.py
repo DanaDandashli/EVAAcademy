@@ -387,7 +387,9 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
     Write 2-4 lines of Python code testing: {topic}
     Introduce ONE real bug that causes WRONG OUTPUT or RUNTIME ERROR.
     Bug must require understanding of {topic} to fix — not a typo or comment issue.
-    The correct_answer MUST fix ONLY the bug — keep all other logic identical.
+    The correct_answer MUST produce a positive, logical result when run.
+    NEVER introduce new bugs in correct_answer — it must be strictly better than code_template.
+    The fix must be minimal — change only what's broken, nothing else.
     NEVER simplify or remove lines in the correct_answer — only fix the specific bug.
     code_template = buggy code, correct_answer = fixed code.
     Instruction = 'This code has a bug — find and fix it.'"""

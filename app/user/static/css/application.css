@@ -683,7 +683,7 @@
 .bug-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--red);
   margin: 0;
 }
 .bug-sub {
