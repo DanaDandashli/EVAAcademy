@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="{% static 'css/dashboard-kids.css' %}">
 {% endblock %}
 
-{% block title %} Child Dashboard {% endblock %}
+{% block title %} Dashboard {% endblock %}
 
 {% block content %}
 <main class="dash-main">
@@ -32,7 +32,7 @@
   <div class="dash-grid">
 
     <!-- ─────────────── LEFT COLUMN ─────────────── -->
-    <aside class="dash-col dash-col--left">
+    <aside class="dash-col dash-col--left hide-left">
 
       <!-- Profile Card -->
       <div class="dash-card profile-card reveal" id="profileCard">
@@ -163,7 +163,7 @@
                       <h3 class="lp-lesson-title">{{ lesson.lesson.title }}</h3>
                     </div>
                     {% if lesson.is_completed %}
-                      <span class="lp-section-done-pill" style="margin-left:auto;">✓ Complete</span>
+                      <span class="lp-section-done-pill">Complete</span>
                     {% endif %}
                   </div>
                 </div>
@@ -299,9 +299,9 @@
           </div>
 
           <!-- Full list (rank 4+) -->
-          <ul class="lb-list lb-list-full reveal" id="lbFullRows" style="margin-top:20px;"></ul>
+          <ul class="lb-list lb-list-full reveal" id="lbFullRows"></ul>
 
-          <div id="lbLoadMoreWrap" style="text-align:center;padding:16px;display:none;">
+          <div id="lbLoadMoreWrap" class="lb-load-more-wrap">
             <button id="lbLoadMoreBtn" class="lb-see-all" onclick="loadLeaderboard()">
               <i class="fas fa-chevron-down fa-xs"></i> Load More
             </button>
@@ -349,7 +349,7 @@
             </div>
           </div>
           {% empty %}
-            <p style="text-align:center; color:#9ca3af; padding:24px; font-size:0.85rem;">No quests available yet.</p>
+            <p class="text-mute">No quests available yet.</p>
           {% endfor %}
         </div>
 
@@ -423,7 +423,7 @@
               </div>
             </div>
           {% empty %}
-            <p style="color:#9ca3af; font-size:0.85rem;">No lessons yet.</p>
+            <p class="text-mute">No lessons yet.</p>
           {% endfor %}
         </div>
 
@@ -484,7 +484,7 @@
           <!-- Topics card -->
           <div class="compete-topics-card">
             <div class="compete-topics-header">
-              <i class="fas fa-brain" style="color:var(--purple)"></i>
+              <i class="fas fa-brain" style="color:var(--primary)"></i>
               <span>Your battle topics</span>
             </div>
             <p class="compete-topics-desc">
@@ -494,7 +494,7 @@
               {% for lesson in completed_lessons %}
                 <span class="compete-tag purple">{{ lesson }}</span>
               {% empty %}
-                <span style="font-size:0.82rem;color:#9ca3af;">
+                <span class="text-mute">
                   Complete some lessons first to unlock competitions!
                 </span>
               {% endfor %}
@@ -806,15 +806,15 @@
           <p class="settings-section-title">Profile</p>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-user"></i> Username</span>
-            <span style="font-size:0.85rem;font-weight:700;color:#374151">{{ user.username }}</span>
+            <span class="settings-text">{{ user.username }}</span>
           </div>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-envelope"></i> Email</span>
-            <span style="font-size:0.82rem;color:#9ca3af">{{ user.email|default:"No email set" }}</span>
+            <span class="settings-text-mute">{{ user.email|default:"No email set" }}</span>
           </div>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-users"></i> Age Group</span>
-            <span style="font-size:0.85rem;font-weight:700;color:#374151">{{ user.age_group|capfirst }}</span>
+            <span class="settings-text">{{ user.age_group|capfirst }}</span>
           </div>
         </div>
 
@@ -822,19 +822,19 @@
           <p class="settings-section-title">Progress</p>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-star"></i> Level</span>
-            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">Level {{ level }} — {{ rank_title }}</span>
+            <span class="settings-text">Level {{ level }} — {{ rank_title }}</span>
           </div>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-bolt"></i> Total XP</span>
-            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">{{ xp_cur }} XP</span>
+            <span class="settings-text">{{ xp_cur }} XP</span>
           </div>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-trophy"></i> Rank</span>
-            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">#{{ user_rank }} in {{ track_label }}</span>
+            <span class="settings-text">#{{ user_rank }} in {{ track_label }}</span>
           </div>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-swords"></i> Competition Wins</span>
-            <span style="font-size:0.85rem;font-weight:700;color:var(--purple)">{{ profile.compete_wins }}</span>
+            <span class="settings-text">{{ profile.compete_wins }}</span>
           </div>
         </div>
 
@@ -842,7 +842,7 @@
           <p class="settings-section-title">Account Actions</p>
           <div class="settings-row">
             <span class="settings-row-label"><i class="fas fa-right-from-bracket"></i> Sign Out</span>
-            <a href="{% url 'logout' %}" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
+            <a href="{% url 'logout' %}" class="signout">Sign Out</a>
           </div>
         </div>
       </div>
@@ -884,7 +884,7 @@
               <span class="lb-level">Lv.{{ entry.level }}</span>
             </li>
           {% empty %}
-            <li style="text-align:center; padding:20px; color:#9ca3af;">No players yet.</li>
+            <li class="text-mute">No players yet.</li>
           {% endfor %}
         </ul>
         <button class="lb-see-all" id="seeAllBtn"  onclick="switchPanel('leaderboard-mid', this)">See all {{ total_players }} players <i class="fas fa-arrow-right"></i></button>

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 
-{%block title%}For Adults - EVA Academy {%endblock%}
+{% block title %}For Adults - EVA Academy {% endblock %}
 
-{%block content%}
+{% block content %}
   <!-- HERO BANNER -->
   <section class="ch-hero">
     <div class="ch-hero-inner">
@@ -36,7 +36,7 @@
 
         <div class="ch-game-card" data-aos="fade-up" data-aos-delay="150">
           <div class="ch-game-card-top">
-            <div class="ch-game-icon purple"><i class="fa-solid fa-chart-simple"></i></div>
+            <div class="ch-game-icon primary"><i class="fa-solid fa-chart-simple"></i></div>
             <span class="ch-badge intermediate">Intermediate</span>
           </div>
           <h3 class="ch-game-name">Data Analysis Lab</h3>
@@ -62,7 +62,7 @@
 
         <div class="ch-game-card" data-aos="fade-up" data-aos-delay="250">
           <div class="ch-game-card-top">
-            <div class="ch-game-icon purple"><i class="fa-solid fa-bolt"></i></div>
+            <div class="ch-game-icon primary"><i class="fa-solid fa-bolt"></i></div>
             <span class="ch-badge advanced">Advanced</span>
           </div>
           <h3 class="ch-game-name">Advanced Automation</h3>
@@ -156,7 +156,7 @@
     <div class="ch-cta-inner" data-aos="fade-up">
       <h2 class="ch-cta-title">Ready to Begin?</h2>
       <p class="ch-cta-sub">Start your Python journey today with our interactive games</p>
-      <button class="ch-cta-btn" id="ctaStartLearning">Start Learning Now</button>
+      <a href="{% url 'login' %}" class="ch-cta-btn" >Start Learning Now</a>
     </div>
   </section>
-{%endblock%}
+{% endblock %}

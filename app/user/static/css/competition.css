@@ -1,12 +1,3 @@
-:root {
-  --purple: #008080;
-  --dk-purple2: #00a0a0;
-  --green: #10b981;
-  --gold: #f59e0b;
-  --red: #ef4444;
-  --orange: #f97316;
-}
-
 .comp-layout {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -21,7 +12,7 @@
   gap: 14px;
   padding: 20px;
   overflow-y: auto;
-  background: #f8f7ff;
+  background: var(--bg-light-purple);
 }
 
 .comp-right {
@@ -30,10 +21,19 @@
   gap: 14px;
   padding: 16px;
   border-left: 1.5px solid rgba(0, 128, 128,0.1);
-  background: #fff;
+  background: var(--surface);
   overflow-y: auto;
 }
 
+.compete-eva-avatar-circle{
+  width:150px;
+  height:80px;
+  border-radius:50%
+}
+.hint-section{
+  display:none;
+  padding:0 16px;
+}
 /* Reuse dashboard compete styles */
 .compete-player-initial,
 .compete-coder-initial {
@@ -42,14 +42,14 @@
   background: var(--primary);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.2rem; font-weight: 800;
-  color: #fff; font-family: 'Nunito', sans-serif;
+  color: var(--text-inverse); font-family: var(--font-heading);
 }
 
 .battle-editor {
   width: 100%;
   height: 160px;
-  background: #1a1a2e;
-  color: #e2e8f0;
+  background: var(--code-bg);
+  color: var(--code-text);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 12px;
@@ -62,7 +62,7 @@
 }
 
 .compete-opp-code {
-  background: #1a1a2e;
+  background: var(--code-bg);
   border-radius: 10px;
   padding: 12px;
   overflow-y: auto;
@@ -70,18 +70,9 @@
   margin-top: 10px;
   font-family: monospace;
   font-size: 0.82rem;
-  color: #e2e8f0;
+  color: var(--code-text);
   line-height: 1.7;
 }
-
-.app-run-btn {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 22px; border-radius: 10px;
-  background: var(--primary); color: #fff; border: none;
-  font-size: 0.88rem; font-weight: 800; cursor: pointer;
-  font-family: 'Nunito', sans-serif; transition: all 0.2s;
-}
-.app-run-btn:hover { background: #006666; transform: scale(1.03); }
 
 .compete-result-actions{
   display:flex;
@@ -94,13 +85,13 @@
 .app-complete-btn {
   width: 100%;
   padding: 13px;
-  background: linear-gradient(135deg, var(--primary), #00a0a0);
-  color: #fff; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: var(--text-inverse); border: none; border-radius: 14px;
   font-size: 0.9rem; font-weight: 800; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
   box-shadow: 0 6px 20px rgba(0, 128, 128,0.3);
-  font-family: 'Nunito', sans-serif; transition: all 0.2s;
+  font-family: var(--font-heading); transition: all 0.2s;
   white-space: nowrap;
 }
 .app-complete-btn:hover { transform: translateY(-2px); }
@@ -126,7 +117,7 @@
   font-size: 0.85rem;
   font-weight: 900;
   color: rgba(0, 128, 128,0.3);
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
   padding-top: 60px;
 }
 
@@ -136,7 +127,7 @@
   align-items: center;
   gap: 16px;
   padding: 40px 24px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 20px;
   border: 1.5px solid rgba(0, 128, 128,0.1);
   box-shadow: 0 4px 20px rgba(0, 128, 128,0.08);
@@ -180,7 +171,7 @@
   font-size: 3rem;
   font-weight: 900;
   color: var(--primary);
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
 }
 
 .compete-player-avatar-wrap {
@@ -209,7 +200,7 @@
 }
 
 .compete-coder-card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 16px;
   border: 1.5px solid rgba(0, 128, 128,0.1);
   height: 100%;
@@ -249,13 +240,13 @@
 .compete-coder-name {
   display: block;
   font-size: 0.85rem; font-weight: 800;
-  color: #111827; font-family: 'Nunito', sans-serif;
+  color: var(--text-dark); font-family: var(--font-heading);
 }
-.compete-coder-meta { display: block; font-size: 0.72rem; color: #9ca3af; }
+.compete-coder-meta { display: block; font-size: 0.72rem; color: var(--text-muted); }
 
 .you-badge {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-inverse);
   font-size: 0.62rem;
   font-weight: 900;
   padding: 2px 7px;
@@ -271,27 +262,30 @@
   padding: 9px 22px;
   border-radius: 10px;
   background: var(--primary);
-  color: #fff;
+  color: var(--text-inverse);
+  margin-top:8px;
   border: none;
   font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
   transition: all 0.2s;
   align-self: flex-start;
 }
+
+.app-run-btn:hover { background: var(--primary-dark); transform: scale(1.03); }
 
 .compete-tests-row {
   display: flex;
   justify-content: space-between;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--text-light);
 }
 
 .compete-tests-bar {
   height: 6px;
-  background: #f3f4f6;
+  background: var(--bg-gray);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -304,18 +298,20 @@
 }
 
 .you-fill {
-  background: linear-gradient(90deg, var(--primary), #00a0a0);
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  width:0%;
 }
 
 .opp-fill {
-  background: linear-gradient(90deg, #10b981, #06b6d4);
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  width:0%;
 }
 
 .compete-timer-bar-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 12px;
   padding: 10px 16px;
   border: 1.5px solid rgba(0, 128, 128,0.1);
@@ -325,14 +321,14 @@
 .compete-timer-track {
   flex: 1;
   height: 8px;
-  background: #f3f4f6;
+  background: var(--bg-gray);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .compete-timer-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #ec4899);
+  background: linear-gradient(90deg, var(--primary), var(--pink));
   border-radius: 99px;
   width: 100%;
   transition: width 1s linear;
@@ -356,20 +352,20 @@
   padding: 3px 10px;
   border-radius: 99px;
   white-space: nowrap;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
   flex-shrink: 0;
 }
 
 .compete-status-pill.coding {
   background: rgba(59,130,246,0.1);
-  color: #2563eb;
+  color: var(--blue-dark);
   border: 1px solid rgba(59,130,246,0.18);
   animation: codingPulse 2s ease-in-out infinite;
 }
 
 .compete-status-pill.done {
   background: rgba(16,185,129,0.12);
-  color: #059669;
+  color: var(--green-dark);
   border: 1px solid rgba(16,185,129,0.2);
 }
 
@@ -387,7 +383,7 @@
   border-radius:10px;
   padding:12px;
   font-size:0.83rem;
-  color:#374151;
+  color:var(--text-mid);
   line-height:1.6;
   margin-top:8px;
 }
@@ -405,7 +401,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
   transition: all 0.2s;
 }
 .compete-hint-btn:hover { background: rgba(0,128,128,0.15); }
@@ -423,7 +419,7 @@
 }
 
 .solution-modal-content {
-  background:#fff;
+  background:var(--surface);
   border-radius:20px;
   padding:32px;
   max-width:600px;
@@ -432,7 +428,7 @@
   overflow-y:auto;
   position:relative;
   font-size:0.88rem;
-  color:#374151;
+  color:var(--text-mid);
   line-height:1.7;
 }
 
@@ -444,13 +440,13 @@
   border:none;
   font-size:1.2rem;
   cursor:pointer;
-  color:#6b7280;
+  color:var(--text-light);
 }
 
 .solution-modal-title{
   font-family:'Nunito',sans-serif;
   font-weight:900;
-  color:#1f2937;
+  color:var(--text-heading);
   margin:0 0 16px;
   display:flex;
   align-items:center;
@@ -458,7 +454,7 @@
 }
 
 .solution-loading{
-  color:#9ca3af;
+  color:var(--text-muted);
   font-style:italic;
 }
 
@@ -476,19 +472,29 @@
 .app-output-topbar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 7px 16px;
-  background: #161b22;
-  font-size: 0.78rem; color: #6b7280; font-family: monospace;
+  background: var(--code-output-bar);
+  font-size: 0.78rem; color: var(--text-light); font-family: monospace;
   flex-shrink: 0;
 }
 
 .app-output-status { font-size: 0.75rem; font-weight: 700; }
-.app-output-status.success { color: #10b981; }
-.app-output-status.error   { color: #f87171; }
+.app-output-status.success { color: var(--green); }
+.app-output-status.error   { color: var(--red-light); }
 
 .app-output-body {
   padding: 10px 16px;
   font-family: monospace; font-size: 0.82rem; line-height: 1.8;
-  overflow-y: auto; background: #0d1117; flex: 1;
+  overflow-y: auto; background: var(--code-bg-darker); flex: 1;
 }
 
-.app-output-placeholder { color: #4b5563; font-size: 0.82rem; }
+.app-output-placeholder { color: var(--text-body); font-size: 0.82rem; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .comp-layout { grid-template-columns: 1fr; }
+  .comp-right { display: none; }
+}
+@media (max-width: 480px) {
+  .comp-left { padding: 12px; }
+  .comp-right { padding: 12px; }
+}

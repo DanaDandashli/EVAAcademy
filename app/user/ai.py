@@ -17,7 +17,7 @@ PYTHON_CURRICULUM_FOUNDATION = [
     {'order': 1,  'title': 'The Basics',                    'level_required': 1,  'category': 'beginner',
         'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /, //, %)', 'string concatenation', 'format()']},
     {'order': 2,  'title': 'Control Flow',                  'level_required': 1,  'category': 'beginner',
-        'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values']},
+        'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values', 'pass statement']},
     {'order': 3,  'title': 'Functions',                     'level_required': 2,  'category': 'beginner',
         'topics': ['defining functions', 'parameters', 'default parameters', 'return values', 'scope', 'multiple return values', 'docstrings']},
     {'order': 4,  'title': 'Loops',                         'level_required': 2,  'category': 'beginner',
@@ -240,6 +240,12 @@ STRICT CODE RULES:
 - Every variable used MUST be defined in the same code block
 - NEVER reference a variable that isn't declared in the same snippet
 - NEVER use apostrophes inside single-quoted strings — use double quotes for strings containing apostrophes
+- NEVER use these functions — they are NOT supported in the browser Python environment:
+  help(), dir(), vars(), globals(), locals(), open(), os, sys, subprocess,
+  import os, import sys, import re, import json, import datetime,
+  __import__(), eval(), exec(), compile(), memoryview(), bytearray()
+- To demonstrate docstrings, use print(function.__doc__) instead of help()
+- Never import any external modules — only pure Python built-ins
 - Max {constraints['max_lines']} lines per code example
 
 Return ONLY valid JSON, no markdown, no explanation:
@@ -255,7 +261,8 @@ Return ONLY valid JSON, no markdown, no explanation:
     try:
         raw = _call_ai(
             prompt,
-            system='You are a JSON generator. Return ONLY a valid JSON array. No markdown. No code blocks. No backticks. No explanation. Start your response with [ and end with ].'
+            system='You are a JSON generator. Return ONLY a valid JSON array. No markdown. No code blocks. No backticks. No explanation. Start your response with [ and end with ].',
+            max_tokens=4000
         )
         if not raw:
             return []
@@ -277,9 +284,9 @@ def validate_task(instruction, code, output, age_group='child', task_type='free_
 The correct fixed code is:
 {correct_answer}
 
-PASS if the student's code produces the correct output and the bug is fixed — exact match not required.
-FAIL only if the original bug is still present in the code.
-IGNORE the task description wording — judge ONLY whether the bug is fixed."""
+PASS if the student's code matches the correct answer.
+If the student's code is identical to the correct answer, always PASS immediately.
+FAIL only if the original buggy code is unchanged."""
     elif task_type == 'fill_blank':
         task_context = f"""Task type: FILL IN THE BLANK
 Student's answer: "{code}"

@@ -16,7 +16,7 @@
       <i class="fas fa-arrow-left"></i> Back
     </a>
     <div class="ch-topbar-center">
-      <i class="fas fa-folder-open" style="color:var(--purple)"></i>
+      <i class="fas fa-folder-open" style="color:var(--primary)"></i>
       <span>Mini Projects</span>
     </div>
     <div class="ch-topbar-right">
@@ -106,7 +106,7 @@
               <span id="chOutputStatus" class="ch-output-status"></span>
             </div>
             <div class="ch-output-body" id="chOutputBody">
-              <span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>
+              <span>Run your code to see output...</span>
             </div>
           </div>
 
@@ -171,7 +171,7 @@
       </h3>
       <div class="ch-portfolio-grid">
         {% for project in published_projects %}
-        <div class="ch-portfolio-card" style="cursor:pointer;" onclick="openPortfolioModal('{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.code|escapejs }}', '{{ project.eva_feedback|escapejs }}')">
+        <div class="ch-portfolio-card" onclick="openPortfolioModal('{{ project.title|escapejs }}', '{{ project.description|escapejs }}', '{{ project.code|escapejs }}', '{{ project.eva_feedback|escapejs }}')">
           <div class="ch-portfolio-icon"><i class="fab fa-python"></i></div>
           <h4 class="ch-portfolio-name">{{ project.title }}</h4>
           <p class="ch-portfolio-desc">{{ project.description }}</p>

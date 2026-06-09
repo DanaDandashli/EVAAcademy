@@ -36,7 +36,7 @@
 
         <div class="ch-game-card" data-aos="fade-up" data-aos-delay="150">
           <div class="ch-game-card-top">
-            <div class="ch-game-icon purple"><i class="fas fa-gamepad"></i></div>
+            <div class="ch-game-icon primary"><i class="fas fa-gamepad"></i></div>
             <span class="ch-badge beginner">Beginner</span>
           </div>
           <h3 class="ch-game-name">Block Builder</h3>
@@ -62,7 +62,7 @@
 
         <div class="ch-game-card" data-aos="fade-up" data-aos-delay="250">
           <div class="ch-game-card-top">
-            <div class="ch-game-icon purple"><i class="fa-solid fa-book-open"></i></div>
+            <div class="ch-game-icon primary"><i class="fa-solid fa-book-open"></i></div>
             <span class="ch-badge advanced">Advanced</span>
           </div>
           <h3 class="ch-game-name">Story Coder</h3>
@@ -156,7 +156,7 @@
     <div class="ch-cta-inner" data-aos="fade-up">
       <h2 class="ch-cta-title">Ready to Begin?</h2>
       <p class="ch-cta-sub">Start your Python journey today with our interactive games</p>
-      <button class="ch-cta-btn" id="ctaStartLearning">Start Learning Now</button>
+      <a href="{% url 'login' %}" class="ch-cta-btn" >Start Learning Now</a>
     </div>
   </section>
 {%endblock%}

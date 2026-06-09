@@ -80,12 +80,12 @@
   </button>
   <div class="sidebar-footer">
     <a class="sidebar-user" onclick="navigateTo('settings',this)">
-      <div class="user-avatar-sm" style="width:34px;height:34px;border-radius:50%;background:var(--gradient1);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:white;flex-shrink:0;">{{user.username|first|upper}}</div>
+      <div class="user-avatar-sm">{{user.username|first|upper}}</div>
       <div class="info">
         <div class="name">{{user.username}}</div>
         <div class="sub">Profile & Settings</div>
       </div>
-      <i class="fa-solid fa-gear" style="color:var(--text-muted);font-size:0.85rem;"></i>
+      <i class="fa-solid fa-gear"></i>
     </a>
   </div>
 </aside>
@@ -97,8 +97,8 @@
   <!-- ═══════════════ PANEL: HOME (Dashboard) ═══════════════ -->
   <div class="page-panel active" id="panel-home">
     <div class="page-header">
-      <h1>Welcome back, {{ user.username }} <i class="fa-solid fa-hand-wave" style="font-size:1.3rem;-webkit-text-fill-color:initial;"></i></h1>
-      <p>{{ track_label }} &bull; Level {{ level }} &bull; <span style="color:var(--accent3);font-weight:600;"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete</span> — Keep the momentum going!</p>
+      <h1>Welcome back, {{ user.username }} <i class="fa-solid fa-hand-wave wave-hand-icon"></i></h1>
+      <p>{{ track_label }} &bull; Level {{ level }} &bull; <span class="page-header-text"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete</span> — Keep the momentum going!</p>
     </div>
 
     <!-- STATS -->
@@ -135,7 +135,7 @@
       <div class="left-col">
         <div class="card">
           <div class="skill-card">
-            <h3><i class="fa-solid fa-brain" style="color:var(--accent)"></i> Lesson Progress</h3>
+            <h3><i class="fa-solid fa-brain lesson-icon"></i> Lesson Progress</h3>
             {% for l in lessons_data %}
               {% if l.completed_count > 0 or l.is_current or forloop.counter <= 3 %}
                 <div class="skill-item">
@@ -144,7 +144,7 @@
                     <span class="skill-pct" style="color:#a78bfa">{{ l.completed_count }}/{{ l.total_count }}</span>
                   </div>
                   <div class="skill-bar">
-                    <div class="skill-fill" data-w="{% if l.total_count %}{% widthratio l.completed_count l.total_count 100 %}{% else %}0{% endif %}" style="background:linear-gradient(90deg,#6c63ff,#a78bfa)"></div>
+                    <div class="skill-fill" data-w="{% if l.total_count %}{% widthratio l.completed_count l.total_count 100 %}{% else %}0{% endif %}"></div>
                   </div>
                 </div>
               {% endif %}
@@ -154,77 +154,46 @@
       </div>
 
       <!-- CENTER/RIGHT: EVA Summary + Achievements -->
-      <div class="right-col" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="right-col">
 
         <!-- EVA Summary -->
         <div class="card">
           <div class="skill-card">
-            <h3><i class="fa-solid fa-robot" style="color:var(--accent2)"></i> EVA Summary</h3>
+            <h3><i class="fa-solid fa-robot eva-robot-icon"></i> EVA Summary</h3>
 
             {% if eva_context.weak_areas %}
-              <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px;">Areas to improve:</p>
+              <p class="weak-areas-label">Areas to improve:</p>
               {% for w in eva_context.weak_areas|slice:":3" %}
               <div class="skill-item">
                 <div class="skill-top">
-                  <span class="skill-name" style="font-size:0.7rem;">{{ w.lesson }}</span>
-                  <span class="skill-pct" style="color:#ff6b9d;font-size:0.68rem;">{{ w.attempts }}x failed</span>
+                  <span class="skill-name">{{ w.lesson }}</span>
+                  <span class="skill-pct skill-pct--failed">{{ w.attempts }}x failed</span>
                 </div>
-                <div style="font-size:0.65rem;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ w.concept|truncatechars:45 }}</div>
+                <div class="skill-concept">{{ w.concept|truncatechars:45 }}</div>
               </div>
               {% endfor %}
             {% else %}
-              <p style="font-size:0.75rem;color:var(--text-muted);padding:8px 0;">No weak areas detected yet. Keep completing lessons!</p>
+              <p class="weak-areas-empty">No weak areas detected yet. Keep completing lessons!</p>
             {% endif %}
 
             {% if current_section %}
-            <a href="{% if current_section.node_type == 'introduction' %}{% url 'introduction' current_section.id %}{% elif current_section.node_type == 'application' %}{% url 'application' current_section.id %}{% elif current_section.node_type == 'competition' %}{% url 'competition' current_section.id %}{% elif current_section.node_type == 'test' %}{% url 'test' current_section.id %}{% endif %}" style="text-decoration:none;">
-              <div style="margin-top:12px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);border-radius:10px;padding:10px 12px;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='rgba(0,212,255,0.15)'" onmouseout="this.style.background='rgba(0,212,255,0.08)'">
-                <div style="font-size:0.65rem;color:var(--accent2);font-weight:700;margin-bottom:3px;"><i class="fa-solid fa-play fa-xs"></i> CONTINUE</div>
-                <div style="font-size:0.75rem;font-weight:600;">{{ current_lesson.title }}</div>
-                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px;">{{ current_section.node_type|capfirst }} node</div>
+            <a href="{% if current_section.node_type == 'introduction' %}{% url 'introduction' current_section.id %}{% elif current_section.node_type == 'application' %}{% url 'application' current_section.id %}{% elif current_section.node_type == 'competition' %}{% url 'competition' current_section.id %}{% elif current_section.node_type == 'test' %}{% url 'test' current_section.id %}{% endif %}" class="continue-link">
+              <div class="continue-card" onmouseover="this.style.background='rgba(0,212,255,0.15)'" onmouseout="this.style.background='rgba(0,212,255,0.08)'">
+                <div class="continue-label"><i class="fa-solid fa-play fa-xs"></i> CONTINUE</div>
+                <div class="continue-lesson">{{ current_lesson.title }}</div>
+                <div class="continue-node">{{ current_section.node_type|capfirst }} node</div>
               </div>
             </a>
             {% endif %}
           </div>
         </div>
-
-        <!-- Achievements -->
-        {% comment %} <div class="card">
-          <div class="skill-card">
-            <h3><i class="fa-solid fa-medal" style="color:var(--accent4)"></i> Achievements <span style="font-size:0.68rem;color:var(--text-muted);font-weight:500;">{{ total_badges }} earned</span></h3>
-
-            {% if earned_achievements %}
-              {% for ach in earned_achievements|slice:":3" %}
-              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-                <div style="width:30px;height:30px;border-radius:8px;background:rgba(108,99,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <i class="{{ ach.icon }}" style="color:{{ ach.color }};font-size:0.85rem;"></i>
-                </div>
-                <div>
-                  <div style="font-size:0.73rem;font-weight:600;">{{ ach.name }}</div>
-                  <div style="font-size:0.62rem;color:var(--text-muted);">{{ ach.description }}</div>
-                </div>
-              </div>
-              {% endfor %}
-            {% else %}
-              <p style="font-size:0.75rem;color:var(--text-muted);padding:8px 0;">Complete nodes to earn badges!</p>
-            {% endif %}
-
-            {% if unearned_achievements %}
-            <div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:0.65rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:1px;">{{ unearned_achievements|length }} locked</div>
-              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:3px;">Next: {{ unearned_achievements.0.name }}</div>
-            </div>
-            {% endif %}
-          </div>
-        </div> {% endcomment %}
-
       </div>
 
       <!-- RIGHT: Leaderboard -->
       <div class="right-col">
         <div class="lb-mini">
           <div class="lb-mini-header">
-            <h3><i class="fa-solid fa-ranking-star" style="color:var(--accent4)"></i> Global Ranks</h3>
+            <h3><i class="fa-solid fa-ranking-star rank-star-icon"></i> Global Ranks</h3>
           </div>
           <div class="lb-list">
             {% for entry in leaderboard|slice:":3" %}
@@ -235,7 +204,7 @@
               <div class="lb-avatar" style="background:var(--gradient1)">{{ entry.user.username|first|upper }}{{ entry.user.username|slice:"1:2"|upper }}</div>
               <div class="lb-info">
                 <div class="lb-name">{{ entry.user.username }}
-                  {% if entry.user == user %}<span style="font-size:0.58rem;background:rgba(108,99,255,0.2);color:var(--accent);padding:1px 5px;border-radius:4px">YOU</span>{% endif %}
+                  {% if entry.user == user %}<span class="lb-name-you">YOU</span>{% endif %}
                 </div>
                 <div class="lb-level">Lv.{{ entry.level }}</div>
               </div>
@@ -253,14 +222,14 @@
     <div class="chart-row">
       <div class="chart-card">
         <div class="chart-card-header">
-          <div><h3><i class="fa-solid fa-chart-area" style="color:var(--accent)"></i> XP Progress</h3><p>Total XP earned so far</p></div>
+          <div><h3><i class="fa-solid fa-chart-area accent"></i> XP Progress</h3><p>Total XP earned so far</p></div>
           <div class="chart-badges"><span class="chart-badge">{{ xp_cur }} XP</span><span class="chart-badge green"><i class="fa-solid fa-arrow-trend-up fa-xs"></i> Lv.{{ level }}</span></div>
         </div>
         <div class="chart-canvas-wrap"><canvas id="xpChart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card-header">
-          <div><h3><i class="fa-solid fa-spider-web" style="color:var(--accent)"></i> Node Completion</h3><p>Progress across all node types</p></div>
+          <div><h3><i class="fa-solid fa-spider-web accent"></i> Node Completion</h3><p>Progress across all node types</p></div>
           <div class="chart-badges"><span class="chart-badge">Level {{ level }}</span></div>
         </div>
         <div class="chart-canvas-wrap"><canvas id="radarChart"></canvas></div>
@@ -272,10 +241,10 @@
 
       <!-- Recent Activity -->
       <div class="activity-card">
-        <h3><i class="fa-solid fa-bolt-lightning" style="color:var(--accent4)"></i> Recent Activity</h3>
+        <h3><i class="fa-solid fa-bolt-lightning accent4"></i> Recent Activity</h3>
         {% for progress in completed_progress|slice:":5" %}
         <div class="activity-item">
-          <div class="activity-icon" style="background:rgba(6,214,160,0.13);color:var(--green)"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="activity-icon"><i class="fa-solid fa-circle-check"></i></div>
           <div class="activity-text">
             <div class="main-text">Completed {{ progress.section.node_type|capfirst }} — {{ progress.section.lesson.title }}</div>
             <div class="time"><i class="fa-regular fa-clock fa-xs"></i> {{ progress.completed_at|timesince }} ago</div>
@@ -289,25 +258,25 @@
           </div>
         </div>
         {% empty %}
-        <div style="color:var(--text-muted);font-size:0.82rem;padding:10px 0;">No activity yet. Start learning!</div>
+        <div class="activity-muted">No activity yet. Start learning!</div>
         {% endfor %}
       </div>
 
       <!-- Up Next -->
       <div class="upnext-card">
-        <h3><i class="fa-solid fa-rocket" style="color:var(--accent)"></i> Up Next</h3>
+        <h3><i class="fa-solid fa-rocket accent"></i> Up Next</h3>
         {% for lesson_data in lessons_data %}
           {% if not lesson_data.is_locked %}
             {% for section_data in lesson_data.sections %}
               {% if section_data.is_current %}
               {% if section_data.section.node_type == 'introduction' %}
-              <a href="{% url 'introduction' section_data.section.id %}" style="text-decoration:none;">
+              <a href="{% url 'introduction' section_data.section.id %}">
               {% elif section_data.section.node_type == 'application' %}
-              <a href="{% url 'application' section_data.section.id %}" style="text-decoration:none;">
+              <a href="{% url 'application' section_data.section.id %}">
               {% elif section_data.section.node_type == 'competition' %}
-              <a href="{% url 'competition' section_data.section.id %}" style="text-decoration:none;">
+              <a href="{% url 'competition' section_data.section.id %}">
               {% elif section_data.section.node_type == 'test' %}
-              <a href="{% url 'test' section_data.section.id %}" style="text-decoration:none;">
+              <a href="{% url 'test' section_data.section.id %}">
               {% endif %}
                 <div class="upnext-item">
                   <div class="upnext-icon"><i class="fa-solid fa-play"></i></div>
@@ -338,7 +307,7 @@
   <div class="page-panel" id="panel-learning-path">
     <div class="path-header">
       <div class="page-header">
-        <h1><i class="fa-solid fa-map" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Learning Path</h1>
+        <h1><i class="fa-solid fa-map accent font-icon"></i> Learning Path</h1>
         <p>{{ track_label }} — {{ completed_sections_count }} / {{ total_sections }} nodes completed</p>
       </div>
       {% if current_section %}
@@ -357,7 +326,7 @@
         </div>
         <div class="lp-progress-text">
           <span>{{ completed_sections_count }} / {{ total_sections }} nodes</span>
-          <span style="color:var(--accent)">{{ overall_pct }}% Complete</span>
+          <span class="accent">{{ overall_pct }}% Complete</span>
         </div>
       </div>
 
@@ -391,10 +360,10 @@
                 </div>
               </div>
               {% else %}
-                {% if section_data.section.node_type == 'introduction' %}<a href="{% url 'introduction' section_data.section.id %}" style="text-decoration:none;">
-                {% elif section_data.section.node_type == 'application' %}<a href="{% url 'application' section_data.section.id %}" style="text-decoration:none;">
-                {% elif section_data.section.node_type == 'competition' %}<a href="{% url 'competition' section_data.section.id %}" style="text-decoration:none;">
-                {% elif section_data.section.node_type == 'test' %}<a href="{% url 'test' section_data.section.id %}" style="text-decoration:none;">
+                {% if section_data.section.node_type == 'introduction' %}<a href="{% url 'introduction' section_data.section.id %}">
+                {% elif section_data.section.node_type == 'application' %}<a href="{% url 'application' section_data.section.id %}">
+                {% elif section_data.section.node_type == 'competition' %}<a href="{% url 'competition' section_data.section.id %}">
+                {% elif section_data.section.node_type == 'test' %}<a href="{% url 'test' section_data.section.id %}">
                 {% endif %}
                 <div class="node-item {% if section_data.is_completed %}done{% elif section_data.is_current %}current{% else %}locked{% endif %}">
                   <div class="node-icon">
@@ -434,7 +403,7 @@
           </div>
         </div>
         {% empty %}
-        <p style="color:var(--text-muted);padding:20px;text-align:center;">No lessons available yet.</p>
+        <p class="lb-muted">No lessons available yet.</p>
         {% endfor %}
       </div>
     </div>
@@ -443,7 +412,7 @@
   <!-- ═══════════════ PANEL: LEADERBOARD ═══════════════ -->
   <div class="page-panel" id="panel-leaderboard">
     <div class="page-header">
-      <h1><i class="fa-solid fa-trophy" style="color:#ffd166;-webkit-text-fill-color:initial;font-size:1.4rem;"></i> Global Leaderboard</h1>
+      <h1><i class="fa-solid fa-trophy lb-icon"></i> Global Leaderboard</h1>
       <p>See how you stack up against coders worldwide &bull; {{ track_label }}</p>
     </div>
     <div class="lb-full-card">
@@ -451,8 +420,8 @@
         <div>Rank</div><div>Player</div><div>Level</div><div>XP</div>
       </div>
       <div id="lbFullRows"></div>
-      <div id="lbLoadMoreWrap" style="text-align:center;padding:16px;display:none;">
-        <button id="lbLoadMoreBtn" class="lb-see-all" style="width:100%" onclick="loadLeaderboard()">
+      <div id="lbLoadMoreWrap" class="lb-load-more-wrap">
+        <button id="lbLoadMoreBtn" class="lb-see-all" onclick="loadLeaderboard()">
           <i class="fa-solid fa-chevron-down fa-xs"></i> Load More
         </button>
       </div>
@@ -462,8 +431,8 @@
   <template id="lbRowTemplate">
     <div class="lb-full-row">
       <div class="lb-rank"></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div class="lb-avatar" style="background:var(--gradient1)"></div>
+      <div class="lb-row">
+        <div class="lb-avatar"></div>
         <div class="lb-info">
           <div class="lb-name"></div>
           <div class="lb-level"></div>
@@ -477,12 +446,12 @@
   <!-- ═══════════════ PANEL: PROGRESS ═══════════════ -->
   <div class="page-panel" id="panel-progress">
     <div class="page-header">
-      <h1><i class="fa-solid fa-chart-line" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Progress</h1>
+      <h1><i class="fa-solid fa-chart-line accent font-icon"></i> Progress</h1>
       <p>Detailed breakdown of your learning journey</p>
     </div>
     <div class="progress-flex">
       <div class="prog-skills-full">
-        <h3><i class="fa-solid fa-brain" style="color:var(--accent)"></i> Skill Breakdown</h3>
+        <h3><i class="fa-solid fa-brain accent"></i> Skill Breakdown</h3>
         {% for l in lessons_data %}
         <div class="prog-skill-item">
           <div class="prog-skill-top">
@@ -514,7 +483,7 @@
           {% endfor %}
           {% for ach in unearned_achievements %}
           <div class="milestone-item mi-locked">
-            <div class="mi-icon"><i class="fa-solid fa-lock" style="color:var(--text-dim)"></i></div>
+            <div class="mi-icon"><i class="fa-solid fa-lock text-dim"></i></div>
             <div class="mi-name">{{ ach.name }}</div>
             <div class="mi-date">{{ ach.description }}</div>
           </div>
@@ -527,12 +496,12 @@
   <!-- ═══════════════ PANEL: 1v1 COMPETE ═══════════════ -->
   <div class="page-panel" id="panel-compete">
     <div class="page-header">
-      <h1><i class="fa-solid fa-shield-halved" style="color:var(--accent3);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> 1v1 Compete</h1>
+      <h1><i class="fa-solid fa-shield-halved accent3 font-icon"></i> 1v1 Compete</h1>
       <p>Battle EVA AI in real-time coding challenges</p>
     </div>
 
     <div class="compete-hero">
-      <h2><i class="fa-solid fa-swords" style="-webkit-text-fill-color:initial;font-size:1.4rem;color:var(--accent3)"></i> Ready to Battle?</h2>
+      <h2><i class="fa-solid fa-swords accent3 font-icon"></i> Ready to Battle?</h2>
       <p>Take on EVA AI in a live coding challenge — prove your skills and earn XP</p>
       <a href="{% url 'compete_room' %}" class="compete-btn">
         <i class="fa-solid fa-play"></i> Start Battle
@@ -545,32 +514,32 @@
         <div class="cl"><i class="fa-solid fa-swords fa-sm"></i> Total Battles</div>
       </div>
       <div class="compete-stat">
-        <div class="cv" style="color:var(--green)">{{ profile.compete_wins }}</div>
+        <div class="cv text-green">{{ profile.compete_wins }}</div>
         <div class="cl"><i class="fa-solid fa-circle-check fa-sm"></i> Wins</div>
       </div>
       <div class="compete-stat">
-        <div class="cv" style="color:var(--accent2)">{{ profile.elo_rating }}</div>
+        <div class="cv accent2">{{ profile.elo_rating }}</div>
         <div class="cl"><i class="fa-solid fa-chart-line fa-sm"></i> ELO Rating</div>
       </div>
     </div>
 
     <div class="compete-info-card">
       <div class="compete-info-row">
-        <span class="compete-info-label"><i class="fa-solid fa-robot" style="color:var(--accent2)"></i> Opponent</span>
+        <span class="compete-info-label"><i class="fa-solid fa-robot accent2"></i> Opponent</span>
         <span class="compete-info-value">EVA AI — adapts to your level</span>
       </div>
       <div class="compete-info-row">
-        <span class="compete-info-label"><i class="fa-solid fa-star" style="color:var(--accent4)"></i> Your Level</span>
+        <span class="compete-info-label"><i class="fa-solid fa-star accent4"></i> Your Level</span>
         <span class="compete-info-value">{{ rank_title }} — Lv.{{ level }}</span>
       </div>
       <div class="compete-info-row">
-        <span class="compete-info-label"><i class="fa-solid fa-percent" style="color:var(--green)"></i> Win Rate</span>
+        <span class="compete-info-label"><i class="fa-solid fa-percent text-green"></i> Win Rate</span>
         <span class="compete-info-value">
           {% if profile.compete_battles > 0 %}{{ compete_win_rate }}%{% else %}No battles yet{% endif %}
         </span>
       </div>
       <div class="compete-info-row">
-        <span class="compete-info-label"><i class="fa-solid fa-bolt" style="color:var(--accent4)"></i> XP from Battles</span>
+        <span class="compete-info-label"><i class="fa-solid fa-bolt accent4"></i> XP from Battles</span>
         <span class="compete-info-value">{{ comp_xp }} XP</span>
       </div>
     </div>
@@ -580,7 +549,7 @@
   <!-- ═══════════════ PANEL: EVA ADVISOR ═══════════════ -->
   <div class="page-panel" id="panel-eva">
     <div class="page-header">
-      <h1><i class="fa-solid fa-chalkboard-user" style="color:var(--accent2);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> EVA Advisor</h1>
+      <h1><i class="fa-solid fa-chalkboard-user accent2 font-icon"></i> EVA Advisor</h1>
       <p>Your AI-powered learning companion — hints only, never gives answers</p>
     </div>
     <div class="advisor-layout">
@@ -711,13 +680,13 @@
   <!-- ═══════════════ PANEL: CERTIFICATES ═══════════════ -->
   <div class="page-panel" id="panel-certificates">
     <div class="page-header">
-      <h1><i class="fa-solid fa-certificate" style="color:var(--accent4);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Certificates</h1>
+      <h1><i class="fa-solid fa-certificate accent4 font-icon"></i> Certificates</h1>
       <p>{{ certs_earned }} earned &bull; {{ certs_remaining }} remaining</p>
     </div>
 
     {% if certs_earned > 0 %}
     <div class="cert-doc-section">
-      <p class="cert-section-label"><i class="fa-solid fa-trophy" style="color:var(--accent4)"></i> Earned</p>
+      <p class="cert-section-label"><i class="fa-solid fa-trophy accent4"></i> Earned</p>
       {% for l in lessons_data %}
         {% if l.is_completed %}
         <div class="cert-document">
@@ -769,7 +738,7 @@
     </div>
     {% else %}
     <div class="cert-empty-state">
-      <i class="fa-solid fa-certificate fa-2x" style="color:var(--text-dim)"></i>
+      <i class="fa-solid fa-certificate fa-2x text-dim"></i>
       <p>No certificates yet — complete all nodes in a lesson to earn your first one.</p>
     </div>
     {% endif %}
@@ -813,14 +782,14 @@
   <!-- ═══════════════ PANEL: SETTINGS ═══════════════ -->
   <div class="page-panel" id="panel-settings">
     <div class="page-header">
-      <h1><i class="fa-solid fa-gear" style="color:var(--accent);-webkit-text-fill-color:initial;font-size:1.3rem;"></i> Settings</h1>
+      <h1><i class="fa-solid fa-gear accent font-icon"></i> Settings</h1>
       <p>Manage your account, notifications and preferences</p>
     </div>
     <div class="settings-sections">
       <div class="settings-content">
         <div id="settings-profile">
           <div class="settings-card">
-            <h3><i class="fa-solid fa-user-pen" style="color:var(--accent)"></i> Profile Information</h3>
+            <h3><i class="fa-solid fa-user-pen accent"></i> Profile Information</h3>
             <div class="setting-row">
               <span class="s-title"><i class="fas fa-user"></i>Username</span>
               <div class="s-desc">{{user.username}}</div>
@@ -835,7 +804,7 @@
             </div>
           </div>
           <div class="settings-card">
-            <h3><i class="fa-solid fa-bullseye" style="color:var(--accent)"></i> Progress</h3>
+            <h3><i class="fa-solid fa-bullseye accent"></i> Progress</h3>
             <div class="setting-row">
               <span class="s-title"><i class="fas fa-star"></i>Level</span>
               <div class="s-desc">Level {{ level }} — {{ rank_title }}</div>
@@ -854,10 +823,10 @@
             </div>
           </div>
           <div class="settings-card">
-            <h3><i class="fa-solid fa-user-lock" style="color:var(--accent)"></i> Account Actions</h3>
+            <h3><i class="fa-solid fa-user-lock accent"></i> Account Actions</h3>
             <div class="setting-row">
               <span class="s-title"><i class="fas fa-right-from-bracket"></i>Sign Out</span>
-              <a href="{% url 'logout' %}" onclick="clearPanel()" style="font-size:0.85rem;font-weight:700;color:var(--red);">Sign Out</a>
+              <a href="{% url 'logout' %}" onclick="clearPanel()" class="signout">Sign Out</a>
             </div>
           </div>
         </div>

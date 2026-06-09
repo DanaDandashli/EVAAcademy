@@ -1,9 +1,3 @@
-:root {
-  --purple: #008080;
-  --dk-purple2: #00a0a0;
-  --purple-gradient: linear-gradient(135deg, #008080, #00a0a0);
-}
-
 .node-layout .navbar {
   display: none;
 }
@@ -27,7 +21,7 @@
   justify-content: space-between;
   padding: 0 24px;
   height: 56px;
-  background: #fff;
+  background: var(--surface);
   border-bottom: 1.5px solid rgba(0, 128, 128,0.1);
   box-shadow: 0 2px 12px rgba(0, 128, 128,0.06);
   flex-shrink: 0;
@@ -41,7 +35,7 @@
   gap: 8px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--text-light);
   text-decoration: none;
   transition: color 0.2s;
   white-space: nowrap;
@@ -54,11 +48,12 @@
   gap: 8px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--text-mid);
+  min-width: 0;
 }
 
-.node-lesson-label { color: #9ca3af; }
-.node-breadcrumb-sep { font-size: 10px; color: #d1d5db; }
+.node-lesson-label { color: var(--text-muted); }
+.node-breadcrumb-sep { font-size: 10px; color: var(--border-light); }
 .node-section-label { color: var(--primary); font-weight: 800; }
 
 .node-topbar-right {
@@ -76,13 +71,13 @@
   border-radius: 99px;
   font-size: 0.78rem;
   font-weight: 800;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
 }
 
-.node-type-introduction { background: rgba(59,130,246,0.1);  color: #2563eb; }
-.node-type-application  { background: rgba(16,185,129,0.1);  color: #059669; }
-.node-type-competition  { background: rgba(245,158,11,0.1);  color: #d97706; }
-.node-type-test         { background: rgba(239,68,68,0.1);   color: #dc2626; }
+.node-type-introduction { background: rgba(59,130,246,0.1);  color: var(--blue-dark); }
+.node-type-application  { background: rgba(16,185,129,0.1);  color: var(--green-dark); }
+.node-type-competition  { background: rgba(245,158,11,0.1);  color: var(--amber-dark); }
+.node-type-test         { background: rgba(239,68,68,0.1);   color: var(--red-dark); }
 
 /* ── Node layout ── */
 .node-layout {
@@ -90,7 +85,7 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: #f8f7ff;
+  background: var(--bg-light-purple);
 }
 
 .node-main {
@@ -112,7 +107,7 @@
   overflow-y: auto;
   padding: 32px;
   border-right: 1.5px solid rgba(0, 128, 128,0.1);
-  background: #fff;
+  background: var(--surface);
 }
 
 .intro-right {
@@ -138,30 +133,30 @@
 .intro-icon {
   width: 48px; height: 48px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: linear-gradient(135deg, var(--blue), var(--indigo));
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 20px; flex-shrink: 0;
+  color: var(--text-inverse); font-size: 20px; flex-shrink: 0;
 }
 
 .intro-title {
   font-size: 1.5rem; font-weight: 900;
-  color: #1f2937; font-family: 'Nunito', sans-serif;
+  color: var(--text-heading); font-family: var(--font-heading);
   margin: 0;
 }
 
 .intro-subtitle {
-  font-size: 0.85rem; color: #9ca3af;
+  font-size: 0.85rem; color: var(--text-muted);
   font-weight: 500; margin: 4px 0 0;
 }
 
 .intro-body h2 {
   font-size: 1.05rem; font-weight: 800;
-  color: #1f2937; font-family: 'Nunito', sans-serif;
+  color: var(--text-heading); font-family: var(--font-heading);
   margin: 24px 0 8px;
 }
 
 .intro-body p {
-  font-size: 0.9rem; color: #4b5563;
+  font-size: 0.9rem; color: var(--text-body);
   line-height: 1.7; margin: 0 0 12px;
 }
 
@@ -184,7 +179,7 @@
 
 .intro-highlight-box p {
   font-size: 0.84rem;
-  color: #374151;
+  color: var(--text-mid);
   line-height: 1.6;
   margin: 0;
 }
@@ -203,7 +198,7 @@
   align-items: center;
   gap: 10px;
   font-size: 0.88rem;
-  color: #374151;
+  color: var(--text-mid);
   font-weight: 600;
 }
 
@@ -215,8 +210,8 @@
 .intro-complete-btn {
   width: 100%;
   padding: 10px;
-  background: linear-gradient(135deg, var(--primary), #00a0a0);
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: var(--text-inverse);
   border: none;
   border-radius: 14px;
   font-size: 0.95rem;
@@ -227,7 +222,7 @@
   justify-content: center;
   gap: 10px;
   box-shadow: 0 6px 20px rgba(0, 128, 128,0.3);
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
   transition: all 0.2s ease;
 }
 
@@ -244,7 +239,7 @@
 }
 
 .intro-code-bar {
-  background: #16213e;
+  background: var(--code-topbar);
   padding: 10px 16px;
   display: flex;
   align-items: center;
@@ -254,7 +249,7 @@
 
 .intro-code-filename {
   font-size: 0.82rem;
-  color: #9ca3af;
+  color: var(--text-muted);
   flex: 1;
   font-family: monospace;
 }
@@ -263,22 +258,22 @@
   font-size: 0.72rem;
   font-weight: 700;
   background: rgba(255,255,255,0.08);
-  color: #6b7280;
+  color: var(--text-light);
   padding: 3px 10px;
   border-radius: 99px;
 }
 
 .intro-code-body {
-  background: #1a1a2e;
+  background: var(--code-bg);
   padding: 20px;
 }
 
 .intro-code-body pre {
   margin: 0;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   line-height: 1.8;
-  color: #e2e8f0;
+  color: var(--code-text);
   white-space: pre-wrap;
 }
 
@@ -287,10 +282,10 @@
 }
 
 .intro-output-bar {
-  background: #161b22;
+  background: var(--code-output-bar);
   padding: 8px 16px;
   font-size: 0.78rem;
-  color: #6b7280;
+  color: var(--text-light);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -298,13 +293,14 @@
 }
 
 .intro-output-body {
-  background: #0d1117;
+  background: var(--code-bg-darker);
   padding: 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+.output-body{ color:#4b5563; font-size:0.82rem; }
 /* ── Intro slides ── */
 .intro-slide { display: none; }
 .intro-slide.active { display: block; animation: slideFadeIn 0.3s ease; }
@@ -321,12 +317,13 @@
 }
 
 .intro-progress-bar {
-  flex: 1; height: 6px; background: #f3f4f6; border-radius: 99px; overflow: hidden;
+  flex: 1; height: 6px; background: var(--bg-gray); border-radius: 99px; overflow: hidden;
 }
 
 .intro-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #00a0a0);
+  width: 0%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
   border-radius: 99px;
   transition: width 0.4s ease;
   box-shadow: 0 0 8px rgba(0, 128, 128,0.35);
@@ -335,7 +332,7 @@
 .intro-progress-label {
   font-size: 0.82rem; font-weight: 700;
   color: var(--primary); white-space: nowrap;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-heading);
 }
 
 .intro-slide-header {
@@ -344,19 +341,19 @@
 
 .intro-slide-num {
   width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), #00a0a0);
-  color: #fff; font-size: 0.85rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: var(--text-inverse); font-size: 0.85rem; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Nunito', sans-serif; flex-shrink: 0;
+  font-family: var(--font-heading); flex-shrink: 0;
 }
 
 .intro-slide-title {
   font-size: 1.15rem; font-weight: 900;
-  color: #1f2937; font-family: 'Nunito', sans-serif; margin: 0;
+  color: var(--text-heading); font-family: var(--font-heading); margin: 0;
 }
 
 .intro-slide-explanation {
-  font-size: 0.92rem; color: #4b5563;
+  font-size: 0.92rem; color: var(--text-body);
   line-height: 1.8; margin: 0;
 }
 
@@ -373,7 +370,7 @@
   border: 1.5px solid rgba(0, 128, 128,0.2);
   background: transparent; color: var(--primary);
   font-size: 0.88rem; font-weight: 700; cursor: pointer;
-  font-family: 'Nunito', sans-serif; transition: all 0.2s;
+  font-family: var(--font-heading); transition: all 0.2s;
 }
 .intro-btn-back:hover:not(:disabled) { background: rgba(0, 128, 128,0.06); }
 .intro-btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -381,17 +378,17 @@
 .intro-btn-next {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 20px; border-radius: 10px;
-  background: var(--primary); color: #fff; border: none;
+  background: var(--primary); color: var(--text-inverse); border: none;
   font-size: 0.88rem; font-weight: 700; cursor: pointer;
-  font-family: 'Nunito', sans-serif; transition: all 0.2s;
+  font-family: var(--font-heading); transition: all 0.2s;
   box-shadow: 0 4px 14px rgba(0, 128, 128,0.3);
 }
 .intro-btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 128, 128,0.4); }
 
 .adv-out-line { display: block; }
-.adv-out-line.cmd { color: #a5f3fc; }
-.adv-out-line.in  { color: #94a3b8; }
-.adv-out-line.err { color: #f87171; }
+.adv-out-line.cmd { color: var(--code-text-cmd); }
+.adv-out-line.in  { color: var(--slate-text); }
+.adv-out-line.err { color: var(--red-light); }
 
 /* ── Skulpt Input Overlay ── */
 #skInputOverlay {
@@ -405,7 +402,7 @@
 }
 
 #skInputOverlay .sk-input-card {
-  background: #008080;
+  background: var(--primary);
   border: 1px solid rgba(108, 99, 255, 0.4);
   border-radius: 12px;
   padding: 24px;
@@ -414,7 +411,7 @@
 }
 
 #skInputPromptText {
-  color: #e8e8ff;
+  color: var(--light-purple-text);
   font-size: 0.9rem;
   margin-bottom: 12px;
   font-family: monospace;
@@ -422,11 +419,11 @@
 
 #skInputField {
   width: 100%;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid rgba(108, 99, 255, 0.3);
   border-radius: 8px;
   padding: 8px 12px;
-  color: #008080;
+  color: var(--primary);
   font-size: 0.9rem;
   outline: none;
 }
@@ -436,10 +433,75 @@
   width: fit-content;
   padding: 8px 24px;
   background: var(--gradient1);
-  border: 1px solid #fff;
+  border: 1px solid var(--text-inverse);
   border-radius: 8px;
-  color: white;
+  color: var(--text-inverse);
   font-weight: 700;
   cursor: pointer;
   display: block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .intro-left { padding: 28px 24px; }
+  .intro-right { padding: 28px 24px; }
+  .intro-slide-title { font-size: 1.05rem; }
+  .intro-content { max-width: 480px; }
+}
+@media (max-width: 768px) {
+  .intro-layout { grid-template-columns: 1fr; }
+  .intro-left { padding: 24px 20px; border-right: none; border-bottom: 1.5px solid rgba(0, 128, 128,0.1); }
+  .intro-right { padding: 24px 20px; }
+  .intro-content { max-width: 100%; }
+  .intro-slide-title { font-size: 1rem; }
+  .intro-slide-explanation { font-size: 0.88rem; }
+  .intro-code-body pre { font-size: 0.8rem; }
+  .intro-code-body { padding: 16px; }
+  .intro-nav { flex-wrap: wrap; gap: 8px; }
+  .intro-btn-back, .intro-btn-next { flex: 1; justify-content: center; min-width: 0; padding: 10px 14px; font-size: 0.82rem; }
+  .intro-complete-btn { font-size: 0.85rem; padding: 10px 16px; }
+
+  /* ── Node topbar responsive ── */
+  .node-topbar { padding: 0 16px; gap: 10px; }
+  .node-topbar-center { font-size: 0.8rem; min-width: 0; overflow: hidden; }
+  .node-lesson-label { display: none; }
+  .node-breadcrumb-sep { display: none; }
+  .node-type-pill { font-size: 0.72rem; padding: 4px 10px; gap: 4px; }
+  .node-back-btn { font-size: 0.8rem; gap: 6px; }
+}
+@media (max-width: 480px) {
+  .intro-left { padding: 20px 14px; }
+  .intro-right { padding: 20px 14px; }
+  .intro-slide-title { font-size: 0.92rem; }
+  .intro-slide-explanation { font-size: 0.84rem; line-height: 1.6; }
+  .intro-progress-wrap { margin-bottom: 16px; }
+  .intro-progress-label { font-size: 0.75rem; }
+  .intro-nav { flex-direction: column; }
+  .intro-btn-back, .intro-btn-next { width: 100%; padding: 10px 12px; font-size: 0.8rem; }
+  .intro-complete-btn { width: 100%; }
+  .intro-slide-num { width: 26px; height: 26px; font-size: 0.75rem; }
+  .intro-code-body { padding: 12px; }
+  .intro-code-body pre { font-size: 0.75rem; }
+  .intro-code-bar { padding: 8px 12px; flex-wrap: wrap; }
+  .intro-code-filename { font-size: 0.75rem; }
+  .intro-code-badge { font-size: 0.65rem; }
+
+  /* ── Skulpt overlay responsive ── */
+  #skInputOverlay .sk-input-card {
+    padding: 16px;
+    min-width: auto;
+    max-width: 90vw;
+    margin: 0 12px;
+  }
+  #skInputPromptText { font-size: 0.82rem; }
+  #skInputField { font-size: 0.82rem; padding: 8px 10px; }
+  #skInputSubmit { padding: 8px 20px; font-size: 0.85rem; }
+
+  /* ── Node topbar responsive ── */
+  .node-topbar { padding: 0 12px; gap: 6px; }
+  .node-topbar-center { font-size: 0.75rem; }
+  .node-section-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+  .node-type-pill { font-size: 0.65rem; padding: 3px 8px; }
+  .node-type-pill i { display: none; }
+  .node-back-btn { font-size: 0.78rem; }
 }

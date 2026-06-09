@@ -90,7 +90,7 @@
           </svg>
           <span class="countdown-num" id="countdownNum">3</span>
         </div>
-        <p class="compete-countdown-sub"><i class="fas fa-rocket" style="color:var(--purple)"></i> Get ready to code!</p>
+        <p class="compete-countdown-sub"><i class="fas fa-rocket" style="color:var(--primary)"></i> Get ready to code!</p>
       </div>
     </div>
 
@@ -123,10 +123,10 @@
             <span class="compete-tests-val" id="youTestsVal">In Progress</span>
           </div>
           <div class="compete-tests-bar">
-            <div class="compete-tests-fill you-fill" id="youTestsFill" style="width:0%"></div>
+            <div class="compete-tests-fill you-fill" id="youTestsFill"></div>
           </div>
           <textarea id="battleEditor" class="battle-editor" placeholder="# Write your solution here..."></textarea>
-          <button class="app-run-btn" id="battleRunBtn" style="margin-top:8px;">
+          <button class="app-run-btn" id="battleRunBtn">
             <i class="fas fa-play"></i> Run & Test
           </button>
           <!-- output panel -->
@@ -157,10 +157,10 @@
             <span class="compete-tests-val" id="oppTestsVal">In Progress</span>
           </div>
           <div class="compete-tests-bar">
-            <div class="compete-tests-fill opp-fill" id="oppTestsFill" style="width:0%"></div>
+            <div class="compete-tests-fill opp-fill" id="oppTestsFill"></div>
           </div>
           <div class="compete-opp-code" id="oppCodeView">
-            <span style="color:#6b7280;font-size:0.82rem;font-family:monospace;">Waiting for opponent...</span>
+            <span>Waiting for opponent...</span>
           </div>
         </div>
       </div>
@@ -193,8 +193,8 @@
   <!-- RIGHT: EVA panel -->
   <div class="comp-right">
     <div class="compete-eva-header">
-      <div class="compete-eva-avatar-circle">
-        <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA" style="width:100%;height:100%;border-radius:50%"/>
+      <div>
+        <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA" class="compete-eva-avatar-circle"/>
       </div>
       <div class="compete-eva-header-info">
         <h3 class="compete-eva-title">EVA is watching</h3>
@@ -211,7 +211,7 @@
     </div>
 
     <!-- Hint button (shown during battle) -->
-    <div id="hintSection" style="display:none;padding:0 16px;">
+    <div id="hintSection" class="hint-section">
       <button class="compete-hint-btn" id="hintBtn">
         <i class="fas fa-lightbulb"></i> Need a Hint?
       </button>

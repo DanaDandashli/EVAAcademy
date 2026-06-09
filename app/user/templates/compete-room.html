@@ -16,7 +16,7 @@
       <i class="fas fa-arrow-left"></i> Back
     </a>
     <div class="cr-topbar-center">
-      <i class="fas fa-swords" style="color:var(--purple)"></i>
+      <i class="fas fa-swords" style="color:var(--primary)"></i>
       <span>1v1 Compete Arena</span>
     </div>
     <div class="cr-topbar-right">
@@ -96,7 +96,7 @@
           <span class="cr-countdown-num" id="crCountdownNum">3</span>
         </div>
         <p class="cr-countdown-sub">
-          <i class="fas fa-rocket" style="color:var(--purple)"></i> Get ready to code!
+          <i class="fas fa-rocket" style="color:var(--primary)"></i> Get ready to code!
         </p>
       </div>
     </div>
@@ -106,7 +106,7 @@
 
       <!-- Timer -->
       <div class="cr-timer-bar">
-        <i class="fas fa-clock" style="color:var(--purple)"></i>
+        <i class="fas fa-clock" style="color:var(--primary)"></i>
         <div class="cr-timer-track">
           <div class="cr-timer-fill" id="crTimerFill"></div>
         </div>
@@ -164,7 +164,7 @@
               <span id="crOutputStatus" class="cr-output-status"></span>
             </div>
             <div class="cr-output-body" id="crOutputBody">
-              <span style="color:#6b7280;font-size:0.82rem;">Run your code to see output...</span>
+              <span>Run your code to see output...</span>
             </div>
           </div>
 
@@ -178,7 +178,7 @@
               <span id="crYouTests">Pending</span>
             </div>
             <div class="cr-tests-bar">
-              <div class="cr-tests-fill you-fill" id="crYouTestsFill" style="width:0%"></div>
+              <div class="cr-tests-fill you-fill" id="crYouTestsFill"></div>
             </div>
           </div>
         </div>
@@ -191,7 +191,7 @@
             <p class="cr-eva-label">EVA watching</p>
           </div>
           <div class="cr-commentary" id="crCommentary">
-            <p style="font-size:0.78rem;color:#9ca3af;text-align:center;">Battle starting...</p>
+            <p>Battle starting...</p>
           </div>
         </div>
 
@@ -215,11 +215,11 @@
             <span id="crOppTests">Pending</span>
           </div>
           <div class="cr-tests-bar">
-            <div class="cr-tests-fill opp-fill" id="crOppTestsFill" style="width:0%"></div>
+            <div class="cr-tests-fill opp-fill" id="crOppTestsFill"></div>
           </div>
 
           <div class="cr-opp-code" id="crOppCode">
-            <span style="color:#6b7280;font-size:0.82rem;font-family:monospace;">
+            <span>
               Opponent is typing...
             </span>
           </div>
@@ -250,8 +250,8 @@
             </div>
             <span class="cr-result-name">{{ user.username }} <span class="you-badge">YOU</span></span>
             <span class="cr-result-tests" id="crYouResultTests">Pending</span>
-            <div class="cr-tests-bar" style="width:100%">
-              <div class="cr-tests-fill you-fill" id="crYouResultFill" style="width:0%"></div>
+            <div class="cr-tests-bar">
+              <div class="cr-tests-fill you-fill" id="crYouResultFill"></div>
             </div>
             <span class="cr-result-xp" id="crYouXP">+10 XP</span>
           </div>
@@ -265,7 +265,7 @@
             <span class="cr-result-name" id="crOppResultName">Opponent</span>
             <span class="cr-result-tests" id="crOppResultTests">Pending</span>
             <div class="cr-tests-bar" style="width:100%">
-              <div class="cr-tests-fill opp-fill" id="crOppResultFill" style="width:0%"></div>
+              <div class="cr-tests-fill opp-fill" id="crOppResultFill"></div>
             </div>
             <span class="cr-result-xp" id="crOppXP">+10 XP</span>
           </div>
@@ -293,7 +293,7 @@
 <div id="crSolutionModal" class="compete-solution-modal">
   <div class="solution-modal-content">
     <button onclick="const m=document.getElementById('crSolutionModal');m.classList.add('hidden');m.style.display='none';" class="close-solution-modal"><i class="fas fa-times"></i></button>
-    <h3 class="solution-modal-title"><i class="fas fa-graduation-cap" style="color:var(--purple,#6c63ff)"></i> EVA Solution Review</h3>
+    <h3 class="solution-modal-title"><i class="fas fa-graduation-cap" style="color:var(--primary,#6c63ff)"></i> EVA Solution Review</h3>
     <div id="crSolutionContent" class="solution-loading"></div>
   </div>
 </div>
