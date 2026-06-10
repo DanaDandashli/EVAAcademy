@@ -1,163 +1,204 @@
 {% extends "base.html" %}
 {% load static %}
 
-{%block title%}For Teens - EVA Academy {%endblock%}
+{% block title %}Teen Track — EVA Academy{% endblock %}
 
-{%block content%}
-  <!-- HERO BANNER -->
-  <section class="ch-hero">
-    <div class="ch-hero-inner">
-      <h1 class="ch-hero-title" data-aos="fade-up">Learning for Teenagers</h1>
-      <p class="ch-hero-sub" data-aos="fade-up" data-aos-delay="100">Build real projects and gain skills for future tech careers (ages 13-18)</p>
+{% block content %}
+
+<!-- HERO -->
+<section class="ch-hero">
+  <div class="ch-hero-inner">
+    <div class="ch-hero-badge" data-aos="fade-up">
+      <i class="fas fa-rocket"></i> Ages 13-18
     </div>
-  </section>
-
-  <!-- GAMES & CHALLENGES -->
-  <section class="ch-games" id="games">
-    <div class="ch-section-container">
-      <div class="ch-section-head" data-aos="fade-up">
-        <h2 class="ch-section-title">Available Games &amp; Challenges</h2>
-        <p class="ch-section-sub">Progress from beginner to advanced levels at your own pace</p>
-      </div>
-      <div class="ch-games-grid">
-
-        <div class="ch-game-card" data-aos="fade-up" data-aos-delay="100">
-          <div class="ch-game-card-top">
-            <div class="ch-game-icon pink"><i class="fas fa-gamepad"></i></div>
-            <span class="ch-badge beginner">Beginner</span>
-          </div>
-          <h3 class="ch-game-name">Game Dev Studio</h3>
-          <p class="ch-game-desc">Create your first 2D game with Python and game physics</p>
-          <div class="ch-game-footer">
-            <span class="ch-interactive"><i class="fas fa-check-circle"></i> Interactive Lessons</span>
-            <a href="#" class="ch-start-link" data-action="trial">Start Game <i class="fas fa-chevron-right"></i></a>
-          </div>
-        </div>
-
-        <div class="ch-game-card" data-aos="fade-up" data-aos-delay="150">
-          <div class="ch-game-card-top">
-            <div class="ch-game-icon primary"><i class="fa-solid fa-code"></i></div>
-            <span class="ch-badge intermediate">Intermediate</span>
-          </div>
-          <h3 class="ch-game-name">Web Scraper Quest</h3>
-          <p class="ch-game-desc">Extract data from the web and build cool projects</p>
-          <div class="ch-game-footer">
-            <span class="ch-interactive"><i class="fas fa-check-circle"></i> Interactive Lessons</span>
-            <a href="#" class="ch-start-link" data-action="trial">Start Game <i class="fas fa-chevron-right"></i></a>
-          </div>
-        </div>
-
-        <div class="ch-game-card" data-aos="fade-up" data-aos-delay="200">
-          <div class="ch-game-card-top">
-            <div class="ch-game-icon pink"><i class="fa-brands fa-codepen"></i></div>
-            <span class="ch-badge intermediate">Intermediate</span>
-          </div>
-          <h3 class="ch-game-name">AI Playground</h3>
-          <p class="ch-game-desc">Train machine learning models and create smart programs
-          </p>
-          <div class="ch-game-footer">
-            <span class="ch-interactive"><i class="fas fa-check-circle"></i> Interactive Lessons</span>
-            <a href="#" class="ch-start-link" data-action="trial">Start Game <i class="fas fa-chevron-right"></i></a>
-          </div>
-        </div>
-
-        <div class="ch-game-card" data-aos="fade-up" data-aos-delay="250">
-          <div class="ch-game-card-top">
-            <div class="ch-game-icon primary"><i class="fa-solid fa-trophy"></i></div>
-            <span class="ch-badge advanced">Advanced</span>
-          </div>
-          <h3 class="ch-game-name">Hackathon Challenge</h3>
-          <p class="ch-game-desc">Compete in coding challenges and build real-world apps  </p>
-          <div class="ch-game-footer">
-            <span class="ch-interactive"><i class="fas fa-check-circle"></i> Interactive Lessons</span>
-            <a href="#" class="ch-start-link" data-action="trial">Start Game <i class="fas fa-chevron-right"></i></a>
-          </div>
-        </div>
-
-      </div>
+    <h1 class="ch-hero-title" data-aos="fade-up">Teen Developer Academy</h1>
+    <p class="ch-hero-sub" data-aos="fade-up" data-aos-delay="100">
+      Build real Python skills through progressive challenges, competitive coding battles, and a personal project portfolio that proves what you can do
+    </p>
+    <div class="ch-curriculum-badges" data-aos="fade-up" data-aos-delay="150">
+      <span class="curriculum-badge intermediate"><i class="fas fa-swords"></i> Competitive</span>
+      <span class="curriculum-badge intermediate"><i class="fas fa-brain"></i> Challenging</span>
+      <span class="curriculum-badge intermediate"><i class="fas fa-folder-open"></i> Portfolio</span>
+      <span class="curriculum-badge intermediate"><i class="fas fa-ranking-star"></i> Leaderboard</span>
     </div>
-  </section>
+    <a href="{% url 'login' %}" class="ch-hero-btn" data-aos="fade-up" data-aos-delay="200">
+      <i class="fas fa-play"></i> Start Building
+    </a>
+  </div>
+</section>
 
-  <!-- LEARNING JOURNEY -->
-  <section class="ch-journey" id="journey">
-    <div class="ch-section-container">
-      <div class="ch-section-head" data-aos="fade-up">
-        <h2 class="ch-section-title">Your Learning Journey</h2>
-        <p class="ch-section-sub">Track your progress as you advance through levels</p>
+<!-- 4 LEARNING NODES -->
+<section class="ch-games" id="nodes">
+  <div class="ch-section-container">
+    <div class="ch-section-head" data-aos="fade-up">
+      <div class="accent-bar"></div>
+      <h2 class="ch-section-title">Four Nodes. One Mastered Lesson.</h2>
+      <p class="ch-section-sub">Every lesson is structured as 4 interconnected nodes — complete all 4 to unlock the next lesson and earn your certificate</p>
+    </div>
+    <div class="ch-games-grid ch-games-grid--4">
+      <div class="ch-game-card ch-game-card--teen" data-aos="fade-up" data-aos-delay="100">
+        <div class="ch-game-card-top">
+          <div class="ch-game-icon pink"><i class="fas fa-book-open"></i></div>
+          <span class="ch-badge beginner">Node 1</span>
+        </div>
+        <h3 class="ch-game-name">Introduction</h3>
+        <p class="ch-game-desc">Deep-dive into concepts with real, runnable Python examples. Generated slides adapt to your progress and learning pace</p>
+        <div class="ch-game-footer">
+          <span class="ch-interactive"><i class="fas fa-check-circle"></i> Runnnable Examples</span>
+          <a href="{% url 'login' %}" class="ch-start-link">Explore <i class="fas fa-chevron-right"></i></a>
+        </div>
       </div>
-
-      <div class="ch-journey-list" id="journeyList">
-
-        <div class="ch-journey-item" data-step="1">
-          <div class="ch-step-col">
-            <div class="ch-step-circle" data-index="0">1</div>
-            <div class="ch-step-line"></div>
-          </div>
-          <div class="ch-step-card" data-aos="fade-up" data-aos-delay="100">
-            <h3 class="ch-step-title">Beginner Level</h3>
-            <p class="ch-step-desc">Start with visual blocks and basic concepts</p>
-            <div class="ch-step-meta">
-              <i class="fas fa-trophy ch-trophy"></i>
-              <span>20 challenges</span>
-            </div>
-          </div>
+      <div class="ch-game-card ch-game-card--teen" data-aos="fade-up" data-aos-delay="150">
+        <div class="ch-game-card-top">
+          <div class="ch-game-icon primary"><i class="fas fa-code"></i></div>
+          <span class="ch-badge intermediate">Node 2</span>
         </div>
-
-        <div class="ch-journey-item" data-step="2">
-          <div class="ch-step-col">
-            <div class="ch-step-circle" data-index="1">2</div>
-            <div class="ch-step-line"></div>
-          </div>
-          <div class="ch-step-card" data-aos="fade-up" data-aos-delay="150">
-            <h3 class="ch-step-title">Intermediate Level</h3>
-            <p class="ch-step-desc">Write real Python code with guidance</p>
-            <div class="ch-step-meta">
-              <i class="fas fa-trophy ch-trophy"></i>
-              <span>30 challenges</span>
-            </div>
-          </div>
+        <h3 class="ch-game-name">Application</h3>
+        <p class="ch-game-desc">Write real programs from scratch. EVA uses the Socratic method — asking questions, giving hints, never writing your code</p>
+        <div class="ch-game-footer">
+          <span class="ch-interactive"><i class="fas fa-check-circle"></i> Adaptive Difficulty</span>
+          <a href="{% url 'login' %}" class="ch-start-link">Explore <i class="fas fa-chevron-right"></i></a>
         </div>
-
-        <div class="ch-journey-item" data-step="3">
-          <div class="ch-step-col">
-            <div class="ch-step-circle" data-index="2">3</div>
-            <div class="ch-step-line"></div>
-          </div>
-          <div class="ch-step-card" data-aos="fade-up" data-aos-delay="200">
-            <h3 class="ch-step-title">Advanced Level</h3>
-            <p class="ch-step-desc">Build complex projects independently</p>
-            <div class="ch-step-meta">
-              <i class="fas fa-trophy ch-trophy"></i>
-              <span>25 challenges</span>
-            </div>
-          </div>
+      </div>
+      <div class="ch-game-card ch-game-card--teen" data-aos="fade-up" data-aos-delay="200">
+        <div class="ch-game-card-top">
+          <div class="ch-game-icon pink"><i class="fas fa-trophy"></i></div>
+          <span class="ch-badge intermediate">Node 3</span>
         </div>
-
-        <div class="ch-journey-item" data-step="4">
-          <div class="ch-step-col">
-            <div class="ch-step-circle" data-index="3">4</div>
-            <!-- no line on last -->
-          </div>
-          <div class="ch-step-card" data-aos="fade-up" data-aos-delay="250">
-            <h3 class="ch-step-title">Expert Level</h3>
-            <p class="ch-step-desc">Master advanced techniques and patterns</p>
-            <div class="ch-step-meta">
-              <i class="fas fa-trophy ch-trophy"></i>
-              <span>15 challenges</span>
-            </div>
-          </div>
+        <h3 class="ch-game-name">Competition</h3>
+        <p class="ch-game-desc">Go head-to-head against EVA in a timed coding duel. Finish first to earn bonus XP and climb the leaderboard</p>
+        <div class="ch-game-footer">
+          <span class="ch-interactive"><i class="fas fa-check-circle"></i> Timed Duel</span>
+          <a href="{% url 'login' %}" class="ch-start-link">Explore <i class="fas fa-chevron-right"></i></a>
         </div>
-
+      </div>
+      <div class="ch-game-card ch-game-card--teen" data-aos="fade-up" data-aos-delay="250">
+        <div class="ch-game-card-top">
+          <div class="ch-game-icon primary"><i class="fas fa-clipboard-check"></i></div>
+          <span class="ch-badge advanced">Node 4</span>
+        </div>
+        <h3 class="ch-game-name">Test</h3>
+        <p class="ch-game-desc">A comprehensive 5-question assessment covering the full lesson. Pass to unlock the next lesson and earn your certificate</p>
+        <div class="ch-game-footer">
+          <span class="ch-interactive"><i class="fas fa-check-circle"></i> Scored Assessment</span>
+          <a href="{% url 'login' %}" class="ch-start-link">Explore <i class="fas fa-chevron-right"></i></a>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- CTA -->
-  <section class="ch-cta" id="ch-cta">
-    <div class="ch-cta-inner" data-aos="fade-up">
-      <h2 class="ch-cta-title">Ready to Begin?</h2>
-      <p class="ch-cta-sub">Start your Python journey today with our interactive games</p>
-      <a href="{% url 'login' %}" class="ch-cta-btn" >Start Learning Now</a>
+<!-- PLATFORM FEATURES -->
+<section class="why-section" id="features" style="background:var(--bg-section)">
+  <div class="section-container">
+    <div class="accent-bar"></div>
+    <h2 class="section-title" data-aos="fade-up">The Full Platform Experience</h2>
+    <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">
+      Beyond lessons — EVA Academy has a complete set of features designed to keep you engaged and growing
+    </p>
+    <div class="features-grid">
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+        <div class="feature-icon-wrap f-icon-pink"><i class="fas fa-swords"></i></div>
+        <h3>1v1 Compete Room</h3>
+        <p>Challenge EVA to a live coding duel on any completed topic. Win to gain ELO rating, bonus XP, and leaderboard position.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+        <div class="feature-icon-wrap f-icon-gold"><i class="fas fa-folder-open"></i></div>
+        <h3>Mini Projects Portfolio</h3>
+        <p>EVA generates a personalized coding project based on your completed lessons. Build it, get EVA's review, and publish to your portfolio.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+        <div class="feature-icon-wrap f-icon-blue"><i class="fas fa-chart-line"></i></div>
+        <h3>XP & Leaderboard</h3>
+        <p>Earn XP for every completed node, track your level progression, and compete with other students on the age-group leaderboard.</p>
+      </div>
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+        <div class="feature-icon-wrap f-icon-green"><i class="fas fa-certificate"></i></div>
+        <h3>Lesson Certificates</h3>
+        <p>Complete a full lesson to earn a downloadable PDF certificate — listing your name, lesson title, topics mastered, and level achieved.</p>
+      </div>
     </div>
-  </section>
-{%endblock%}
+  </div>
+</section>
+
+<!-- CURRICULUM -->
+<section class="ch-journey" id="curriculum">
+  <div class="ch-section-container">
+    <div class="ch-section-head" data-aos="fade-up">
+      <div class="accent-bar"></div>
+      <h2 class="ch-section-title">Your Learning Path</h2>
+      <p class="ch-section-sub">A structured Python curriculum progressing from fundamentals to advanced concepts</p>
+    </div>
+    <div class="ch-journey-list">
+      <div class="ch-journey-item" data-step="1">
+        <div class="ch-step-col">
+          <div class="ch-step-circle" data-index="0"><i class="fas fa-play"></i></div>
+          <div class="ch-step-line"></div>
+        </div>
+        <div class="ch-step-card" data-aos="fade-up" data-aos-delay="100">
+          <h3 class="ch-step-title">The Basics</h3>
+          <p class="ch-step-desc">Master variables, data types, arithmetic, string manipulation, and type casting — the foundation of every Python program</p>
+          <div class="ch-step-meta">
+            <i class="fas fa-tag ch-trophy"></i>
+            <span>print, input, variables, data types, format(), arithmetic operators</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-journey-item" data-step="2">
+        <div class="ch-step-col">
+          <div class="ch-step-circle" data-index="1"><i class="fas fa-code-branch"></i></div>
+          <div class="ch-step-line"></div>
+        </div>
+        <div class="ch-step-card" data-aos="fade-up" data-aos-delay="150">
+          <h3 class="ch-step-title">Control Flow</h3>
+          <p class="ch-step-desc">Add intelligence to your programs — conditional logic, comparisons, and nested decision trees</p>
+          <div class="ch-step-meta">
+            <i class="fas fa-tag ch-trophy"></i>
+            <span>if, elif, else, comparison operators, logical operators, truthy/falsy</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-journey-item" data-step="3">
+        <div class="ch-step-col">
+          <div class="ch-step-circle" data-index="2"><i class="fas fa-cube"></i></div>
+          <div class="ch-step-line"></div>
+        </div>
+        <div class="ch-step-card" data-aos="fade-up" data-aos-delay="200">
+          <h3 class="ch-step-title">Functions</h3>
+          <p class="ch-step-desc">Write reusable, modular code. Learn to define functions, pass parameters, return values, and document your work professionally</p>
+          <div class="ch-step-meta">
+            <i class="fas fa-tag ch-trophy"></i>
+            <span>def, parameters, return, scope, default parameters, docstrings</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-journey-item" data-step="4">
+        <div class="ch-step-col">
+          <div class="ch-step-circle" data-index="3"><i class="fas fa-rotate"></i></div>
+        </div>
+        <div class="ch-step-card" data-aos="fade-up" data-aos-delay="250">
+          <h3 class="ch-step-title">Loops & Beyond</h3>
+          <p class="ch-step-desc">Automate repetitive tasks, iterate over data, and build programs that scale — unlocking the real power of Python</p>
+          <div class="ch-step-meta">
+            <i class="fas fa-tag ch-trophy"></i>
+            <span>for, while, range, break, continue, enumerate, nested loops</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="ch-cta" id="ch-cta">
+  <div class="ch-cta-inner" data-aos="fade-up">
+    <i class="fas fa-star ch-cta-icon"></i>
+    <h2 class="ch-cta-title">Ready to Level Up?</h2>
+    <p class="ch-cta-sub">Sign in and start building real Python skills with EVA</p>
+    <a href="{% url 'login' %}" class="ch-cta-btn">
+      <i class="fas fa-sign-in-alt"></i> Sign In & Start Learning
+    </a>
+  </div>
+</section>
+
+{% endblock %}

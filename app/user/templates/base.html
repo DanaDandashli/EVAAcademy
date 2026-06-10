@@ -18,7 +18,7 @@
     <div class="nav-container">
       <a href="{% url 'index' %}" class="logo">
         <div class="logo-icon"><i class="fas fa-code"></i></div>
-        <span>EVA Academy</span>
+        <span class="logo-text">EVA Academy</span>
       </a>
 
       <ul class="nav-links" id="navLinks">
@@ -67,7 +67,11 @@
           <div class="logo-icon"><i class="fas fa-code"></i></div>
           <span>EVA Academy</span>
         </div>
-        <p>Learn Python through interactive nodes and challenges.</p>
+        <p>AI-powered Python learning for every age — built for curiosity, designed for mastery.</p>
+        <div class="footer-badges">
+          <span class="footer-badge"><i class="fas fa-robot"></i> AI Tutor</span>
+          <span class="footer-badge"><i class="fas fa-shield-alt"></i> Safe for Kids</span>
+        </div>
       </div>
       <div class="footer-col">
         <h4>Programs</h4>
@@ -78,14 +82,25 @@
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
+        <h4>Learn</h4>
         <ul>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Blog</a></li>
+          <li><a href="{% url 'index' %}#how">How It Works</a></li>
+          <li><a href="{% url 'login' %}">Sign In</a></li>
+          {% comment %} {% if not request.user.is_authenticated %}
+          <li><a href="{% url 'register' %}">Create Account</a></li>
+          {% endif %} {% endcomment %}
         </ul>
       </div>
       <div class="footer-col">
+        <h4>Features</h4>
+        <ul>
+          <li>AI Tutor</li>
+          <li>Compete Arena</li>
+          <li>Certificates</li>
+          <li>Portfolio</li>
+        </ul>
+      </div>
+      {% comment %} <div class="footer-col">
         <h4>Account</h4>
         <ul>
           {% if request.user.is_authenticated %}
@@ -93,11 +108,9 @@
             <li><a href="{% url 'logout' %}">Sign Out</a></li>
           {% else %}
             <li><a href="{% url 'login' %}">Sign In</a></li>
-            {% comment %} <li><a href="{% url 'register' %}">Create Account</a></li> {% endcomment %}
           {% endif %}
-          <li><a href="#">Privacy Policy</a></li>
         </ul>
-      </div>
+      </div> {% endcomment %}
     </div>
     <div class="footer-bottom">
       <p>&copy; 2026 EVA Academy. All rights reserved.</p>
