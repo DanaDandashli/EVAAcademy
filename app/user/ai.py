@@ -521,8 +521,9 @@ def generate_next_test_question(lesson_title, question_number, weak_areas=None, 
     level = student_context.get('level', 1)
 
     # Assign one specific topic per question
-    current_topic = lesson_topics[(
-        question_number - 1) % len(lesson_topics)] if lesson_topics else lesson_title
+    topics_to_use = taught_concepts if taught_concepts else lesson_topics
+    current_topic = topics_to_use[(question_number - 1) %
+                              len(topics_to_use)] if topics_to_use else lesson_title
 
     prev_q_titles = ', '.join([q.get('instruction', '')[
                               :50] for q in previous_questions]) if previous_questions else 'none'
