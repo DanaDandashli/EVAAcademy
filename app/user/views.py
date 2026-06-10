@@ -635,11 +635,13 @@ def IntroductionView(request, section_id):
         id=section_id, node_type='introduction').first()
     if not _check_section_access(request.user, section):
         return redirect('dashboard')
-    slides = list(section.slides.all().order_by('order'))
+
+    user = request.user
+    slides = list(section.slides.filter(
+        age_group=user.age_group).order_by('order'))
 
     # ── Generate slides if none exist ──
     if not slides:
-        user = request.user
         completed_lessons = get_completed_lessons(
             user, exclude_lesson=section.lesson)
         student_context = get_student_context(user)
@@ -663,13 +665,15 @@ def IntroductionView(request, section_id):
 
             Slide.objects.create(
                 section=section,
+                age_group=user.age_group,
                 order=slide_data.get('order', 1),
                 title=slide_data.get('title', ''),
                 explanation=slide_data.get('explanation', ''),
                 code=code,
             )
 
-        slides = list(section.slides.all().order_by('order'))
+        slides = list(section.slides.filter(
+            age_group=user.age_group).order_by('order'))  # ← fixed
 
     context = {
         'section':      section,

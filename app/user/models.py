@@ -153,6 +153,7 @@ class Slide(models.Model):
         on_delete=models.CASCADE,
         related_name='slides'
     )
+    age_group = models.CharField(max_length=10, blank=True, default='')
     order = models.IntegerField()
     title = models.CharField(max_length=200)
     explanation = models.TextField()
