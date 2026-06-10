@@ -43,10 +43,10 @@
               {% if user.avatar %}
                 <img src="{{ user.avatar.image.url }}" alt="You"/>
               {% else %}
-                <div class="cr-player-initial">{{ user.username|first|upper }}</div>
+                <div class="cr-player-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
               {% endif %}
             </div>
-            <span class="cr-player-name">{{ user.username }}</span>
+            <span class="cr-player-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span>
             <span class="cr-player-meta">Lv.{{ profile.level }} · {{ user.age_group|capfirst }}</span>
             <span class="cr-online-dot"></span>
           </div>
@@ -123,11 +123,11 @@
               {% if user.avatar %}
                 <img src="{{ user.avatar.image.url }}" alt="You"/>
               {% else %}
-                <div class="cr-coder-initial">{{ user.username|first|upper }}</div>
+                <div class="cr-coder-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
               {% endif %}
             </div>
             <div class="cr-coder-info">
-              <span class="cr-coder-name">{{ user.username }} <span class="you-badge">YOU</span></span>
+              <span class="cr-coder-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}<span class="you-badge">YOU</span></span>
               <span class="cr-coder-meta">Lv.{{ profile.level }}</span>
             </div>
             <span class="cr-status-pill coding" id="youStatus">
@@ -245,10 +245,10 @@
               {% if user.avatar %}
                 <img src="{{ user.avatar.image.url }}" alt="You"/>
               {% else %}
-                <div class="cr-coder-initial">{{ user.username|first|upper }}</div>
+                <div class="cr-coder-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
               {% endif %}
             </div>
-            <span class="cr-result-name">{{ user.username }} <span class="you-badge">YOU</span></span>
+            <span class="cr-result-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}<span class="you-badge">YOU</span></span>
             <span class="cr-result-tests" id="crYouResultTests">Pending</span>
             <div class="cr-tests-bar">
               <div class="cr-tests-fill you-fill" id="crYouResultFill"></div>

@@ -26,11 +26,21 @@
       <div class="test-rule"><i class="fas fa-user"></i> Solo</div>
     </div>
 
+    <!-- Steps panel -->
+    <div class="app-steps-panel" id="stepsPanel">
+      <div class="app-steps-list" id="stepsList"></div>
+    </div>
+
     <!-- Task -->
     <div class="test-task-card" id="testTaskCard">
-      <h2>Question 1</h2>
-      {% if questions %}
-      <p>{{ questions.0.instruction }}</p>
+      {% if already_completed %}
+        <h2 style="color:#10b981"><i class="fas fa-check-circle"></i> Test Completed!</h2>
+        <p>You have successfully completed this test. All questions are done.</p>
+      {% else %}
+        <h2>Question 1</h2>
+        {% if questions %}
+        <p>{{ questions.0.instruction }}</p>
+        {% endif %}
       {% endif %}
     </div>
 
@@ -98,6 +108,8 @@
   const SECTION_ID      = {{ section_id }};
   const QUESTIONS       = {{ questions_json|safe }};
   const TOTAL_QUESTIONS = {{ total_questions }};
+  const PASSED_COUNT       = {{ passed_count }};
+  const ALREADY_COMPLETED  = {{ already_completed|yesno:"true,false" }};
 </script>
 <script src="{% static 'js/test.js' %}"></script>
 {% endblock %}

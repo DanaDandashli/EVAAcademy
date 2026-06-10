@@ -49,10 +49,10 @@
             {% if user.avatar %}
               <img src="{{ user.avatar.image.url }}" class="compete-player-avatar" alt="You"/>
             {% else %}
-              <div class="compete-player-initial">{{ user.username|first|upper }}</div>
+              <div class="compete-player-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
             {% endif %}
           </div>
-          <div class="compete-player-name">{{ user.username }}</div>
+          <div class="compete-player-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</div>
           <div class="compete-player-meta">Lv.{{ profile.level }}</div>
           <span class="compete-online-dot"></span>
         </div>
@@ -110,10 +110,10 @@
             {% if user.avatar %}
               <img src="{{ user.avatar.image.url }}" class="compete-coder-avatar" alt="You"/>
             {% else %}
-              <div class="compete-coder-initial">{{ user.username|first|upper }}</div>
+              <div class="compete-coder-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
             {% endif %}
             <div class="compete-coder-info">
-              <span class="compete-coder-name">{{ user.username }} <span class="you-badge">YOU</span></span>
+              <span class="compete-coder-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}<span class="you-badge">YOU</span></span>
               <span class="compete-coder-meta">Lv.{{ profile.level }}</span>
             </div>
             <span class="compete-status-pill coding" id="youStatusCoding"><i class="fas fa-code"></i> Coding...</span>
@@ -240,6 +240,7 @@
   const CHALLENGE   = {{ challenge_json|safe }};
   const OPP_NAME    = "{{ opp_name }}";
   const OPP_LEVEL   = {{ opp_level }};
+  const ALREADY_COMPLETED = {{ already_completed|yesno:"true,false" }};
   const CSRF_TOKEN  = "{{ csrf_token }}";
 </script>
 <script src="{% static 'js/competition.js' %}"></script>

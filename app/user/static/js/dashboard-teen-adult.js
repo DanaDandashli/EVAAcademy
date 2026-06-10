@@ -597,10 +597,18 @@ function loadLeaderboard() {
         }
 
         // Avatar & name
-        clone.querySelector(".lb-avatar").textContent = row.username
-          .slice(0, 2)
-          .toUpperCase();
-        clone.querySelector(".lb-name").textContent = row.username;
+        const initials = row.first_name
+          ? (
+              row.first_name[0] + (row.last_name ? row.last_name[0] : "")
+            ).toUpperCase()
+          : row.username.slice(0, 2).toUpperCase();
+
+        const displayName = row.first_name
+          ? `${row.first_name} ${row.last_name}`.trim()
+          : row.username;
+
+        clone.querySelector(".lb-avatar").textContent = initials;
+        clone.querySelector(".lb-name").textContent = displayName;
         clone.querySelector(".lb-level").textContent = "Lv." + row.level;
 
         // YOU badge

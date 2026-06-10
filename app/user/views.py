@@ -245,7 +245,7 @@ def _get_level(xp):
 def _calculate_xp_and_level(user, profile, completed_progress):
     """Calculate XP from all sources, sync profile, return level stats."""
     xp = sum(NODE_XP.get(p.section.node_type, 0) for p in completed_progress)
-    
+
     xp += profile.compete_wins * NODE_XP['competition']
     if user.age_group != 'child':
         xp += Project.objects.filter(user=user,
@@ -673,7 +673,7 @@ def IntroductionView(request, section_id):
             )
 
         slides = list(section.slides.filter(
-            age_group=user.age_group).order_by('order'))  # ← fixed
+            age_group=user.age_group).order_by('order'))
 
     context = {
         'section':      section,
@@ -692,6 +692,10 @@ def CompleteSectionView(request, section_id):
     section = Section.objects.filter(id=section_id).first()
     if not _check_section_access(request.user, section):
         return redirect('dashboard')
+    
+    already_completed = UserProgress.objects.filter(
+        user=request.user, section=section, completed=True
+    ).exists()
     UserProgress.objects.update_or_create(
         user=request.user,
         section=section,
@@ -704,7 +708,7 @@ def CompleteSectionView(request, section_id):
 
     if section.node_type == 'competition':
         won = request.POST.get('won', 'false') == 'true'
-        if won:
+        if won and not already_completed:
             profile = StudentProfile.objects.get(user=request.user)
             profile.competition_wins += 1
             profile.save()
@@ -957,6 +961,11 @@ def CompetitionView(request, section_id):
     if not _check_section_access(request.user, section):
         return redirect('dashboard')
     user = request.user
+    
+    already_completed = UserProgress.objects.filter(
+        user=user, section=section, completed=True
+    ).exists()
+    
     profile = StudentProfile.objects.get(user=user)
 
     # Get lesson topics from curriculum
@@ -999,6 +1008,7 @@ def CompetitionView(request, section_id):
         'opp_name':        opp_name,
         'opp_level':       opp_level,
         'section_id':      section.id,
+        'already_completed': already_completed,
     }
     return render(request, 'nodes/competition.html', context)
 
@@ -1269,6 +1279,7 @@ def AdvisorChatView(request):
             age_group=request.user.age_group,
             eva_context=eva_context,
             history=history,
+            node_type=data.get('node_type', 'advisor'),
         )
 
         # ── Save EVA response ──
@@ -1302,6 +1313,8 @@ def LeaderboardAPIView(request):
         rows.append({
             'rank':     rank,
             'username': p.user.username,
+            'first_name': p.user.first_name,
+            'last_name':  p.user.last_name,
             'level':    p.level,
             'xp':       p.xp_total,
             'is_you':   p.user_id == user.id,

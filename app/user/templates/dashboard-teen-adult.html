@@ -20,8 +20,8 @@
   <div class="topbar-right">
     <div class="xp-badge"><i class="fa-solid fa-bolt"></i> {{ xp_cur }} XP</div>
     <div class="user-chip" onclick="navigateTo('settings',this)">
-      <div class="user-avatar-sm">{{ user.username|first|upper }}</div>
-      <span>{{ user.username }}</span>
+      <div class="user-avatar-sm">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
+      <span>{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span>
     </div>
   </div>
 </header>
@@ -30,10 +30,10 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-profile">
     <div class="avatar-initials">
-      {{ user.username|first|upper }}
+      {% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
       <div class="level-ring" style="--xp-pct:{{ xp_pct }};"></div>
     </div>
-    <h3>{{user.username}}</h3>
+    <h3>{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h3>
     <p class="role">{{ rank_title }}</p>
     <div class="level-info">
       <span class="level-badge">Lv.{{ level }}</span>
@@ -80,9 +80,9 @@
   </button>
   <div class="sidebar-footer">
     <a class="sidebar-user" onclick="navigateTo('settings',this)">
-      <div class="user-avatar-sm">{{user.username|first|upper}}</div>
+      <div class="user-avatar-sm">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
       <div class="info">
-        <div class="name">{{user.username}}</div>
+        <div class="name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</div>
         <div class="sub">Profile & Settings</div>
       </div>
       <i class="fa-solid fa-gear"></i>
@@ -97,7 +97,7 @@
   <!-- ═══════════════ PANEL: HOME (Dashboard) ═══════════════ -->
   <div class="page-panel active" id="panel-home">
     <div class="page-header">
-      <h1>Welcome back, {{ user.username }} <i class="fa-solid fa-hand-wave wave-hand-icon"></i></h1>
+      <h1>Welcome back, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %} <i class="fa-solid fa-hand-wave wave-hand-icon"></i></h1>
       <p>{{ track_label }} &bull; Level {{ level }} &bull; <span class="page-header-text"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete</span> — Keep the momentum going!</p>
     </div>
 
@@ -201,9 +201,9 @@
               <div class="lb-rank" style="{% if forloop.counter == 1 %}color:#ffd166{% elif forloop.counter == 2 %}color:#c0c0c0{% elif forloop.counter == 3 %}color:#cd7f32{% endif %}">
                 {% if forloop.counter <= 3 %}<i class="fa-solid fa-medal"></i>{% else %}{{ forloop.counter }}{% endif %}
               </div>
-              <div class="lb-avatar" style="background:var(--gradient1)">{{ entry.user.username|first|upper }}{{ entry.user.username|slice:"1:2"|upper }}</div>
+              <div class="lb-avatar" style="background:var(--gradient1)">{% if entry.user.first_name %}{{ entry.user.first_name|first|upper }}{{ entry.user.last_name|first|upper }}{% else %}{{ entry.user.username|first|upper }}{% endif %}</div>
               <div class="lb-info">
-                <div class="lb-name">{{ entry.user.username }}
+                <div class="lb-name">{% if entry.user.first_name %}{{ entry.user.first_name }} {{ entry.user.last_name }}{% else %}{{ entry.user.username }}{% endif %}
                   {% if entry.user == user %}<span class="lb-name-you">YOU</span>{% endif %}
                 </div>
                 <div class="lb-level">Lv.{{ entry.level }}</div>

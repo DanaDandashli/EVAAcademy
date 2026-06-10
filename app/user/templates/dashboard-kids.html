@@ -18,7 +18,7 @@
       </a>
     </div>
     <div>
-      <h1 class="dash-greeting">Hey, {{ user.username }}! <span class="wave-emoji"><i class="fa-solid fa-hand"></i></span></h1>
+      <h1 class="dash-greeting">Hey, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}! <span class="wave-emoji"><i class="fa-solid fa-hand"></i></span></h1>
       <p class="dash-sub">Keep coding — you are doing amazing! <span class="dash-sub-icon"><i class="fa-solid fa-star"></i></span></p>
     </div>
     {% if current_section %}
@@ -50,12 +50,12 @@
           {% if avatar_url %}
             <img src="{{ avatar_url }}" alt="Avatar" class="profile-avatar-img"/>
           {% else %}
-            <div class="profile-avatar-initial">{{ user.username|first|upper }}</div>
+            <div class="profile-avatar-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
           {% endif %}
           <div class="profile-lvl-badge">LVL {{ level }}</div>
         </div>
 
-        <h2 class="profile-name">{{ user.username }}</h2>
+        <h2 class="profile-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h2>
         <p class="profile-rank">{{ rank_title }}</p>
 
         <div class="profile-xp-row">
@@ -73,7 +73,7 @@
             <span class="profile-stat-val">#{{ user_rank }}</span>
             <span class="profile-stat-lbl">Rank</span>
           </div>
-          <div class="profile-stat highlight">
+          <div class="profile-stat">
             <i class="fas fa-check-circle profile-stat-icon green"></i>
             <span class="profile-stat-val">{{ completed_quests_count }}</span>
             <span class="profile-stat-lbl">Quests</span>
@@ -280,7 +280,7 @@
                     {% if entry.user.avatar %}
                       <img src="{{ entry.user.avatar.image.url }}" class="lb-podium-avatar" alt=""/>
                     {% else %}
-                      <div class="lb-podium-initial">{{ entry.user.username|first|upper }}</div>
+                      <div class="lb-podium-initial">{% if entry.user.first_name %}{{ entry.user.first_name|first|upper }}{{ entry.user.last_name|first|upper }}{% else %}{{ entry.user.username|first|upper }}{% endif %}</div>
                     {% endif %}
                   </div>
                   <div class="lb-podium-rank rank-{{ forloop.counter }}">
@@ -288,7 +288,7 @@
                     {% else %}<i class="fas fa-medal"></i>{% endif %}
                   </div>
                   <span class="lb-podium-name {% if entry.user == user %}lb-you-name{% endif %}">
-                    {{ entry.user.username }}{% if entry.user == user %} ★{% endif %}
+                    {% if entry.user.first_name %}{{ entry.user.first_name }} {{ entry.user.last_name }}{% else %}{{ entry.user.username }}{% endif %}{% if entry.user == user %}{% endif %}
                   </span>
                   <span class="lb-podium-xp">{{ entry.xp_total }} XP</span>
                   <span class="lb-podium-lv">Lv.{{ entry.level }}</span>
@@ -453,11 +453,11 @@
                 {% if avatar_url %}
                   <img src="{{ avatar_url }}" alt="You"/>
                 {% else %}
-                  <div class="compete-stats-initial">{{ user.username|first|upper }}</div>
+                  <div class="compete-stats-initial">{% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}</div>
                 {% endif %}
               </div>
               <div class="compete-stats-info">
-                <span class="compete-stats-name">{{ user.username }}</span>
+                <span class="compete-stats-name">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</span>
                 <span class="compete-stats-meta">Level {{ profile.level }} · {{ rank_title }}</span>
               </div>
               <div class="compete-stats-numbers">
@@ -876,7 +876,7 @@
               {% endif %}
               <div class="lb-info">
                 <span class="lb-name">
-                  {{ entry.user.username }}
+                  {% if entry.user.first_name %}{{ entry.user.first_name }} {{ entry.user.last_name }}{% else %}{{ entry.user.username }}{% endif %}
                   {% if entry.user == user %}<i class="fas fa-star lb-you-star"></i>{% endif %}
                 </span>
                 <span class="lb-xp">{{ entry.xp_total }} XP</span>

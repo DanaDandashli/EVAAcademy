@@ -223,7 +223,8 @@ document.addEventListener("DOMContentLoaded", () => {
             '". No code. One guiding question only.',
           code: battleEditor ? battleEditor.getValue() : "",
           lesson: "Python",
-          eva_context: {},
+          node_type: "competition",
+          eva_context: { challengeInstruction: CHALLENGE.instruction },
           is_greeting: false,
         }),
       });
@@ -507,12 +508,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Hide hint section
     const hintSection = document.getElementById("hintSection");
     if (hintSection) hintSection.style.display = "none";
-    
+
     const banner = document.getElementById("resultBanner");
     const text = document.getElementById("resultBannerText");
 
     if (youWon) {
-      text.textContent = "You won the battle! +50 XP";
+      text.textContent = ALREADY_COMPLETED
+        ? "You won the battle!"
+        : "You won the battle! +50 XP";
       banner.style.background =
         "linear-gradient(135deg, rgba(0,128,128,0.1), rgba(0,160,160,0.08))";
       banner.style.borderColor = "rgba(0,128,128,0.2)";

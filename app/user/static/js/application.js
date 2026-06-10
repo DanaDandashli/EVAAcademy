@@ -273,7 +273,11 @@ document.addEventListener("DOMContentLoaded", () => {
           message: userContext,
           code: "",
           lesson: document.title || "Python",
-          eva_context: typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {},
+          node_type: "application",
+          eva_context: {
+            ...(typeof EVA_CONTEXT !== "undefined" ? EVA_CONTEXT : {}),
+            taskInstruction: currentTask ? currentTask.instruction : "",
+          },
           is_greeting: false,
         }),
       });
@@ -446,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadTaskUI(currentTask);
       updateStepsPanel();
       addEvaAIMessage(
-        "The student just passed a task. Congratulate them in 1 sentence and encourage the next challenge. No code.",
+        "The student just passed a task. Congratulate them in 1 sentence only. Do NOT repeat, describe, or mention the next task at all.",
       );
     } catch (err) {
       console.error("Error loading next task:", err);
@@ -587,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadTaskUI(currentTask);
     updateStepsPanel();
     addEvaAIMessage(
-      "Greet the student warmly in 1 sentence. Tell them EVA is here if they get stuck. No code, no task details.",
+      "Greet the student warmly in 1 sentence. Tell them EVA is here if they get stuck. Do NOT mention or describe the task.",
     );
   }
 });

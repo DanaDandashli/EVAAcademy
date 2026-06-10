@@ -387,9 +387,7 @@ def generate_next_task(lesson_title, task_number, previous_tasks=None, student_p
     Write 2-4 lines of Python code testing: {topic}
     Introduce ONE real bug that causes WRONG OUTPUT or RUNTIME ERROR.
     Bug must require understanding of {topic} to fix — not a typo or comment issue.
-    The correct_answer MUST produce a positive, logical result when run.
-    NEVER introduce new bugs in correct_answer — it must be strictly better than code_template.
-    The fix must be minimal — change only what's broken, nothing else.
+    The correct_answer MUST fix ONLY the bug — keep all other logic identical.
     NEVER simplify or remove lines in the correct_answer — only fix the specific bug.
     code_template = buggy code, correct_answer = fixed code.
     Instruction = 'This code has a bug — find and fix it.'"""
@@ -461,8 +459,6 @@ def validate_generated_task(task_data, lesson_topics):
             return False, "No blank in template"
         if not correct_answer:
             return False, "Missing correct answer"
-
-    
     elif task_type == 'bug_fix':
         if not code_template:
             return False, "Missing buggy code"
@@ -636,8 +632,8 @@ Return ONLY valid JSON:
         return None
 
 
-def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child', eva_context={}, history=[]):
-    """EVA Advisor chat — returns AI response."""
+def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child', eva_context={}, history=[], node_type='advisor'):
+    """EVA Advisor chat — returns AI response. Behavior adapts per node_type."""
 
     if age_group == 'child':
         persona = "a friendly and encouraging Python tutor for kids aged 7-12"
@@ -649,30 +645,79 @@ def eva_chat(user_message, user_code='', lesson_title='Python', age_group='child
         persona = "a professional Python instructor for adult learners"
         style = "Be concise, technical when appropriate, and respectful. Maximum 4 sentences."
 
-    # Build progress summary
-    weak_areas = eva_context.get('weakAreas', [])
-    completed = eva_context.get('completedLessons', [])
     level = eva_context.get('level', 1)
 
-    progress_summary = ''
-    if completed:
-        progress_summary += f"Completed lessons: {', '.join(completed)}. "
-    if weak_areas:
-        areas = []
-        for w in weak_areas:
-            concept = w.get('concept', '')
-            attempts = w.get('attempts', 0)
-            if concept:
-                areas.append(
-                    f"{w['lesson']} — struggled {attempts}x with: {concept[:60]}")
-            else:
-                areas.append(f"{w['lesson']} ({w.get('nodeType', '')})")
+    # ── Node-specific system prompts ──
+    if node_type == 'application':
+        task_instruction = eva_context.get('taskInstruction', '')
+        system_prompt = f"""You are EVA, {persona}.
 
-        progress_summary += f"Student's specific weak areas: {'; '.join(areas)}. IMPORTANT: Immediately assign ONE targeted practice challenge that addresses the first weak area. Do not just mention the weak area — give a specific coding task related to it."
+The student is working on the Application node for lesson: {lesson_title}.
+Current task: "{task_instruction}"
+Student's current code:
+```python
+{user_code}
+```
+
+Your ONLY job is to guide the student toward completing the current task above.
+NEVER assign a new challenge — the task is already defined.
+NEVER change or extend the task requirements.
+
+Your Teaching Philosophy:
+1. GUIDE — Ask ONE Socratic question that nudges the student toward the solution. Never give the answer directly.
+2. ON ERROR — Identify what went wrong in 1 sentence and ask a guiding question.
+3. ON ENCOURAGEMENT — Celebrate progress in 1 sentence and guide next step.
+
+STRICT RULES — NO EXCEPTIONS:
+- NEVER write any code, not even a single character of Python syntax
+- NEVER use backticks or code blocks of any kind
+- Keep responses under 3 sentences
+- {style}"""
+
+    elif node_type == 'competition':
+        challenge_instruction = eva_context.get('challengeInstruction', '')
+        system_prompt = f"""You are EVA, {persona}.
+
+The student is in the Competition node for lesson: {lesson_title}.
+Current challenge: "{challenge_instruction}"
+Student's current code:
+```python
+{user_code}
+```
+
+Your ONLY job is to give ONE Socratic hint that guides the student toward solving this challenge.
+NEVER solve it for them. NEVER assign a different challenge.
+
+STRICT RULES — NO EXCEPTIONS:
+- NEVER write any code, not even a single character of Python syntax
+- NEVER use backticks or code blocks of any kind
+- ONE guiding question or hint only
+- Keep responses under 2 sentences
+- {style}"""
+
     else:
-        progress_summary += " IMPORTANT: Check the conversation history carefully and never repeat a challenge already assigned. Always progress to something new."
+        # ── Dashboard advisor — full challenge-assigning behavior ──
+        weak_areas = eva_context.get('weakAreas', [])
+        completed = eva_context.get('completedLessons', [])
 
-    system_prompt = f"""You are EVA, {persona}.
+        progress_summary = ''
+        if completed:
+            progress_summary += f"Completed lessons: {', '.join(completed)}. "
+        if weak_areas:
+            areas = []
+            for w in weak_areas:
+                concept = w.get('concept', '')
+                attempts = w.get('attempts', 0)
+                if concept:
+                    areas.append(
+                        f"{w['lesson']} — struggled {attempts}x with: {concept[:60]}")
+                else:
+                    areas.append(f"{w['lesson']} ({w.get('nodeType', '')})")
+            progress_summary += f"Student's specific weak areas: {'; '.join(areas)}. IMPORTANT: Immediately assign ONE targeted practice challenge that addresses the first weak area. Do not just mention the weak area — give a specific coding task related to it."
+        else:
+            progress_summary += f" Assign ONE meaningful challenge appropriate for Level {level} based on completed lessons above. Avoid trivially simple tasks like printing a single word. Check conversation history and never repeat a challenge already assigned."
+            
+        system_prompt = f"""You are EVA, {persona}.
 
 Student Profile:
 - Level: {level}
