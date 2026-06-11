@@ -218,22 +218,24 @@
   --bg-white: var(--surface);
   --bg-gray: var(--bg-section);
   --bg-light-purple: var(--bg-alt);
-    --hero-bg: var(--bg-hero);
+  --hero-bg: var(--bg-hero);
+  --hero-gradient-mid: #1e1b4b;
+  --auth-gradient-start: #1a1a2e;
 
-    --green-light: #064e3b;
-    --green-mid: #065f46;
-    --green-dark-text: #6ee7b7;
-    --gold-light: #78350f;
-    --gold-border: #92400e;
-    --gold-dark: #fbbf24;
-    --gold-darkest: #fde68a;
-    --cream-bg: #1c1917;
-    --warm-bg: #1c1917;
-    --light-purple: #1e1b4b;
-    --light-purple-alt: #1e1b4b;
-    --light-purple-text: #c4b5fd;
-    --purple-lightest: #1a1a2e;
-    --slate-text: #64748b;
+  --green-light: #064e3b;
+  --green-mid: #065f46;
+  --green-dark-text: #6ee7b7;
+  --gold-light: #78350f;
+  --gold-border: #92400e;
+  --gold-dark: #fbbf24;
+  --gold-darkest: #fde68a;
+  --cream-bg: #1c1917;
+  --warm-bg: #1c1917;
+  --light-purple: #1e1b4b;
+  --light-purple-alt: #1e1b4b;
+  --light-purple-text: #c4b5fd;
+  --purple-lightest: #1a1a2e;
+  --slate-text: #64748b;
   }
 
 /* ── Light Theme (manual toggle override) ── */
@@ -272,6 +274,8 @@
   --bg-gray: var(--bg-section);
   --bg-light-purple: var(--bg-alt);
   --hero-bg: var(--bg-hero);
+  --hero-gradient-mid: #fce7f3;
+  --auth-gradient-start: #f3f0ff;
 
   --purple-light: #a78bfa;
   --purple-dark: #5b21b6;

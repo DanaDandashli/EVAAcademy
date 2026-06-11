@@ -198,22 +198,53 @@ function initCharts() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: "rgba(10,10,26,0.95)",
+            backgroundColor:
+              document.documentElement.getAttribute("data-theme") === "light"
+                ? "rgba(255,255,255,0.95)"
+                : "rgba(10,10,26,0.95)",
+            titleColor:
+              document.documentElement.getAttribute("data-theme") === "light"
+                ? "#111827"
+                : "#e8e8ff",
+            bodyColor:
+              document.documentElement.getAttribute("data-theme") === "light"
+                ? "#6b7280"
+                : "#8888bb",
             borderColor: "rgba(108,99,255,0.4)",
             borderWidth: 1,
-            titleColor: "#e8e8ff",
-            bodyColor: "#8888bb",
             cornerRadius: 8,
           },
         },
         scales: {
           x: {
-            grid: { color: "rgba(255,255,255,0.04)" },
-            ticks: { color: "#8888bb", font: { size: 11 } },
+            grid: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "rgba(0,0,0,0.06)"
+                  : "rgba(255,255,255,0.15)",
+            },
+            ticks: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "#6b7280"
+                  : "#8888bb",
+              font: { size: 11 },
+            },
           },
           y: {
-            grid: { color: "rgba(255,255,255,0.04)" },
-            ticks: { color: "#8888bb", font: { size: 11 } },
+            grid: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "rgba(0,0,0,0.06)"
+                  : "rgba(255,255,255,0.15)",
+            },
+            ticks: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "#6b7280"
+                  : "#8888bb",
+              font: { size: 11 },
+            },
             min: 0,
           },
         },
@@ -271,9 +302,25 @@ function initCharts() {
         plugins: { legend: { display: false } },
         scales: {
           r: {
-            grid: { color: "rgba(255,255,255,0.07)" },
-            angleLines: { color: "rgba(255,255,255,0.07)" },
-            pointLabels: { color: "#8888bb", font: { size: 11 } },
+            grid: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "rgba(0,0,0,0.1)"
+                  : "rgba(255,255,255,0.15)",
+            },
+            angleLines: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "rgba(0,0,0,0.1)"
+                  : "rgba(255,255,255,0.15)",
+            },
+            pointLabels: {
+              color:
+                document.documentElement.getAttribute("data-theme") === "light"
+                  ? "#4b5563"
+                  : "#8888bb",
+              font: { size: 11 },
+            },
             ticks: { display: false, stepSize: 25 },
             min: 0,
             max: 100,

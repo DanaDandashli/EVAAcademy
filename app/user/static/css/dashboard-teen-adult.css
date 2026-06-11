@@ -11,6 +11,7 @@
   --text: #e8e8ff;
   --text-muted: #8888bb;
   --text-dim: #5555aa;
+  --text-inverse: #ffffff;
   --gradient1: linear-gradient(135deg, #6c63ff, #a78bfa);
   --gradient2: linear-gradient(135deg, #00d4ff, #0099cc);
   --gradient3: linear-gradient(135deg, #ff6b9d, #ff4444);
@@ -21,6 +22,95 @@
   --shadow: 0 4px 24px rgba(108,99,255,0.15);
   --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
 }
+[data-theme="light"] {
+  --bg: #f3f4f6;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-dim: #9ca3af;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --gradient1: linear-gradient(135deg, #6c63ff, #a78bfa);
+}
+
+/* ── Light Mode Overrides ── */
+[data-theme="light"] .xp-bar-wrap,
+[data-theme="light"] .skill-bar,
+[data-theme="light"] .prog-skill-bar { background: rgba(0,0,0,0.08); }
+
+[data-theme="light"] .stat-chip { background: rgba(0,0,0,0.04); }
+
+[data-theme="light"] .sidebar-user:hover,
+[data-theme="light"] .goal-item:hover,
+[data-theme="light"] .match-row:hover,
+[data-theme="light"] .upnext-item,
+[data-theme="light"] .milestone-item,
+[data-theme="light"] .activity-item { background: rgba(0,0,0,0.03); }
+
+[data-theme="light"] .lb-item:hover,
+[data-theme="light"] .lb-full-row:hover { background: rgba(0,0,0,0.03); }
+
+[data-theme="light"] .lb-full-table-header,
+[data-theme="light"] .lb-full-row,
+[data-theme="light"] .activity-item,
+[data-theme="light"] .setting-row { border-bottom-color: var(--card-border); }
+
+[data-theme="light"] .heatmap-cell.none { background: rgba(0,0,0,0.05); }
+
+[data-theme="light"] .lp-section-badge.locked { background: rgba(0,0,0,0.04); border-color: var(--card-border); }
+
+[data-theme="light"] .node-item.locked { background: rgba(0,0,0,0.03); border-color: var(--card-border); }
+
+[data-theme="light"] .node-item.locked .node-icon { background: rgba(0,0,0,0.05); }
+
+[data-theme="light"] .node-item.locked .node-title { color: #6b7280; }
+
+[data-theme="light"] .lp-path-line { stroke: #d1d5db; }
+
+[data-theme="light"] .lp-section-num.locked-num { background: rgba(0,0,0,0.08); }
+
+[data-theme="light"] .lp-progress-bar { background: rgba(0,0,0,0.08); }
+
+[data-theme="light"] .topbar { background: rgba(255,255,255,0.95); border-bottom: 1px solid var(--card-border); }
+
+[data-theme="light"] .sidebar { border-right: 1px solid var(--card-border); }
+
+[data-theme="light"] .page-header h1 {
+  background: linear-gradient(135deg, var(--text-dim) 30%, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--text-dim);
+}
+
+[data-theme="light"] .nav-item:hover { color: var(--accent); }
+
+[data-theme="light"] .cert-empty-state { background: rgba(0,0,0,0.02);  border-color: rgba(0,0,0,0.1); }
+
+[data-theme="light"] .sidebar-profile h3,  
+[data-theme="light"] .user-chip span { color: var(--accent); }
+
+[data-theme="light"] .adv-msg-bubble{ background: rgba(255,255,255,0.95); color: var(--accent2); }
+
+[data-theme="light"] .compete-info-value{ color: var(--text-muted); }
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: var(--card-border);
+  color: var(--accent);
+}
+
 * { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; }
 body {

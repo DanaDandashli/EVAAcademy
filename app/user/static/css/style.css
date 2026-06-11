@@ -262,7 +262,7 @@ img {
 
 /* ==================== HERO ==================== */
 .hero {
-    background: linear-gradient(135deg, var(--hero-bg) 0%, #fce7f3 50%, var(--light-purple-alt) 100%);
+    background: linear-gradient(135deg, var(--hero-bg) 0%, var(--hero-gradient-mid) 50%, var(--light-purple-alt) 100%);
     padding: 120px 0 80px;
     overflow: hidden;
 }
@@ -841,7 +841,7 @@ img {
 
 /* ==================== CTA ==================== */
 .cta-section {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--pink) 100%);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg-alt) 50%, var(--surface-raised) 100%);
     padding: 96px 24px;
     text-align: center;
     position: relative;
@@ -869,13 +869,13 @@ img {
 .cta-container h2 {
     font-size: clamp(1.9rem, 4vw, 2.7rem);
     font-weight: 900;
-    color: var(--bg-white);
+    color: var(--primary);
     line-height: 1.2;
     margin-bottom: 14px;
 }
 
 .cta-container p {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--primary-light);
     font-size: 1rem;
     margin-bottom: 34px;
 }
@@ -883,8 +883,8 @@ img {
 .btn-cta-white {
     display: inline-block;
     padding: 17px 38px;
-    background: var(--bg-white);
-    color: var(--primary);
+    background: var(--primary);
+    color: var(--bg-white);
     border-radius: 14px;
     font-size: 0.97rem;
     font-weight: 700;
@@ -904,7 +904,7 @@ img {
     justify-content: center;
     gap: 22px;
     flex-wrap: wrap;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--primary-light);
     font-size: 0.82rem;
 }
 
@@ -1676,20 +1676,20 @@ img {
 }
 
 /* ── Kids game card enhanced ── */
-.ch-game-card--kids {
+/* .ch-game-card--kids {
   background: linear-gradient(160deg, var(--bg-white), #fef9ee);
 }
 .ch-game-card--kids:nth-child(even) {
   background: linear-gradient(160deg, var(--bg-white), #f0f9ff);
-}
+} */
 
 /* ── Teen game card enhanced ── */
-.ch-game-card--teen {
+/* .ch-game-card--teen {
   background: linear-gradient(160deg, var(--bg-white), #f0f9ff);
 }
 .ch-game-card--teen:nth-child(even) {
   background: linear-gradient(160deg, var(--bg-white), #fce7f3);
-}
+} */
 
 /* ── Adult game card enhanced ── */
 .ch-game-card--adult {
@@ -2413,6 +2413,21 @@ img {
   font-weight: 700;
   cursor: pointer;
   display: block;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
 }
 
 /* ==================== RESPONSIVE ==================== */
