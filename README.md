@@ -95,22 +95,22 @@ EVAAcademy/
 │           ├── css/            # Per-page stylesheets + variables.css
 │           └── js/             # Per-page JavaScript
 │ 	    └── templates/
-│           ├── base.html                   # Landing page base (navbar + footer)
-│   		    ├── base-dashboard.html     	  # Dashboard base
-│   		    ├── index.html              	  # Home page
-│   		    ├── children.html           	  # Kids landing page
-│   		    ├── teen.html               	  # Teen landing page
-│   		    ├── adult.html              	  # Adult landing page
-│   		    ├── login.html              	  # Login
-│   		    ├── register.html           	  # Registration
-│   		    ├── dashboard-kids.html     	  # Kids dashboard
-│   		    ├── dashboard-teen-adult.html 	# Teen/Adult dashboard
-│   		    └── nodes/
-│				        ├── base-node.html      # Node base
-│       		    ├── introduction.html   # Slide node
-│       		    ├── application.html    # Coding task node
-│       		    ├── competition.html    # 1v1 battle node
-│       		    └── test.html           # Final test node
+│           ├── base.html                    # Landing page base (navbar + footer)
+│   		├── base-dashboard.html     	 # Dashboard base
+│   		├── index.html              	 # Home page
+│   		├── children.html           	 # Kids landing page
+│   		├── teen.html               	 # Teen landing page
+│   		├── adult.html              	 # Adult landing page
+│   		├── login.html              	 # Login
+│   		├── register.html           	 # Registration
+│   		├── dashboard-kids.html     	 # Kids dashboard
+│   		├── dashboard-teen-adult.html    # Teen/Adult dashboard
+│   		└── nodes/
+│				├── base-node.html      # Node base
+│       		├── introduction.html   # Slide node
+│       		├── application.html    # Coding task node
+│       		├── competition.html    # 1v1 battle node
+│       		└── test.html           # Final test node
 ├── eva_academy/
 │   ├── settings.py             # Django settings
 │   ├── urls.py                 # Root URL config
