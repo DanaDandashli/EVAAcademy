@@ -74,7 +74,7 @@
   width: 100%;
   padding: 13px;
   background: var(--primary-gradient);
-  color: var(--text-inverse);
+  color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 0.95rem;

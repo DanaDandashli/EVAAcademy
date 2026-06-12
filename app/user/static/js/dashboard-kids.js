@@ -374,15 +374,26 @@ function loadLeaderboard() {
     .then(data => {
       const container = document.getElementById("lbFullRows");
 
-      data.rows.forEach(row => {
+      data.rows.forEach((row) => {
         if (row.rank <= 3) return; // skip top 3, already in podium
+
+        const initials = row.first_name
+          ? (
+              row.first_name[0] + (row.last_name ? row.last_name[0] : "")
+            ).toUpperCase()
+          : row.username.slice(0, 2).toUpperCase();
+
+        const displayName = row.first_name
+          ? `${row.first_name} ${row.last_name}`.trim()
+          : row.username;
+
         const li = document.createElement("li");
         li.className = "lb-item" + (row.is_you ? " lb-you" : "");
         li.innerHTML = `
-          <span class="lb-rank-num ${row.is_you ? 'you-num' : ''}">${row.rank}</span>
-          <div class="lb-avatar-initial">${row.username.slice(0,1).toUpperCase()}</div>
+          <span class="lb-rank-num ${row.is_you ? "you-num" : ""}">${row.rank}</span>
+          <div class="lb-avatar-initial">${initials}</div>
           <div class="lb-info">
-            <span class="lb-name">${row.is_you ? 'YOU' : row.username}${row.is_you ? ' <i class="fas fa-star lb-you-star"></i>' : ''}</span>
+            <span class="lb-name">${row.is_you ? "YOU" : displayName}${row.is_you ? ' <i class="fas fa-star lb-you-star"></i>' : ""}</span>
             <span class="lb-xp">${row.xp} XP</span>
           </div>
           <span class="lb-level">Lv.${row.level}</span>`;

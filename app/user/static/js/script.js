@@ -211,3 +211,39 @@ document.getElementById("openTrialHero")?.addEventListener("click", () => {
 document.getElementById("openTrialCta")?.addEventListener("click", () => {
   window.location.href = "/register/";
 });
+
+// ── Count-up animation on scroll ──
+const countEls = document.querySelectorAll('.stat-card-number[data-count]');
+const countObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const el = entry.target;
+    const target = parseInt(el.dataset.count);
+    const suffix = el.dataset.suffix || '';
+    const duration = 3500;
+    const step = 16;
+    const increment = target / (duration / step);
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = Math.floor(current).toLocaleString() + suffix;
+    }, step);
+    // countObserver.unobserve(el);
+  });
+}, { threshold: 0.5 });
+countEls.forEach(el => countObserver.observe(el));
+
+// ── Flip cards touch support ──
+document.querySelectorAll('.flip-wrap').forEach(card => {
+  card.addEventListener('click', () => {
+    card.classList.toggle('flipped');
+  });
+});
+
+// ── Marquee cards touch support ──
+document.querySelectorAll('.marquee-card').forEach(card => {
+  card.addEventListener('click', () => {
+    card.classList.toggle('flipped');
+  });
+});

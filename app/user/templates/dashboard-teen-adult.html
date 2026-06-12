@@ -64,8 +64,8 @@
   <button class="nav-item" data-panel="leaderboard" onclick="navigateTo('leaderboard',this)">
     <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span> Leaderboard
   </button>
-  <button class="nav-item" data-panel="challenges" onclick="window.location.href='{% url 'challenges' %}'">
-    <span class="nav-icon"><i class="fa-solid fa-swords"></i></span> Challenges
+  <button class="nav-item" data-panel="project" onclick="window.location.href='{% url 'project' %}'">
+    <span class="nav-icon"><i class="fas fa-folder-open"></i></span> Projects
   </button>
   <button class="nav-item" data-panel="progress" onclick="navigateTo('progress',this)">
     <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span> Progress
@@ -101,7 +101,7 @@
   <div class="page-panel active" id="panel-home">
     <div class="page-header">
       <h1>Welcome back, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %} <i class="fa-solid fa-hand-wave wave-hand-icon"></i></h1>
-      <p>{{ track_label }} &bull; Level {{ level }} &bull; <span class="page-header-text"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete</span> — Keep the momentum going!</p>
+      <p>{{ track_label }} &bull; Level {{ level }} &bull; <span class="page-header-text"><i class="fa-solid fa-fire"></i> {{ overall_pct }}% Complete..</span> Keep the momentum going!</p>
     </div>
 
     <!-- STATS -->
@@ -507,7 +507,7 @@
 
     <div class="compete-hero">
       <h2><i class="fa-solid fa-swords accent3 font-icon"></i> Ready to Battle?</h2>
-      <p>Take on EVA AI in a live coding challenge — prove your skills and earn XP</p>
+      <p>Take on EVA AI in a live coding challenge. Prove your skills and earn XP</p>
       <a href="{% url 'compete_room' %}" class="compete-btn">
         <i class="fa-solid fa-play"></i> Start Battle
       </a>
@@ -531,7 +531,7 @@
     <div class="compete-info-card">
       <div class="compete-info-row">
         <span class="compete-info-label"><i class="fa-solid fa-robot accent2"></i> Opponent</span>
-        <span class="compete-info-value">EVA AI — adapts to your level</span>
+        <span class="compete-info-value">EVA AI. Adapts to your level</span>
       </div>
       <div class="compete-info-row">
         <span class="compete-info-label"><i class="fa-solid fa-star accent4"></i> Your Level</span>
@@ -555,7 +555,7 @@
   <div class="page-panel" id="panel-eva">
     <div class="page-header">
       <h1><i class="fa-solid fa-chalkboard-user accent2 font-icon"></i> EVA Advisor</h1>
-      <p>Your AI-powered learning companion — hints only, never gives answers</p>
+      <p>Your AI-powered learning companion. Hints only, never gives answers</p>
     </div>
     <div class="advisor-layout">
 
@@ -578,7 +578,7 @@
             {% endif %}
           </h2>
           <p class="adv-task-desc">
-            Your free coding space. Write any Python, run it, and ask EVA for guidance. She'll help you think — but never write code for you.
+            Your free coding space. Write any Python, run it, and ask EVA for guidance. She'll help you think, but never write code for you.
           </p>
           <div class="adv-tags">
             {% for lesson in completed_lessons %}
@@ -627,7 +627,7 @@
             <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
           </div>
           <div class="adv-eva-info">
-            <h3 class="adv-eva-name">EVA — AI Advisor</h3>
+            <h3 class="adv-eva-name">EVA, AI Advisor</h3>
             <p class="adv-eva-sub">Hints only. Never gives answers.</p>
           </div>
           <span class="adv-online-pill">
@@ -640,7 +640,7 @@
 
         <div class="adv-rule-banner">
           <i class="fa-solid fa-lightbulb adv-rule-icon"></i>
-          <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction — the thinking is yours.</p>
+          <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction. The thinking is yours.</p>
         </div>
 
         <div class="adv-quick-chips">
@@ -673,7 +673,7 @@
 
         <div class="adv-chat-input-wrap">
           <input type="text" class="adv-chat-input" id="advChatInput"
-                 placeholder="Ask EVA — she'll guide, not solve..."/>
+                 placeholder="Ask EVA. She'll guide, not solve..."/>
           <button class="adv-chat-send" id="advChatSend">
             <i class="fa-solid fa-paper-plane"></i>
           </button>
@@ -744,7 +744,7 @@
     {% else %}
     <div class="cert-empty-state">
       <i class="fa-solid fa-certificate fa-2x text-dim"></i>
-      <p>No certificates yet — complete all nodes in a lesson to earn your first one.</p>
+      <p>No certificates yet. Complete all nodes in a lesson to earn your first one.</p>
     </div>
     {% endif %}
 

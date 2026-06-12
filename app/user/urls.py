@@ -4,7 +4,7 @@ from .views import (
     LoginView, RegisterView, LogoutView, DashboardView,
     IntroductionView, CompleteSectionView, ApplicationView, CompetitionView, TestView, CompeteRoomView, CompeteResultView,
     AdvisorChatView, GenerateNextTaskView, GenerateNextTestQuestionView, LeaderboardAPIView,
-    ChallengesView, SaveProjectView, ReviewProjectView, PublishProjectView, GenerateProjectView, CertificatePDFView
+    ProjectsView, SaveProjectView, ReviewProjectView, PublishProjectView, GenerateProjectView, CertificatePDFView
 )
 
 urlpatterns = [
@@ -31,11 +31,11 @@ urlpatterns = [
     path('leaderboard/', LeaderboardAPIView, name='leaderboard_api'),
 
     # Challenge Panel
-    path('challenges/', ChallengesView, name='challenges'),
-    path('challenges/save/', SaveProjectView, name='save_project'),
-    path('challenges/review/', ReviewProjectView, name='review_project'),
-    path('challenges/publish/', PublishProjectView, name='publish_project'),
-    path('challenges/generate/', GenerateProjectView, name='generate_project'),
+    path('projects/', ProjectsView, name='project'),
+    path('projects/save/', SaveProjectView, name='save_project'),
+    path('projects/review/', ReviewProjectView, name='review_project'),
+    path('projects/publish/', PublishProjectView, name='publish_project'),
+    path('projects/generate/', GenerateProjectView, name='generate_project'),
 
     path('certificate/<int:lesson_id>/download/', CertificatePDFView, name='certificate_pdf'),
 ]

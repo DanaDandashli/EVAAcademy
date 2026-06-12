@@ -696,7 +696,7 @@
 }
 .bug-sub {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--red);
   margin: 0;
 }
 .bug-indicator {

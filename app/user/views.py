@@ -1327,9 +1327,9 @@ def LeaderboardAPIView(request):
     })
 
 
-# ── Challenges Panel ──
+# ── Projects Panel ──
 @student_required
-def ChallengesView(request):
+def ProjectsView(request):
     user = request.user
     profile, _ = StudentProfile.objects.get_or_create(user=user)
 
@@ -1354,7 +1354,7 @@ def ChallengesView(request):
         'completed_lessons':  completed_lessons,
         'csrf_token':         request.META.get('CSRF_COOKIE', ''),
     }
-    return render(request, 'challenges.html', context)
+    return render(request, 'projects.html', context)
 
 
 # ── Save Project Code ──

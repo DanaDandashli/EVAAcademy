@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function saveCode() {
     if (!projectId || !editor) return;
     try {
-      await fetch("/challenges/save/", {
+      await fetch("/projects/save/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     generateBtn.disabled = true;
 
     try {
-      const res = await fetch("/challenges/generate/", {
+      const res = await fetch("/projects/generate/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     regenerateBtn.disabled = true;
 
     try {
-      const res = await fetch("/challenges/generate/", {
+      const res = await fetch("/projects/generate/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -436,7 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStatusPill("submitted");
 
     try {
-      const res = await fetch("/challenges/review/", {
+      const res = await fetch("/projects/review/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -477,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = true;
 
     try {
-      const res = await fetch("/challenges/publish/", {
+      const res = await fetch("/projects/publish/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -19,7 +19,7 @@
     </div>
     <div>
       <h1 class="dash-greeting">Hey, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}! <span class="wave-emoji"><i class="fa-solid fa-hand"></i></span></h1>
-      <p class="dash-sub">Keep coding — you are doing amazing! <span class="dash-sub-icon"><i class="fa-solid fa-star"></i></span></p>
+      <p class="dash-sub">Keep coding.. You are doing amazing! <span class="dash-sub-icon"><i class="fa-solid fa-star"></i></span></p>
     </div>
     {% if current_section %}
       <button class="btn-trial" onclick="switchPanel('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => document.getElementById('node-{{ current_section.id }}')?.scrollIntoView({behavior:'smooth', block:'center'}), 300)">
@@ -346,7 +346,7 @@
               <div class="quest-foot">
                 <span class="quest-status">
                   {% if uq.is_complete %}
-                    <i class="fas fa-check-circle" style="color:#10b981"></i> Completed — +{{ uq.quest.xp_reward }} XP
+                    <i class="fas fa-check-circle" style="color:#10b981"></i> Completed +{{ uq.quest.xp_reward }} XP
                   {% else %}
                     <i class="fas fa-circle-dot"></i> {{ uq.progress }} / {{ uq.target }} completed
                   {% endif %}
@@ -390,18 +390,22 @@
           <p class="settings-section-title">Overall Stats</p>
           <div class="progress-stats-grid">
             <div class="progress-stat-item">
+              <div class="progress-stat-icon"><i class="fas fa-layer-group"></i></div>
               <span class="progress-stat-num">{{ completed_sections_count }}</span>
               <span class="progress-stat-lbl">Nodes Done</span>
             </div>
             <div class="progress-stat-item">
+              <div class="progress-stat-icon"><i class="fas fa-shield-alt"></i></div>
               <span class="progress-stat-num">{{ total_badges }}</span>
               <span class="progress-stat-lbl">Badges Earned</span>
             </div>
             <div class="progress-stat-item">
+              <div class="progress-stat-icon"><i class="fas fa-bolt"></i></div>
               <span class="progress-stat-num">{{ xp_cur }}</span>
               <span class="progress-stat-lbl">Total XP</span>
             </div>
             <div class="progress-stat-item">
+              <div class="progress-stat-icon"><i class="fas fa-list-check"></i></div>
               <span class="progress-stat-num">{{ user_quests|length }}</span>
               <span class="progress-stat-lbl">Active Quests</span>
             </div>
@@ -513,7 +517,7 @@
             <div class="compete-how-steps">
               <div class="compete-how-step">
                 <div class="compete-how-num">1</div>
-                <p>EVA AI is your opponent — it adapts to your level</p>
+                <p>EVA AI is your opponent. It adapts to your level</p>
               </div>
               <div class="compete-how-step">
                 <div class="compete-how-num">2</div>
@@ -521,7 +525,7 @@
               </div>
               <div class="compete-how-step">
                 <div class="compete-how-num">3</div>
-                <p>Solve it before EVA does — earn XP and boost your ELO rating</p>
+                <p>Solve it before EVA does. Earn XP and boost your ELO rating</p>
               </div>
             </div>
           </div>
@@ -570,7 +574,7 @@
                 {% endif %}
               </h2>
               <p class="adv-task-desc">
-                This is your free coding space. Write any Python code, run it, and ask EVA for guidance whenever you need it. EVA will help you think — but never write code for you.
+                This is your free coding space. Write any Python code, run it, and ask EVA for guidance whenever you need it. EVA will help you think, but never write code for you.
               </p>
               <div class="adv-tags">
                 {% for lesson in completed_lessons %}
@@ -621,7 +625,7 @@
                 <img src="{% static 'images/eva-robot-avatar.jpeg' %}" alt="EVA"/>
               </div>
               <div class="adv-eva-info">
-                <h3 class="adv-eva-name">EVA — Python Advisor</h3>
+                <h3 class="adv-eva-name">EVA, Python Advisor</h3>
                 <p class="adv-eva-sub">Hints only. Never gives answers.</p>
               </div>
               <span class="adv-online-pill">
@@ -631,7 +635,7 @@
 
             <div class="adv-rule-banner">
               <i class="fas fa-lightbulb adv-rule-icon"></i>
-              <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction — the thinking is yours.</p>
+              <p><strong>EVA's rule:</strong> She will never write your code. She asks questions, gives analogies, and nudges you in the right direction. The thinking is yours.</p>
             </div>
 
             <div class="adv-quick-chips">
@@ -685,7 +689,7 @@
 
             <div class="adv-chat-input-wrap">
               <input type="text" class="adv-chat-input" id="advChatInput"
-                    placeholder="Ask EVA — she'll guide, not solve..."/>
+                    placeholder="Ask EVA. She'll guide, not solve..."/>
               <button class="adv-chat-send" id="advChatSend">
                 <i class="fas fa-paper-plane"></i>
               </button>
@@ -782,7 +786,7 @@
                     {% if l.is_locked %}
                       Finish the previous lesson first!
                     {% elif l.completed_count > 0 %}
-                      {% widthratio l.completed_count l.total_count 100 %}% done — keep going!
+                      {% widthratio l.completed_count l.total_count 100 %}% done. Keep going!
                     {% else %}
                       Ready to start!
                     {% endif %}
