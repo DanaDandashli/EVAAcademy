@@ -392,14 +392,16 @@
             </div>
 
             {% if not forloop.last %}
-            {% with next_node=lesson_data.sections|slice:forloop.counter %}
-            <svg class="path-svg" viewBox="0 0 300 36" preserveAspectRatio="none">
-              <path d="M {% cycle '60 0' '240 0' '60 0' '240 0' %} Q 150 18 {% cycle '240 36' '60 36' '240 36' '60 36' %}"
-                stroke="{% if section_data.is_completed %}rgba(108,99,255,0.45){% elif section_data.is_current %}rgba(0,212,255,0.4){% else %}rgba(180,180,200,0.4){% endif %}"
+            <svg class="path-svg" viewBox="0 0 600 48" preserveAspectRatio="none">
+              {% if forloop.counter0|divisibleby:2 %}
+                <path d="M 97 0 C 97 24, 503 24, 503 48"
+              {% else %}
+                <path d="M 503 0 C 503 24, 97 24, 97 48"
+              {% endif %}
+                stroke="{% if section_data.is_completed %}rgba(108,99,255,0.5){% elif section_data.is_current %}rgba(0,212,255,0.45){% else %}rgba(180,180,200,0.25){% endif %}"
                 stroke-width="2" fill="none"
-                stroke-dasharray="{% if section_data.is_locked or lesson_data.is_locked %}4,4{% else %}5,3{% endif %}"/>
+                stroke-dasharray="{% if section_data.is_locked or lesson_data.is_locked %}5,4{% else %}none{% endif %}"/>
             </svg>
-            {% endwith %}
             {% endif %}
 
             {% endfor %}

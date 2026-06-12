@@ -657,10 +657,43 @@ nav.navbar { display: none !important; }
   .cr-result-stats  { grid-template-columns: 1fr; }
   .cr-middle-panel  { flex-direction: row; flex-wrap: wrap; justify-content: center; }
 }
-
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .cr-topbar { padding: 0 14px; gap: 8px; }
+  .cr-topbar-center { font-size: 0.82rem; }
+  .cr-topics-pill { display: none; }
+  .cr-battle-layout { grid-template-columns: 1fr; gap: 16px; }
+  .cr-middle-panel { display: none; }
+  .cr-vs-wrap { flex-direction: row; align-items: center; justify-content: center; gap: 16px; }
+  .cr-vs-badge { transform: none; }
+  .cr-player { min-width: 0; flex: 1; max-width: 140px; }
+  .cr-match-topics { flex-wrap: wrap; gap: 6px; font-size: 0.8rem; }
+  .cr-topic-tag { font-size: 0.75rem; padding: 3px 8px; }
+  .cr-start-btn { width: 100%; justify-content: center; }
+  .cr-timer-bar { padding: 8px 14px; gap: 8px; }
+  .cr-timer-val { font-size: 0.88rem; }
+  .cr-task-card { padding: 12px; }
+  .cr-task-title { font-size: 0.92rem; }
+  .cr-task-desc { font-size: 0.82rem; }
+  .cr-run-btn { width: 100%; justify-content: center; }
+  .cr-result-stats { grid-template-columns: 1fr; gap: 12px; }
+  .cr-result-vs { display: none; }
+  .cr-result-actions { flex-direction: column; gap: 10px; }
+  .cr-play-again-btn, .cr-back-dash-btn { width: 100%; justify-content: center; }
+}
+/* @media (max-width: 640px) {
   .cr-main { padding: 16px; }
   .cr-matchmaking-card { padding: 24px 16px; }
-  .cr-vs-wrap { gap: 16px; }
-  .cr-result-actions { flex-direction: column; }
+} */
+@media (max-width: 480px) {
+  .cr-topbar { height: 48px; }
+  .cr-back-btn { font-size: 0.78rem; }
+  .cr-matchmaking-card { padding: 20px 12px; }
+  .cr-match-title { font-size: 1.1rem; }
+  .cr-match-sub { font-size: 0.8rem; }
+  .cr-countdown-card { padding: 24px 16px; }
+  .cr-result-card { padding: 16px 12px; }
+  .cr-player-name { font-size: 0.78rem; word-break: break-word; text-align: center; }
+  .cr-player-meta { font-size: 0.7rem; text-align: center; }
+  .cr-player { max-width: 120px; }
+  .cr-vs-badge { font-size: 0.75rem; padding: 6px 10px; flex-shrink: 0; }
 }

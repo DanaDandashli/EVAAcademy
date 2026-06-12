@@ -165,6 +165,12 @@ img {
     flex-shrink: 0;
 }
 
+.nav-end{
+    display:flex;
+    align-items:center; 
+    gap:8px;
+}
+
 .btn-signin {
     padding: 8px 18px;
     border: 1.5px solid var(--border);
@@ -2440,11 +2446,12 @@ img {
 
 @media (max-width: 768px) {
 
+   .nav-container { justify-content: space-between; }
+   .theme-toggle { margin-left: 0; }
     /* Show hamburger */
     .hamburger {
         display: flex;
     }
-
     /* Hide desktop nav actions */
     .nav-actions {
         display: none;

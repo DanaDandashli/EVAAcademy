@@ -185,9 +185,15 @@
                             d="M 25,14 C 25,32 75,32 75,50 C 75,68 25,68 25,86"/>
 
                     {% elif lesson.total_count == 4 %}
-                      <!-- node1:25,10 → node2:75,37 → node3:25,63 → node4:75,90 -->
-                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
-                            d="M 25,10 C 25,24 75,24 75,37 C 75,50 25,50 25,63 C 25,77 75,77 75,90"/>
+                      <!-- Segment 1: node1 → node2 -->
+                      <path class="snake-line {% if lesson.sections.0.is_completed %}line-done{% elif lesson.sections.0.is_current %}line-active{% else %}line-locked{% endif %}"
+                            d="M 25,10 C 25,24 75,24 75,37"/>
+                      <!-- Segment 2: node2 → node3 -->
+                      <path class="snake-line {% if lesson.sections.1.is_completed %}line-done{% elif lesson.sections.1.is_current %}line-active{% else %}line-locked{% endif %}"
+                            d="M 75,37 C 75,50 25,50 25,63"/>
+                      <!-- Segment 3: node3 → node4 -->
+                      <path class="snake-line {% if lesson.sections.2.is_completed %}line-done{% elif lesson.sections.2.is_current %}line-active{% else %}line-locked{% endif %}"
+                            d="M 25,63 C 25,77 75,77 75,90"/>
                     {% endif %}
 
                   </svg>

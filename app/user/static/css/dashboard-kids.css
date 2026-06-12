@@ -2541,6 +2541,7 @@ h3,
   background: var(--code-topbar);
   padding: 10px 16px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -3714,61 +3715,92 @@ h3,
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  .dash-grid {
-  grid-template-columns: 220px 1fr 290px;
-    gap: 16px;
-  }
-  .dash-grid.hide-right {
-    grid-template-columns: 220px 1fr;
-  }
+  .dash-grid { grid-template-columns: 220px 1fr 280px; gap: 16px; }
+  .dash-grid.hide-right { grid-template-columns: 220px 1fr; }
 }
 
 @media (max-width: 900px) {
   .dash-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "left right"
-      "mid  mid";
+    grid-template-areas: "left right" "mid mid";
   }
-
-  .dash-col--right {
-    flex-direction: column;
-  }
+  .dash-grid.hide-right { grid-template-columns: 1fr; grid-template-areas: "left" "mid"; }
+  .dash-col--right { flex-direction: column; }
   .advisor-layout { grid-template-columns: 1fr; }
-  .compete-right { position:static; }
-  .adv-chat-panel {
-    position: static;
-    min-height: 500px;
-  }
+  .compete-right { position: static; }
+  .adv-chat-panel { position: static; min-height: 500px; }
+  .profile-card { padding: 20px 16px; }
+  .profile-name { font-size: 1.1rem; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .dash-main { padding: 12px 14px 28px; }
+  .dash-header { flex-wrap: wrap; gap: 8px; padding: 8px 0 12px; }
   .dash-grid {
     grid-template-columns: 1fr;
     grid-template-areas: "left" "mid" "right";
   }
+  .dash-grid.hide-right { grid-template-columns: 1fr; }
 
-  .dash-main {
-    padding: 16px 16px 32px;
-  }
+  /* Profile card */
+  .profile-card { padding: 18px 14px; }
+  .profile-avatar-wrap { width: 70px; height: 70px; }
+  .profile-name { font-size: 1rem; }
+  .profile-title { font-size: 0.75rem; }
+  .profile-xp-label { font-size: 0.72rem; }
 
-  .badges-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  /* Sidebar nav */
+  .sidebar-nav { gap: 4px; }
+  .sidebar-nav-item { padding: 10px 12px; font-size: 0.82rem; }
+  .sidebar-nav-label { font-size: 0.6rem; }
 
-  .dash-header {
-    padding: 10px 0 12px;
-  }
-  .adv-quick-chips { display: none; }
-  .adv-sandbox-bar .adv-sandbox-filename { display: none; }
-  .arena-header-bar { flex-direction:column; align-items:flex-start; }
+  /* Stats row */
+  .profile-stats { gap: 8px; }
+  .profile-stat-val { font-size: 1.1rem; }
+  .profile-stat-lbl { font-size: 0.65rem; }
+
+  /* Learning path */
+  .lp-lesson-card { padding: 14px 12px; }
+  .lp-lesson-title { font-size: 0.88rem; }
+  .lp-nodes { gap: 6px; }
+
+  /* Badges */
+  .badges-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* Compete */
+  .compete-stats-numbers { gap: 12px; }
+  .compete-stat-val { font-size: 1.2rem; }
+  .compete-stat-lbl { font-size: 0.7rem; }
+  .arena-header-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Certificates */
   .dk-cert-grid { grid-template-columns: 1fr; }
-  .dk-cert-card { padding: 20px 16px 16px; }
-  .dk-cert-title { font-size: 1.3rem; }
+  .dk-cert-card { padding: 18px 14px; }
+  .dk-cert-title { font-size: 1.2rem; }
+
+  /* Advisor */
+  .adv-quick-chips { flex-wrap: wrap; }
+  .adv-sandbox-bar .adv-sandbox-filename { display: none; }
+}
+
+@media (max-width: 480px) {
+  .dash-main { padding: 10px 10px 24px; }
+  .profile-avatar-wrap { width: 60px; height: 60px; }
+  .profile-name { font-size: 0.95rem; }
+  .badges-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .badge-card { padding: 10px 6px; }
+  .badge-icon { font-size: 1.4rem; }
+  .badge-name { font-size: 0.65rem; }
+  .lp-lesson-card { padding: 12px 10px; }
+  .compete-stats-player { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .compete-stats-numbers { width: 100%; justify-content: space-between; }
+  .adv-quick-chips { display: none; }
+  .profile-avatar-wrap { width: 70px; height: 70px; margin: 0 auto 12px; }
+  .profile-avatar-initial { font-size: 22px; }
+  .profile-lvl-badge { font-size: 0.6rem; padding: 2px 7px; }
 }
 
 @media (max-width: 400px) {
-  .badges-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .badges-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-stats { justify-content: space-around; }
 }

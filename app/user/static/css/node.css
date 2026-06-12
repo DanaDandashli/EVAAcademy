@@ -449,7 +449,7 @@
   .intro-content { max-width: 480px; }
 }
 @media (max-width: 768px) {
-  .intro-layout { grid-template-columns: 1fr; }
+  .intro-layout { grid-template-columns: 1fr; height: auto; overflow: visible; }
   .intro-left { padding: 24px 20px; border-right: none; border-bottom: 1.5px solid rgba(0, 128, 128,0.1); }
   .intro-right { padding: 24px 20px; }
   .intro-content { max-width: 100%; }
@@ -468,6 +468,12 @@
   .node-breadcrumb-sep { display: none; }
   .node-type-pill { font-size: 0.72rem; padding: 4px 10px; gap: 4px; }
   .node-back-btn { font-size: 0.8rem; gap: 6px; }
+  
+  .node-main { height: auto; overflow-y: auto; flex-direction: column; }
+  .intro-left,
+  .intro-right {
+    overflow-y: visible;
+  }
 }
 @media (max-width: 480px) {
   .intro-left { padding: 20px 14px; }

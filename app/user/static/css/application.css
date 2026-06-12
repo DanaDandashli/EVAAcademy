@@ -544,6 +544,14 @@
   gap: 4px;
   padding: 8px 16px;
 }
+
+.app-progress-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .app-progress-label {
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -737,7 +745,9 @@
   background: rgba(255,255,255,0.07);
   color: var(--text-inverse);
 }
-
+.app-toggle-panel-btn.eva {
+  margin-left: auto;
+}
 /* ── Panel overlays (mobile toggled state) ── */
 .app-steps-panel.open,
 .app-eva-panel.open {

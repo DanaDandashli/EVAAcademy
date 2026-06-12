@@ -239,7 +239,8 @@ STRICT CODE RULES:
 - Every code example must be fully self-contained and runnable
 - Every variable used MUST be defined in the same code block
 - NEVER reference a variable that isn't declared in the same snippet
-- NEVER use apostrophes inside single-quoted strings — use double quotes for strings containing apostrophes
+- CRITICAL: NEVER use apostrophes (') inside single-quoted strings. ALWAYS use double quotes for ANY string containing an apostrophe or contraction (it's, don't, can't, I'm, etc.). Example: use "It's hot!" NOT 'It\'s hot!'
+- CRITICAL: NEVER generate code with contractions inside single-quoted strings — this breaks the browser Python environment
 - NEVER use these functions — they are NOT supported in the browser Python environment:
   help(), dir(), vars(), globals(), locals(), open(), os, sys, subprocess,
   import os, import sys, import re, import json, import datetime,
@@ -620,7 +621,7 @@ Return ONLY valid JSON:
   "instruction": "Write a Python program that...",
   "expected_output": "exact expected output",
   "check_regex": "regex to validate solution",
-  "time_limit": 300
+  "time_limit": 600
 }}"""
 
     try:

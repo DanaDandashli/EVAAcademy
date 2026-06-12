@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── State ──
   let task = null;
   let battleTimer = null;
-  let totalSeconds = 300;
+  let totalSeconds = 600;
   let userSolved = false;
   let oppSolved = false;
 
@@ -209,7 +209,7 @@ Return ONLY raw JSON, no markdown:
     oppCode.innerHTML = "";
 
     // EVA finishes between 80-160 seconds (hard enough to beat)
-    const oppFinishTime = (80 + Math.random() * 80) * 1000;
+    const oppFinishTime = (180 + Math.random() * 180) * 1000;
     const intervalTime = oppFinishTime / codeLines.length;
 
     const typeInterval = setInterval(() => {
@@ -503,7 +503,7 @@ Return ONLY raw JSON, no markdown:
   // ── Play again ──
   document.getElementById("crPlayAgain").addEventListener("click", async () => {
     // Reset state
-    totalSeconds = 300;
+    totalSeconds = 600;
     userSolved = false;
     oppSolved = false;
 

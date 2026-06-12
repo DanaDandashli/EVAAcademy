@@ -356,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── Battle timer ──
   let battleInterval = null;
   let totalSeconds =
-    CHALLENGE && CHALLENGE.time_limit ? CHALLENGE.time_limit : 300;
+    CHALLENGE && CHALLENGE.time_limit ? CHALLENGE.time_limit : 600;
   let userPassed = false;
   let oppFinished = false;
 
@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const oppCode = document.getElementById("oppCodeView");
 
     const maxTime =
-      CHALLENGE && CHALLENGE.time_limit ? CHALLENGE.time_limit : 300;
+      CHALLENGE && CHALLENGE.time_limit ? CHALLENGE.time_limit : 600;
     const oppFinishMs = maxTime * (0.6 + Math.random() * 0.3) * 1000;
 
     let progress = 0;

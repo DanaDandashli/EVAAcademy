@@ -340,10 +340,36 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
-  .test-layout { grid-template-columns: 1fr; }
-  .test-left { border-right: none; max-height: 50vh; }
+@media (max-width: 1024px) {
+  .test-layout { grid-template-columns: 320px 1fr; }
 }
+
+@media (max-width: 768px) {
+  .test-layout { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .test-left {
+    border-right: none;
+    border-bottom: 1.5px solid rgba(239,68,68,0.15);
+    overflow-y: visible;
+    padding: 16px;
+  }
+  .test-right { overflow-y: visible; }
+  .test-rules-banner { flex-wrap: wrap; gap: 8px; }
+  .test-rule { font-size: 0.78rem; padding: 6px 12px; }
+  .test-header { gap: 10px; }
+  .test-title { font-size: 1.1rem; }
+  .test-subtitle { font-size: 0.75rem; }
+  .app-run-bar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+  .app-run-btn { width: 100%; justify-content: center; }
+  .app-complete-btn { width: 100%; justify-content: center; }
+}
+
 @media (max-width: 480px) {
-  .test-left { padding: 16px 12px; }
+  .test-left { padding: 12px 10px; gap: 12px; }
+  .test-right { padding: 0; }
+  .test-icon { width: 36px; height: 36px; font-size: 0.9rem; }
+  .test-title { font-size: 1rem; }
+  .test-score-card { padding: 12px; }
+  .test-score-label { font-size: 0.72rem; }
+  .test-score-val { font-size: 1rem; }
+  .test-editor-topbar { padding: 6px 10px; }
 }

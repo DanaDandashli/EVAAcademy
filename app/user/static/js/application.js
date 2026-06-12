@@ -594,4 +594,40 @@ document.addEventListener("DOMContentLoaded", () => {
       "Greet the student warmly in 1 sentence. Tell them EVA is here if they get stuck. Do NOT mention or describe the task.",
     );
   }
+  // ── Mobile panel toggles ──
+  const toggleStepsBtn = document.getElementById("toggleStepsBtn");
+  const toggleEvaBtn = document.getElementById("toggleEvaBtn");
+  const stepsPanel = document.querySelector(".app-steps-panel");
+  const evaPanel = document.querySelector(".app-eva-panel");
+  const backdrop = document.getElementById("overlayBackdrop");
+
+  function closeAllPanels() {
+    stepsPanel.classList.remove("open");
+    evaPanel.classList.remove("open");
+    backdrop.classList.remove("show");
+  }
+
+  if (toggleStepsBtn) {
+    toggleStepsBtn.addEventListener("click", () => {
+      const isOpen = stepsPanel.classList.contains("open");
+      closeAllPanels();
+      if (!isOpen) {
+        stepsPanel.classList.add("open");
+        backdrop.classList.add("show");
+      }
+    });
+  }
+  if (toggleEvaBtn) {
+    toggleEvaBtn.addEventListener("click", () => {
+      const isOpen = evaPanel.classList.contains("open");
+      closeAllPanels();
+      if (!isOpen) {
+        evaPanel.classList.add("open");
+        backdrop.classList.add("show");
+      }
+    });
+  }
+  if (backdrop) {
+    backdrop.addEventListener("click", closeAllPanels);
+  }
 });

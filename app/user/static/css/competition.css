@@ -25,10 +25,43 @@
   overflow-y: auto;
 }
 
-.compete-eva-avatar-circle{
-  width:150px;
-  height:80px;
-  border-radius:50%
+/* ── EVA header card ── */
+.compete-eva-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(0,128,128,0.15), rgba(0,128,128,0.05));
+  border: 1px solid rgba(0,128,128,0.2);
+  border-radius: 16px;
+  flex-shrink: 0;
+}
+
+.compete-eva-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compete-eva-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+  font-family: var(--font-heading);
+}
+
+.compete-eva-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.compete-eva-avatar-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 .hint-section{
   display:none;
@@ -490,11 +523,43 @@
 .app-output-placeholder { color: var(--text-body); font-size: 0.82rem; }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
-  .comp-layout { grid-template-columns: 1fr; }
-  .comp-right { display: none; }
+@media (max-width: 1024px) {
+  .comp-layout { grid-template-columns: 1fr 260px; }
+  .compete-battle-grid { grid-template-columns: 1fr; gap: 12px; }
+  .compete-vs-divider { display: none; }
 }
+
+@media (max-width: 768px) {
+  .comp-layout { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .comp-left { overflow-y: visible; gap: 10px; padding: 14px; }
+  .comp-right {
+    display: flex;
+    border-left: none;
+    border-top: 1.5px solid rgba(0,128,128,0.1);
+    padding: 14px;
+    background: var(--surface);
+  }
+  .compete-battle-grid { grid-template-columns: 1fr; }
+  .compete-vs-divider { display: none; }
+  .arena-header-bar { flex-wrap: wrap; gap: 8px; }
+  .arena-title { font-size: 1rem; }
+  .arena-subtitle { font-size: 0.75rem; }
+  .compete-vs-card { flex-direction: column; align-items: center; gap: 10px; }
+  .compete-vs-badge { transform: none; }
+  .compete-timer-bar-wrap { gap: 8px; }
+  .compete-timer-val { font-size: 0.9rem; }
+  .battle-editor { height: 130px; }
+}
+
 @media (max-width: 480px) {
-  .comp-left { padding: 12px; }
-  .comp-right { padding: 12px; }
+  .comp-left, 
+  .comp-right{ padding: 10px; }
+  .compete-task-card { padding: 14px; }
+  .compete-task-title { font-size: 0.92rem; }
+  .compete-task-desc { font-size: 0.8rem; }
+  .arena-title { font-size: 0.92rem; }
+  .compete-start-btn { width: 100%; justify-content: center; }
+  .battle-editor { height: 110px; }
+  .app-run-btn { width: 100%; justify-content: center; }
+  .compete-winner-banner { flex-direction: column; gap: 8px; text-align: center; }
 }

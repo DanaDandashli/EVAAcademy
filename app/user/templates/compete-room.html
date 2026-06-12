@@ -110,7 +110,13 @@
         <div class="cr-timer-track">
           <div class="cr-timer-fill" id="crTimerFill"></div>
         </div>
-        <span class="cr-timer-val" id="crTimerVal">5:00</span>
+        <span class="cr-timer-val" id="crTimerVal">10:00</span>
+      </div>
+
+      <!-- Task -->
+      <div class="cr-task-card">
+        <h3 class="cr-task-title" id="crTaskTitle">Python Challenge</h3>
+        <p class="cr-task-desc" id="crTaskDesc">Loading task...</p>
       </div>
 
       <!-- Battle layout -->
@@ -135,12 +141,14 @@
             </span>
           </div>
 
-          <!-- Task -->
-          <div class="cr-task-card">
-            <h3 class="cr-task-title" id="crTaskTitle">Python Challenge</h3>
-            <p class="cr-task-desc" id="crTaskDesc">Loading task...</p>
+          <div class="cr-tests-row">
+            <span>Status</span>
+            <span id="crYouTests">Pending</span>
           </div>
-
+          <div class="cr-tests-bar">
+            <div class="cr-tests-fill you-fill" id="crYouTestsFill"></div>
+          </div>
+          
           <!-- CodeMirror -->
           <div class="cr-editor-topbar">
             <div class="cr-dots">
@@ -173,13 +181,6 @@
             <button class="cr-run-btn" id="crRunBtn">
               <i class="fas fa-play"></i> Run & Test
             </button>
-            <div class="cr-tests-row">
-              <span>Status</span>
-              <span id="crYouTests">Pending</span>
-            </div>
-            <div class="cr-tests-bar">
-              <div class="cr-tests-fill you-fill" id="crYouTestsFill"></div>
-            </div>
           </div>
         </div>
 

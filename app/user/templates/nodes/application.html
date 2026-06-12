@@ -10,7 +10,15 @@
 
   <!-- TOP: Progress bar -->
   <div class="app-progress-wrap">
-    <span class="app-progress-label" id="progressLabel">0% Complete</span>
+    <div class="app-progress-inner">
+      <button class="app-toggle-panel-btn steps" id="toggleStepsBtn">
+        <i class="fas fa-list-check"></i> Steps
+      </button>
+      <span class="app-progress-label" id="progressLabel">0% Complete</span>
+      <button class="app-toggle-panel-btn eva" id="toggleEvaBtn">
+        <i class="fas fa-robot"></i> EVA
+      </button>
+    </div>
     <div class="app-progress-bar">
       <div class="app-progress-fill" id="progressFill"></div>
     </div>
@@ -181,6 +189,7 @@
 
   </div>
 
+  <div class="app-overlay-backdrop" id="overlayBackdrop"></div>
   <div id="xpFloatContainer"></div>
   <canvas id="appConfetti"></canvas>
 

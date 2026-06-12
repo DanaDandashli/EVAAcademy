@@ -325,6 +325,11 @@ document.addEventListener("DOMContentLoaded", () => {
       editor.setValue(
         currentQuestion.starter_code || "# Write your solution here\n\n",
       );
+      document.getElementById("testOutputBody").innerHTML =
+        '<span class="app-output-placeholder">Run your code to see output...</span>';
+      document.getElementById("testOutputStatus").textContent = "";
+      document.getElementById("testOutputStatus").className =
+        "app-output-status";
       updateQuestionPanel();
       updateStepsPanel();
       showFeedback(
@@ -390,8 +395,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ── Initialize ──
-  updateQuestionPanel();
+  // if (!ALREADY_COMPLETED) updateQuestionPanel();
   if (ALREADY_COMPLETED) {
+    document.getElementById("stepsPanel").style.display = "";
     questionNumber = PASSED_COUNT + 1;
     updateStepsPanel();
 
