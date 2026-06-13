@@ -114,14 +114,14 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--bg-white);
+    color: var(--creamy-text);
     font-size: 15px;
     box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
     flex-shrink: 0;
 }
 
 .logo-text{
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--primary-light));
+    background: var(--logo-bg);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -195,7 +195,7 @@ img {
     border-radius: 10px;
     font-weight: 700;
     font-size: 0.88rem;
-    color: var(--bg-white);
+    color: var(--creamy-text);
     box-shadow: 0 4px 14px rgba(0, 128, 128, 0.3);
     transition: var(--transition);
     white-space: nowrap;
@@ -842,7 +842,7 @@ img {
   background: var(--light-purple);
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
-  color: var(--primary);
+  color: var(--text-light);
   position: relative;
   z-index: 1;
 }
@@ -850,7 +850,7 @@ img {
 .flip-front h4 {
   font-size: 15px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--text-light);
   text-align: center;
   position: relative;
   z-index: 1;

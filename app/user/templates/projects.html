@@ -1,4 +1,14 @@
 {% extends "base-dashboard.html" %}
+
+{% block head %}
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+{% endblock %}
+
 {% load static %}
 
 {% block links %}

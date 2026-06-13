@@ -1,4 +1,14 @@
 {% extends "base-dashboard.html" %}
+
+{% block head %}
+  <script>
+    (function() {
+      const t = '{{ theme }}' === 'light' ? 'light' : (localStorage.getItem('theme') || 'dark');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+{% endblock %}
+
 {% load static %}
 
 {% block links %}
@@ -156,7 +166,7 @@
               <span class="dot yellow"></span>
               <span class="dot green"></span>
             </div>
-            <span class="cr-filename">solution.py</span>
+            <span class="cr-filename"> solution.py</span>
             <button class="cr-reset-btn" id="crResetBtn">
               <i class="fas fa-rotate-left"></i> Reset
             </button>

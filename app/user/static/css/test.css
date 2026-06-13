@@ -244,7 +244,7 @@
 .app-run-btn {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 22px; border-radius: 10px;
-  background: var(--red); color: var(--bg-white); border: none;
+  background: var(--red); color: var(--creamy-text); border: none;
   font-size: 0.88rem; font-weight: 800; cursor: pointer;
   font-family: var(--font-heading); transition: all 0.2s;
 }

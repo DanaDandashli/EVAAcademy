@@ -682,6 +682,7 @@ def IntroductionView(request, section_id):
         'slides':       slides,
         'total_slides': len(slides),
         'slides_json':  json.dumps([{'order': i+1, 'code': s.code} for i, s in enumerate(slides)]),
+        'theme': 'light' if request.user.age_group == 'child' else 'dark',
     }
     return render(request, 'nodes/introduction.html', context)
 
@@ -761,6 +762,7 @@ def ApplicationView(request, section_id):
             'completed_lessons':        completed_lessons,
             'level':                    student_context.get('level', 1),
             'completed_sections_count': TaskAttempt.objects.filter(user=user, passed=True).count(),
+            'theme': 'light' if request.user.age_group == 'child' else 'dark',
         })
 
     # ── Current task order = passed + 1 ──
@@ -838,6 +840,7 @@ def ApplicationView(request, section_id):
         'completed_lessons':        completed_lessons,
         'level':                    student_context.get('level', 1),
         'completed_sections_count': TaskAttempt.objects.filter(user=user, passed=True).count(),
+        'theme': 'light' if request.user.age_group == 'child' else 'dark',
     })
 
 
@@ -1009,6 +1012,7 @@ def CompetitionView(request, section_id):
         'opp_level':       opp_level,
         'section_id':      section.id,
         'already_completed': already_completed,
+        'theme': 'light' if request.user.age_group == 'child' else 'dark',
     }
     return render(request, 'nodes/competition.html', context)
 
@@ -1086,6 +1090,7 @@ def TestView(request, section_id):
         'total_score':      total_score,
         'already_completed': already_completed,
         'section_id':       section.id,
+        'theme': 'light' if request.user.age_group == 'child' else 'dark',
     }
     return render(request, 'nodes/test.html', context)
 
@@ -1195,6 +1200,7 @@ def CompeteRoomView(request):
         'completed_lessons': completed_lessons,
         'completed_topics':  completed_topics,
         'csrf_token':        request.META.get("CSRF_COOKIE", ""),
+        'theme': 'light' if request.user.age_group == 'child' else 'dark',
     }
     return render(request, 'compete-room.html', context)
 

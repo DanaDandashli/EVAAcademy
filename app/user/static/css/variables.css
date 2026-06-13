@@ -141,6 +141,7 @@
   --surface-hover:      #B2DFDB;
   --auth-gradient-start: #E0F2F1;
   --hero-gradient-mid:  #B2DFDB;
+  --creamy-text:        #FDF9F0;
  
   /* Landing Page Feature Cards */
   --fc-1: linear-gradient(135deg, #003333, #005555);
@@ -149,6 +150,7 @@
   --fc-4: linear-gradient(135deg, #006666, #009999);
 
   --shimmer-color: rgba(255,255,255,0.55);
+  --logo-bg: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--primary-light));
 }
 
 /* ── Dark Theme (system preference) ── */
@@ -268,29 +270,30 @@
   --fc-4: linear-gradient(135deg, #007777, #00aaaa);
 
   --shimmer-color: rgba(255,255,255,0.01);
+  --logo-bg: linear-gradient(135deg, #F5E6C8, #FAF0DC, #FDF9F0);
 }
 
 /* ── Light Theme (manual toggle override) ── */
 [data-theme="light"] {
   --surface:            #ffffff;
-  --surface-alt:        #E0F2F1;
+  --surface-alt:        #f0fafa;
   --surface-raised:     #ffffff;
-  --surface-hover:      #B2DFDB;
+  --surface-hover:      #e0f2f1;
 
-  --text-primary:       #004D40;
-  --text-secondary:     #00695C;
-  --text-tertiary:      #00796B;
-  --text-muted:         #26A69A;
+  --text-primary:       #0d2f2f;
+  --text-secondary:     #1a4a4a;
+  --text-tertiary:      #2d6b6b;
+  --text-muted:         #4a9090;
   --text-inverse:       #ffffff;
 
-  --bg-page:            #E0F2F1;
-  --bg-section:         #B2DFDB;
-  --bg-alt:             #E0F2F1;
-  --bg-hero:            #B2DFDB;
+  --bg-page:            #f5fafa;
+  --bg-section:         #eaf6f6;
+  --bg-alt:             #f0fafa;
+  --bg-hero:            #e0f2f1;
 
-  --border:             rgba(0, 128, 128, 0.2);
-  --border-light:       rgba(0, 128, 128, 0.12);
-  --border-subtle:      rgba(0, 128, 128, 0.08);
+  --border:             rgba(0, 128, 128, 0.15);
+  --border-light:       rgba(0, 128, 128, 0.08);
+  --border-subtle:      rgba(0, 128, 128, 0.05);
 
   --shadow:             0 4px 24px rgba(0, 128, 128, 0.1);
   --shadow-hover:       0 12px 40px rgba(0, 128, 128, 0.2);
@@ -337,4 +340,5 @@
   --fc-4: linear-gradient(135deg, #006666, #009999);
 
   --shimmer-color: rgba(255,255,255,0.55);
+  --logo-bg: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--primary-light));
 }

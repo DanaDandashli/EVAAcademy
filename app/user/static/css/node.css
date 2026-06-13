@@ -211,7 +211,7 @@
   width: 100%;
   padding: 10px;
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: var(--text-inverse);
+  color: var(--creamy-text);
   border: none;
   border-radius: 14px;
   font-size: 0.95rem;
@@ -368,7 +368,7 @@
   display: flex; align-items: center; gap: 8px;
   padding: 10px 20px; border-radius: 10px;
   border: 1.5px solid rgba(0, 128, 128,0.2);
-  background: transparent; color: var(--primary);
+  background: transparent; color: var(--text-light);
   font-size: 0.88rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-heading); transition: all 0.2s;
 }
@@ -378,7 +378,7 @@
 .intro-btn-next {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 20px; border-radius: 10px;
-  background: var(--primary); color: var(--text-inverse); border: none;
+  background: var(--primary); color: var(--creamy-text); border: none;
   font-size: 0.88rem; font-weight: 700; cursor: pointer;
   font-family: var(--font-heading); transition: all 0.2s;
   box-shadow: 0 4px 14px rgba(0, 128, 128,0.3);
@@ -435,7 +435,7 @@
   background: var(--gradient1);
   border: 1px solid var(--text-inverse);
   border-radius: 8px;
-  color: var(--text-inverse);
+  color: var(--creamy-text);
   font-weight: 700;
   cursor: pointer;
   display: block;
