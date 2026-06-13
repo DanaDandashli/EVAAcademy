@@ -15,65 +15,65 @@ __MaxTokens__ = 2000
 PYTHON_CURRICULUM_FOUNDATION = [
     # ── Beginner ──
     {'order': 1,  'title': 'The Basics',                    'level_required': 1,  'category': 'beginner',
-        'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /, //, %)', 'string concatenation', 'format()']},
+     'topics': ['print', 'input', 'variables', 'data types', 'type casting', 'comments', 'basic arithmetic operators (+, -, *, /, //, %)', 'string concatenation', 'f-strings', 'string multiplication', 'multiple assignment']},
     {'order': 2,  'title': 'Control Flow',                  'level_required': 1,  'category': 'beginner',
-        'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values', 'pass statement']},
+     'topics': ['if statements', 'else', 'elif', 'comparison operators', 'logical operators', 'nested conditions', 'truthy and falsy values', 'pass statement']},
     {'order': 3,  'title': 'Functions',                     'level_required': 2,  'category': 'beginner',
-        'topics': ['defining functions', 'parameters', 'default parameters', 'return values', 'scope', 'multiple return values', 'docstrings']},
+     'topics': ['defining functions', 'parameters', 'default parameters', 'return values', 'scope', 'multiple return values', 'docstrings', '*args', '**kwargs']},
     {'order': 4,  'title': 'Loops',                         'level_required': 2,  'category': 'beginner',
-        'topics': ['for loops', 'while loops', 'range', 'break', 'continue', 'pass', 'nested loops', 'enumerate', 'loop else']},
+     'topics': ['for loops', 'while loops', 'range', 'break', 'continue', 'pass', 'nested loops', 'enumerate', 'loop else', 'zip in loops']},
     {'order': 5,  'title': 'Lists',                         'level_required': 3,  'category': 'beginner',
-        'topics': ['creating lists', 'indexing', 'negative indexing', 'slicing', 'append', 'remove', 'pop', 'sort', 'list methods', 'iterating']},
+     'topics': ['creating lists', 'indexing', 'negative indexing', 'slicing', 'append', 'remove', 'pop', 'sort', 'list methods', 'iterating', 'len', 'in operator', 'list concatenation']},
     {'order': 6,  'title': 'Tuples & Sets',                 'level_required': 3,  'category': 'beginner',
-        'topics': ['creating tuples', 'tuple unpacking', 'immutability', 'creating sets', 'set operations', 'union', 'intersection', 'difference', 'frozen sets']},
+     'topics': ['creating tuples', 'tuple unpacking', 'immutability', 'creating sets', 'set operations', 'union', 'intersection', 'difference', 'frozen sets', 'len', 'in operator']},
     {'order': 7,  'title': 'Dictionaries',                  'level_required': 4,  'category': 'beginner',
-        'topics': ['key-value pairs', 'accessing values', 'adding and updating keys', 'deleting keys', 'dictionary methods', 'iterating dictionaries', 'nested dictionaries', 'dict comprehension']},
+     'topics': ['key-value pairs', 'accessing values', 'adding and updating keys', 'deleting keys', 'dictionary methods', 'iterating dictionaries', 'nested dictionaries', 'dict comprehension', 'get() method', 'in operator for keys']},
     {'order': 8,  'title': 'String Methods',                'level_required': 4,  'category': 'beginner',
-        'topics': ['string operations', 'slicing', 'f-strings', 'format method', 'upper lower', 'strip', 'split', 'join', 'replace', 'find', 'count', 'startswith endswith']},
+     'topics': ['string indexing', 'slicing', 'upper and lower', 'strip', 'split', 'join', 'replace', 'find', 'count', 'startswith and endswith', 'len', 'isdigit and isalpha']},
     {'order': 9,  'title': 'Comprehensions',                'level_required': 4,  'category': 'beginner',
-        'topics': ['list comprehension', 'dict comprehension', 'set comprehension', 'conditional comprehension', 'nested comprehension', 'generator expressions']},
+     'topics': ['list comprehension', 'dict comprehension', 'set comprehension', 'conditional comprehension', 'nested comprehension', 'generator expressions']},
 
     # ── Intermediate ──
     {'order': 10, 'title': 'Lambda & Functional Programming', 'level_required': 5, 'category': 'intermediate',
-        'topics': ['lambda functions', 'map', 'filter', 'reduce', 'zip', 'sorted with key', 'any and all', 'functools']},
-    {'order': 11, 'title': 'File Handling',                 'level_required': 5,  'category': 'intermediate',
-        'topics': ['reading files', 'writing files', 'appending files', 'with statement', 'file modes', 'readlines', 'CSV files', 'JSON files']},
+     'topics': ['lambda functions', 'map', 'filter', 'reduce', 'zip', 'sorted with key', 'any and all', 'functools']},
+    {'order': 11, 'title': 'Built-in Functions',            'level_required': 5,  'category': 'intermediate',
+     'topics': ['len', 'sorted and reversed', 'sum', 'min and max', 'abs and round', 'pow and divmod', 'type and isinstance', 'chr and ord']},
     {'order': 12, 'title': 'Error Handling',                'level_required': 5,  'category': 'intermediate',
-        'topics': ['try/except', 'except specific errors', 'else clause', 'finally clause', 'raising exceptions', 'custom exceptions', 'common built-in errors']},
+     'topics': ['try and except', 'catching specific errors', 'else clause', 'finally clause', 'raising exceptions', 'custom exceptions', 'common built-in errors']},
     {'order': 13, 'title': 'Modules & Libraries',           'level_required': 6,  'category': 'intermediate',
-        'topics': ['import', 'from import', 'aliasing modules', 'math module', 'random module', 'datetime module', 'os module', 'pip', 'standard library']},
+     'topics': ['import', 'from import', 'aliasing modules', 'math module', 'random module', 'string module', 'pip', 'standard library']},
     {'order': 14, 'title': 'Type Hints & Annotations',      'level_required': 6,  'category': 'intermediate',
-        'topics': ['variable annotations', 'function annotations', 'return type hints', 'Optional', 'List Dict type hints', 'Union', 'typing module']},
+     'topics': ['variable annotations', 'function annotations', 'return type hints', 'Optional', 'List and Dict type hints', 'Union', 'typing module']},
     {'order': 15, 'title': 'Context Managers',              'level_required': 6,  'category': 'intermediate',
-        'topics': ['with statement', '__enter__ and __exit__', 'custom context managers', 'contextlib', 'multiple context managers', 'exception handling in context managers']},
+     'topics': ['with statement', '__enter__ and __exit__', 'custom context managers', 'contextlib', 'multiple context managers', 'exception handling in context managers']},
 
     # ── Advanced ──
     {'order': 16, 'title': 'OOP Basics',                    'level_required': 7,  'category': 'advanced',
-        'topics': ['classes', 'objects', 'attributes', 'methods', '__init__', 'self', 'instance vs class variables', '__str__ method']},
+     'topics': ['classes', 'objects', 'attributes', 'methods', '__init__', 'self', 'instance vs class variables', '__str__ method']},
     {'order': 17, 'title': 'OOP Advanced',                  'level_required': 7,  'category': 'advanced',
-        'topics': ['inheritance', 'super()', 'method overriding', 'encapsulation', 'private attributes', 'polymorphism', 'abstract classes', 'multiple inheritance']},
+     'topics': ['inheritance', 'super()', 'method overriding', 'encapsulation', 'private attributes', 'polymorphism', 'abstract classes', 'multiple inheritance']},
     {'order': 18, 'title': 'Recursion',                     'level_required': 8,  'category': 'advanced',
-        'topics': ['recursive functions', 'base case', 'recursive case', 'call stack', 'factorial', 'fibonacci', 'tree traversal', 'memoization']},
+     'topics': ['recursive functions', 'base case', 'recursive case', 'call stack', 'factorial', 'fibonacci', 'tree traversal', 'memoization']},
     {'order': 19, 'title': 'Decorators',                    'level_required': 8,  'category': 'advanced',
-        'topics': ['function decorators', 'wraps', 'decorator with arguments', 'class decorators', 'staticmethod', 'classmethod', 'property decorator']},
+     'topics': ['function decorators', 'functools wraps', 'decorator with arguments', 'class decorators', 'staticmethod', 'classmethod', 'property decorator']},
     {'order': 20, 'title': 'Generators',                    'level_required': 9,  'category': 'advanced',
-        'topics': ['yield', 'generator functions', 'generator expressions', 'lazy evaluation', 'next()', 'send()', 'infinite generators', 'itertools']},
-    {'order': 21, 'title': 'Concurrency Basics',            'level_required': 9,  'category': 'advanced',
-        'topics': ['threading', 'multiprocessing', 'async/await', 'asyncio', 'coroutines', 'event loop', 'concurrent.futures']},
+     'topics': ['yield', 'generator functions', 'generator expressions', 'lazy evaluation', 'next()', 'send()', 'infinite generators', 'itertools']},
+    {'order': 21, 'title': 'Itertools & Built-in Tools',    'level_required': 9,  'category': 'advanced',
+     'topics': ['itertools chain', 'itertools product', 'itertools combinations', 'itertools permutations', 'itertools cycle', 'itertools islice', 'itertools groupby', 'zip_longest', 'collections Counter', 'collections defaultdict', 'collections OrderedDict', 'collections namedtuple']},
 
     # ── Expert ──
     {'order': 22, 'title': 'Data Structures',               'level_required': 10, 'category': 'expert',
-        'topics': ['stacks', 'queues', 'deque', 'linked lists', 'binary trees', 'hash maps', 'heaps', 'graphs']},
+     'topics': ['stacks', 'queues', 'deque', 'linked lists', 'binary trees', 'hash maps', 'heaps', 'graphs']},
     {'order': 23, 'title': 'Algorithms',                    'level_required': 10, 'category': 'expert',
-        'topics': ['bubble sort', 'selection sort', 'insertion sort', 'merge sort', 'quick sort', 'binary search', 'linear search', 'big O notation', 'time complexity']},
+     'topics': ['bubble sort', 'selection sort', 'insertion sort', 'merge sort', 'quick sort', 'binary search', 'linear search', 'big O notation', 'time complexity']},
     {'order': 24, 'title': 'Testing & Debugging',           'level_required': 11, 'category': 'expert',
-        'topics': ['unittest', 'assert statements', 'test cases', 'setUp tearDown', 'mocking', 'print debugging', 'pdb debugger', 'pytest basics']},
+     'topics': ['assert statements', 'print debugging', 'defensive programming', 'input validation', 'error messages', 'tracing code manually', 'common bugs', 'logical errors vs syntax errors']},
     {'order': 25, 'title': 'Regular Expressions',           'level_required': 11, 'category': 'expert',
-        'topics': ['patterns', 're module', 'match', 'search', 'findall', 'sub replace', 'groups', 'special characters', 'flags']},
-    {'order': 26, 'title': 'APIs & Requests',               'level_required': 12, 'category': 'expert',
-        'topics': ['REST APIs', 'GET requests', 'POST requests', 'JSON responses', 'headers', 'authentication', 'error handling in APIs', 'requests library', 'parsing responses']},
-    {'order': 27, 'title': 'Virtual Environments & Project Structure', 'level_required': 12, 'category': 'expert',
-        'topics': ['venv', 'pip freeze', 'requirements.txt', 'project layout', 'packages and modules', '__init__.py', 'relative imports', 'pyproject.toml']},
+     'topics': ['patterns', 're module', 'match', 'search', 'findall', 'sub and replace', 'groups', 'special characters', 'flags']},
+    {'order': 26, 'title': 'JSON & Data Serialization',               'level_required': 12, 'category': 'expert',
+     'topics': ['json module', 'json loads and dumps', 'json formatting', 'nested JSON', 'JSON with lists', 'JSON with dictionaries', 'parsing JSON responses', 'error handling in JSON', 'data serialization']},
+    {'order': 27, 'title': 'Design Patterns',               'level_required': 12, 'category': 'expert',
+     'topics': ['singleton pattern', 'factory pattern', 'observer pattern', 'strategy pattern', 'decorator pattern', 'iterator pattern', 'builder pattern', 'facade pattern']},
 ]
 
 
@@ -186,8 +186,14 @@ def _call_ai(prompt, system='Return only raw valid JSON. No markdown.', max_toke
 def _fix_code(code):
     """Fix code for Skulpt compatibility."""
     code = code.replace('\\"', '"')
-    # Only convert double-quoted strings that don't contain apostrophes
-    code = re.sub(r'"([^"\']*)"', lambda m: "'" + m.group(1) + "'", code)
+    # Fix single-quoted strings containing apostrophes — convert to double quotes
+
+    def fix_apostrophe(m):
+        content = m.group(1)
+        if "'" in content:
+            return '"' + content + '"'
+        return m.group(0)
+    code = re.sub(r"'([^'\\]*(?:\\.[^'\\]*)*)'", fix_apostrophe, code)
     return code
 
 
@@ -230,7 +236,7 @@ Age constraints:
 IMPORTANT: Only teach these specific topics: {topics_str}
 Do NOT include any other topics outside this list.
 
-Decide how many slides this topic needs (minimum 10, maximum 25) based on complexity.
+Decide how many slides this topic needs (minimum 15, maximum 30) based on complexity.
 
 Generate slides that teach "{lesson_title}" progressively from simple to complex.
 Each slide must teach ONE concept from the topics list only.
