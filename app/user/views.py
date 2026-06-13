@@ -1206,12 +1206,23 @@ def CompeteResultView(request):
     won = data.get('won', False)
     profile = StudentProfile.objects.get(user=request.user)
 
+    elo = profile.elo_rating
+
+    if elo < 800:                   # Below 800 -> +30 / -15
+        gain, loss = 30, 15
+    elif elo < 1200:                # 800–1199 -> +25 / -10
+        gain, loss = 25, 10
+    elif elo < 1500:                # 1200–1499 -> +18 / -12
+        gain, loss = 18, 12
+    else:                           # 1500+ -> +12 / -15 (harder to maintain at top)
+        gain, loss = 12, 15
+
     profile.compete_battles += 1
     if won:
         profile.compete_wins += 1
-        profile.elo_rating += 25
+        profile.elo_rating = min(3000, elo + gain)
     else:
-        profile.elo_rating = max(0, profile.elo_rating - 10)
+        profile.elo_rating = max(0, elo - loss)
     profile.save()
 
     return JsonResponse({'status': 'ok'})

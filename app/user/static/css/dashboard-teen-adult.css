@@ -446,6 +446,45 @@ body {
 .node-row.right { justify-content: flex-end; }
 .node-row a { display: block; width: 100%; max-width: 195px; text-decoration: none; }
 
+.lp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--card-border);
+  margin-top: 16px;
+}
+
+.lp-page-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.lp-page-btn:hover:not(:disabled) {
+  background: rgba(0,128,128,0.1);
+  color: var(--accent2);
+  border-color: rgba(0,128,128,0.3);
+}
+
+.lp-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.lp-page-counter {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
 /* Connector line between nodes */
 .node-row:not(:last-child)::after {
   display: none;
@@ -1566,6 +1605,10 @@ body {
   .card-title { font-size: 0.88rem; }
   .chart-canvas-wrap { height: 260px; }
   .chart-card { padding: 14px 12px; }
+
+  .lp-pagination { padding: 12px 0 4px; gap: 8px; }
+  .lp-page-btn { padding: 6px 10px; font-size: 0.72rem; gap: 4px; }
+  .lp-page-counter { font-size: 0.72rem; }
 }
 
 @media(max-width:480px){
@@ -1596,6 +1639,11 @@ body {
   .logo { gap: 0; }
   .topbar-right { gap: 8px; }
   .theme-toggle { width: 30px; height: 30px; font-size: 0.85rem; }
+
+  .lp-pagination { flex-direction: row; justify-content: space-between; }
+  .lp-page-btn span { display: none; }
+  .lp-page-btn { padding: 7px 12px; }
+  .lp-page-counter { font-size: 0.68rem; }
 }
 
 ::-webkit-scrollbar{width:5px;height:5px}

@@ -768,3 +768,27 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// ── Learning Path Pagination ──
+const lpPages = document.querySelectorAll('.lp-lesson-page');
+const lpPrev  = document.getElementById('lpPrev');
+const lpNext  = document.getElementById('lpNext');
+const lpCounter = document.getElementById('lpCounter');
+let lpCurrent = 0;
+
+// Auto-jump to the current active lesson on load
+lpPages.forEach((page, i) => {
+  if (page.querySelector('.node-item.current')) lpCurrent = i;
+});
+
+function lpShow(index) {
+  lpPages.forEach(p => p.style.display = 'none');
+  lpPages[index].style.display = '';
+  lpPrev.disabled = index === 0;
+  lpNext.disabled = index === lpPages.length - 1;
+  lpCounter.textContent = `Lesson ${index + 1} of ${lpPages.length}`;
+}
+
+lpShow(lpCurrent);
+lpPrev.addEventListener('click', () => { if (lpCurrent > 0) lpShow(--lpCurrent); });
+lpNext.addEventListener('click', () => { if (lpCurrent < lpPages.length - 1) lpShow(++lpCurrent); });

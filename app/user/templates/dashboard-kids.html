@@ -22,7 +22,7 @@
       <p class="dash-sub">Keep coding.. You are doing amazing! <span class="dash-sub-icon"><i class="fa-solid fa-star"></i></span></p>
     </div>
     {% if current_section %}
-      <button class="btn-trial" onclick="switchPanel('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => document.getElementById('node-{{ current_section.id }}')?.scrollIntoView({behavior:'smooth', block:'center'}), 300)">
+      <button class="btn-trial" onclick="switchPanel('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => { const node = document.getElementById('node-{{ current_section.id }}'); if(node) { const page = node.closest('.lp-lesson-page'); if(page) { const idx = parseInt(page.dataset.index); lpShow(idx); } setTimeout(() => node.scrollIntoView({behavior:'smooth', block:'center'}), 150); } }, 300)">
         Next Task
       </button>
     {% endif %}
@@ -153,101 +153,83 @@
           <!-- Snake path map -->
           <div class="lp-path-map">
             {% for lesson in lessons_data %}
-              <div class="lp-lesson-card"> 
-                <!-- Lesson header -->
-                <div class="lp-lesson-header">
-                  <div class="lp-lesson-header-inner">
-                    <div class="lp-lesson-icon"><i class="fas fa-book-open"></i></div>
-                    <div>
-                      <span class="lp-lesson-num">Lesson {{ forloop.counter }}</span>
-                      <h3 class="lp-lesson-title">{{ lesson.lesson.title }}</h3>
+              <div class="lp-lesson-page" data-index="{{ forloop.counter0 }}" {% if not forloop.first %}style="display:none;"{% endif %}>
+                <div class="lp-lesson-card">
+                  <!-- Lesson header -->
+                  <div class="lp-lesson-header">
+                    <div class="lp-lesson-header-inner">
+                      <div class="lp-lesson-icon"><i class="fas fa-book-open"></i></div>
+                      <div>
+                        <span class="lp-lesson-num">Lesson {{ forloop.counter }}</span>
+                        <h3 class="lp-lesson-title">{{ lesson.lesson.title }}</h3>
+                      </div>
+                      {% if lesson.is_completed %}
+                        <span class="lp-section-done-pill">Complete</span>
+                      {% endif %}
                     </div>
-                    {% if lesson.is_completed %}
-                      <span class="lp-section-done-pill">Complete</span>
-                    {% endif %}
+                  </div>
+
+                  <!-- Snake track -->
+                  <div class="lp-snake-track" data-nodes="{{ lesson.total_count }}">
+                    <svg class="lp-snake-svg-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {% if lesson.total_count == 2 %}
+                        <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
+                              d="M 25,20 C 25,50 75,50 75,80"/>
+                      {% elif lesson.total_count == 3 %}
+                        <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
+                              d="M 25,14 C 25,32 75,32 75,50 C 75,68 25,68 25,86"/>
+                      {% elif lesson.total_count == 4 %}
+                        <path class="snake-line {% if lesson.sections.0.is_completed %}line-done{% elif lesson.sections.0.is_current %}line-active{% else %}line-locked{% endif %}"
+                              d="M 25,10 C 25,24 75,24 75,37"/>
+                        <path class="snake-line {% if lesson.sections.1.is_completed %}line-done{% elif lesson.sections.1.is_current %}line-active{% else %}line-locked{% endif %}"
+                              d="M 75,37 C 75,50 25,50 25,63"/>
+                        <path class="snake-line {% if lesson.sections.2.is_completed %}line-done{% elif lesson.sections.2.is_current %}line-active{% else %}line-locked{% endif %}"
+                              d="M 25,63 C 25,77 75,77 75,90"/>
+                      {% endif %}
+                    </svg>
+
+                    {% for s in lesson.sections %}
+                      <div class="lp-node-wrap lp-node-pos-{{ lesson.total_count }}-{{ forloop.counter }}" id="node-{{ s.section.id }}">
+                        {% if s.is_current %}
+                          <div class="lp-node-tooltip">
+                            <button class="lp-start-btn">Start <i class="fas fa-arrow-right"></i></button>
+                          </div>
+                        {% endif %}
+
+                        {% if s.is_completed or s.is_current %}
+                          <a href="/lesson/{{ s.section.id }}/{{ s.section.node_type }}/" class="lp-node-link">
+                        {% endif %}
+
+                          <div class="lp-node-bubble
+                            {% if s.is_completed %}node-done
+                            {% elif s.is_current %}node-current
+                            {% else %}node-locked{% endif %}
+                            {% if s.section.is_boss %} node-boss{% endif %}">
+                            {% if s.is_completed %}
+                              <i class="fas fa-check"></i>
+                            {% elif s.is_current %}
+                              <i class="fas fa-play"></i>
+                            {% elif s.section.is_boss %}
+                              <i class="fas fa-dragon"></i>
+                            {% else %}
+                              <i class="fas fa-lock"></i>
+                            {% endif %}
+                          </div>
+
+                        {% if s.is_completed or s.is_current %}
+                          </a>
+                        {% endif %}
+
+                        <span class="lp-node-label
+                          {% if s.is_current %}label-current
+                          {% elif s.section.is_boss %}label-boss{% endif %}">
+                          {{ s.section.title }}
+                        </span>
+                      </div>
+                    {% endfor %}
                   </div>
                 </div>
-
-                <!-- Snake track -->
-                <div class="lp-snake-track" data-nodes="{{ lesson.total_count }}">
-
-                  <!-- SVG path — viewBox matches node % positions exactly -->
-                  <svg class="lp-snake-svg-line" viewBox="0 0 100 100" preserveAspectRatio="none">
-
-                    {% if lesson.total_count == 2 %}
-                      <!-- node1: 25,20 → node2: 75,80 -->
-                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
-                            d="M 25,20 C 25,50 75,50 75,80"/>
-
-                    {% elif lesson.total_count == 3 %}
-                      <!-- node1: 25,14 → node2: 75,50 → node3: 25,86 -->
-                      <path class="snake-line {% if lesson.is_completed %}line-done{% elif lesson.sections.0.is_completed %}line-active{% else %}line-locked{% endif %}"
-                            d="M 25,14 C 25,32 75,32 75,50 C 75,68 25,68 25,86"/>
-
-                    {% elif lesson.total_count == 4 %}
-                      <!-- Segment 1: node1 → node2 -->
-                      <path class="snake-line {% if lesson.sections.0.is_completed %}line-done{% elif lesson.sections.0.is_current %}line-active{% else %}line-locked{% endif %}"
-                            d="M 25,10 C 25,24 75,24 75,37"/>
-                      <!-- Segment 2: node2 → node3 -->
-                      <path class="snake-line {% if lesson.sections.1.is_completed %}line-done{% elif lesson.sections.1.is_current %}line-active{% else %}line-locked{% endif %}"
-                            d="M 75,37 C 75,50 25,50 25,63"/>
-                      <!-- Segment 3: node3 → node4 -->
-                      <path class="snake-line {% if lesson.sections.2.is_completed %}line-done{% elif lesson.sections.2.is_current %}line-active{% else %}line-locked{% endif %}"
-                            d="M 25,63 C 25,77 75,77 75,90"/>
-                    {% endif %}
-
-                  </svg>
-
-                  <!-- Node bubbles -->
-                  {% for s in lesson.sections %}
-                    <div class="lp-node-wrap lp-node-pos-{{ lesson.total_count }}-{{ forloop.counter }}" id="node-{{ s.section.id }}">
-                      {% if s.is_current %}
-                        <div class="lp-node-tooltip">
-                          <button class="lp-start-btn">Start <i class="fas fa-arrow-right"></i></button>
-                        </div>
-                      {% endif %}
-
-                      {% if s.is_completed or s.is_current %}
-                        <a href="/lesson/{{ s.section.id }}/{{ s.section.node_type }}/" class="lp-node-link">
-                      {% endif %}
-
-                        <div class="lp-node-bubble
-                          {% if s.is_completed %}node-done
-                          {% elif s.is_current %}node-current
-                          {% else %}node-locked{% endif %}
-                          {% if s.section.is_boss %} node-boss{% endif %}">
-                          {% if s.is_completed %}
-                            <i class="fas fa-check"></i>
-                          {% elif s.is_current %}
-                            <i class="fas fa-play"></i>
-                          {% elif s.section.is_boss %}
-                            <i class="fas fa-dragon"></i>
-                          {% else %}
-                            <i class="fas fa-lock"></i>
-                          {% endif %}
-                        </div>
-
-                      {% if s.is_completed or s.is_current %}
-                        </a>
-                      {% endif %}
-
-                      <span class="lp-node-label
-                        {% if s.is_current %}label-current
-                        {% elif s.section.is_boss %}label-boss{% endif %}">
-                        {{ s.section.title }}
-                      </span>
-                    </div>
-                  {% endfor %}
-                </div>
               </div>
-              <!-- Connector between lessons -->
-              {% if not forloop.last %}
-                <div class="lp-lesson-connector {% if lesson.is_completed %}done{% else %}locked{% endif %}">
-                  <div class="lp-lesson-connector-dot"></div>
-                  <div class="lp-lesson-connector-line"></div>
-                </div>
-              {% endif %}
-
             {% empty %}
               <div class="lp-empty">
                 <i class="fas fa-book-open"></i>
@@ -255,6 +237,15 @@
               </div>
             {% endfor %}
 
+            <div class="lp-pagination">
+              <button class="lp-page-btn" id="lpPrev" disabled>
+                <i class="fas fa-chevron-left"></i> Previous
+              </button>
+              <span class="lp-page-counter" id="lpCounter">Lesson 1 of {{ lessons_data|length }}</span>
+              <button class="lp-page-btn" id="lpNext">
+                Next <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         </div><!-- end learning-path-card -->
       </div>

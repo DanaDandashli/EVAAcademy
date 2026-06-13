@@ -314,7 +314,7 @@
         <p>{{ track_label }} — {{ completed_sections_count }} / {{ total_sections }} nodes completed</p>
       </div>
       {% if current_section %}
-        <button class="btn-trial" onclick="navigateTo('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => document.getElementById('node-{{ current_section.id }}')?.scrollIntoView({behavior:'smooth', block:'center'}), 300)">
+        <button class="btn-trial" onclick="navigateTo('learning-path', document.querySelector('[data-panel=learning-path]')); setTimeout(() => { const node = document.getElementById('node-{{ current_section.id }}'); if(node) { const page = node.closest('.lp-lesson-page'); if(page) { const idx = parseInt(page.dataset.index); lpShow(idx); } setTimeout(() => node.scrollIntoView({behavior:'smooth', block:'center'}), 150); } }, 300)">
           Next Task
         </button>
       {% endif %}
@@ -335,82 +335,93 @@
 
       <div class="lp-body">
         {% for lesson_data in lessons_data %}
-        {% if not forloop.first %}<div class="lp-divider"></div>{% endif %}
-        <div class="lp-section">
-          <div class="lp-section-header">
-            <div class="lp-section-num {% if lesson_data.is_completed %}completed{% elif lesson_data.is_locked %}locked-num{% else %}in-progress{% endif %}">
-              {{ forloop.counter }}
-            </div>
-            <span class="lp-section-title">{{ lesson_data.lesson.title }}</span>
-            {% if lesson_data.is_completed %}
-              <span class="lp-section-badge done"><i class="fa-solid fa-check fa-xs"></i> Complete</span>
-            {% elif lesson_data.is_locked %}
-              <span class="lp-section-badge locked"><i class="fa-solid fa-lock fa-xs"></i> Locked</span>
-            {% else %}
-              <span class="lp-section-badge active"><i class="fa-solid fa-play fa-xs"></i> In Progress</span>
-            {% endif %}
-          </div>
-
-          <div class="nodes-path">
-            {% for section_data in lesson_data.sections %}
-            <div class="node-row {% cycle 'left' 'right' 'left' 'right' %}" id="node-{{ section_data.section.id }}">
-              {% if section_data.is_locked or lesson_data.is_locked %}
-              <div class="node-item locked">
-                <div class="node-icon"><i class="fa-solid {% if section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i></div>
-                <div>
-                  <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
-                  <div class="node-xp">Locked</div>
+          <div class="lp-lesson-page" data-index="{{ forloop.counter0 }}" {% if not forloop.first %}style="display:none;"{% endif %}>
+            <div class="lp-section">
+              <div class="lp-section-header">
+                <div class="lp-section-num {% if lesson_data.is_completed %}completed{% elif lesson_data.is_locked %}locked-num{% else %}in-progress{% endif %}">
+                  {{ forloop.counter }}
                 </div>
-              </div>
-              {% else %}
-                {% if section_data.section.node_type == 'introduction' %}<a href="{% url 'introduction' section_data.section.id %}">
-                {% elif section_data.section.node_type == 'application' %}<a href="{% url 'application' section_data.section.id %}">
-                {% elif section_data.section.node_type == 'competition' %}<a href="{% url 'competition' section_data.section.id %}">
-                {% elif section_data.section.node_type == 'test' %}<a href="{% url 'test' section_data.section.id %}">
+                <span class="lp-section-title">{{ lesson_data.lesson.title }}</span>
+                {% if lesson_data.is_completed %}
+                  <span class="lp-section-badge done"><i class="fa-solid fa-check fa-xs"></i> Complete</span>
+                {% elif lesson_data.is_locked %}
+                  <span class="lp-section-badge locked"><i class="fa-solid fa-lock fa-xs"></i> Locked</span>
+                {% else %}
+                  <span class="lp-section-badge active"><i class="fa-solid fa-play fa-xs"></i> In Progress</span>
                 {% endif %}
-                <div class="node-item {% if section_data.is_completed %}done{% elif section_data.is_current %}current{% else %}locked{% endif %}">
-                  <div class="node-icon">
-                    <i class="fa-solid {% if section_data.is_completed %}fa-check{% elif section_data.is_current %}fa-play{% elif section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i>
-                  </div>
-                  <div>
-                    <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
-                    <div class="node-xp">
-                      {% if section_data.is_completed %}Completed
-                      {% elif section_data.is_current %}Start Now
-                      {% else %}
-                        {% if section_data.section.node_type == 'introduction' %}+10 XP
-                        {% elif section_data.section.node_type == 'application' %}+30 XP
-                        {% elif section_data.section.node_type == 'competition' %}+50 XP
-                        {% elif section_data.section.node_type == 'test' %}+100 XP
-                        {% endif %}
-                      {% endif %}
+              </div>
+
+              <div class="nodes-path">
+                {% for section_data in lesson_data.sections %}
+                <div class="node-row {% cycle 'left' 'right' 'left' 'right' %}" id="node-{{ section_data.section.id }}">
+                  {% if section_data.is_locked or lesson_data.is_locked %}
+                  <div class="node-item locked">
+                    <div class="node-icon"><i class="fa-solid {% if section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i></div>
+                    <div>
+                      <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
+                      <div class="node-xp">Locked</div>
                     </div>
                   </div>
+                  {% else %}
+                    {% if section_data.section.node_type == 'introduction' %}<a href="{% url 'introduction' section_data.section.id %}">
+                    {% elif section_data.section.node_type == 'application' %}<a href="{% url 'application' section_data.section.id %}">
+                    {% elif section_data.section.node_type == 'competition' %}<a href="{% url 'competition' section_data.section.id %}">
+                    {% elif section_data.section.node_type == 'test' %}<a href="{% url 'test' section_data.section.id %}">
+                    {% endif %}
+                    <div class="node-item {% if section_data.is_completed %}done{% elif section_data.is_current %}current{% else %}locked{% endif %}">
+                      <div class="node-icon">
+                        <i class="fa-solid {% if section_data.is_completed %}fa-check{% elif section_data.is_current %}fa-play{% elif section_data.section.is_boss %}fa-dragon{% else %}fa-lock{% endif %}"></i>
+                      </div>
+                      <div>
+                        <div class="node-label">{{ section_data.section.node_type|capfirst }}</div>
+                        <div class="node-xp">
+                          {% if section_data.is_completed %}Completed
+                          {% elif section_data.is_current %}Start Now
+                          {% else %}
+                            {% if section_data.section.node_type == 'introduction' %}+10 XP
+                            {% elif section_data.section.node_type == 'application' %}+30 XP
+                            {% elif section_data.section.node_type == 'competition' %}+50 XP
+                            {% elif section_data.section.node_type == 'test' %}+100 XP
+                            {% endif %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    </a>
+                  {% endif %}
                 </div>
-                </a>
-              {% endif %}
+
+                {% if not forloop.last %}
+                <svg class="path-svg" viewBox="0 0 600 48" preserveAspectRatio="none">
+                  {% if forloop.counter0|divisibleby:2 %}
+                    <path d="M 97 0 C 97 24, 503 24, 503 48"
+                  {% else %}
+                    <path d="M 503 0 C 503 24, 97 24, 97 48"
+                  {% endif %}
+                    stroke="{% if section_data.is_completed %}rgba(108,99,255,0.5){% elif section_data.is_current %}rgba(0,212,255,0.45){% else %}rgba(180,180,200,0.25){% endif %}"
+                    stroke-width="2" fill="none"
+                    stroke-dasharray="{% if section_data.is_locked or lesson_data.is_locked %}5,4{% else %}none{% endif %}"/>
+                </svg>
+                {% endif %}
+
+                {% endfor %}
+              </div>
             </div>
-
-            {% if not forloop.last %}
-            <svg class="path-svg" viewBox="0 0 600 48" preserveAspectRatio="none">
-              {% if forloop.counter0|divisibleby:2 %}
-                <path d="M 97 0 C 97 24, 503 24, 503 48"
-              {% else %}
-                <path d="M 503 0 C 503 24, 97 24, 97 48"
-              {% endif %}
-                stroke="{% if section_data.is_completed %}rgba(108,99,255,0.5){% elif section_data.is_current %}rgba(0,212,255,0.45){% else %}rgba(180,180,200,0.25){% endif %}"
-                stroke-width="2" fill="none"
-                stroke-dasharray="{% if section_data.is_locked or lesson_data.is_locked %}5,4{% else %}none{% endif %}"/>
-            </svg>
-            {% endif %}
-
-            {% endfor %}
           </div>
-        </div>
         {% empty %}
-        <p class="lb-muted">No lessons available yet.</p>
+          <p class="lb-muted">No lessons available yet.</p>
         {% endfor %}
-      </div>
+
+  <div class="lp-pagination">
+    <button class="lp-page-btn" id="lpPrev" disabled>
+      <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    <span class="lp-page-counter" id="lpCounter">Lesson 1 of {{ lessons_data|length }}</span>
+    <button class="lp-page-btn" id="lpNext">
+      Next <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>
     </div>
   </div>
   
